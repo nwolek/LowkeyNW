@@ -12,6 +12,7 @@
 ** 2005/10/10 added start and end points; 
 ** 2006/11/18 moved to Xcode; compiled for UB
 ** 2007/04/10 added sample count outlet
+** 2007/04/15 mod bang outlet to be combo bang/click; mod increment pre to post
 **
 ** 
 */
@@ -84,8 +85,9 @@ typedef struct _nw_pulsesamp
 	float last_pulse_in;
 	double output_sr;
 	double output_1oversr;
-	//bang on init outlet, added 2004.03.10
-	void *out_bangoninit;
+	//bang outlets
+	void *out_bangoninit;		// add 2004.03.10
+	void *out_bangonoverflow;	// add 2007.04.15
 } t_nw_pulsesamp;
 
 void *nw_pulsesamp_new(t_symbol *snd);
@@ -165,8 +167,8 @@ void *nw_pulsesamp_new(t_symbol *snd)
 	t_nw_pulsesamp *x = (t_nw_pulsesamp *)newobject(this_class);
 	dsp_setup((t_pxobject *)x, 5);					// five inlets
 	outlet_new((t_pxobject *)x, "signal");			// sample count outlet; add 2007.04.10
-	x->out_bangoninit = bangout((t_pxobject *)x);	// "bang when samp begins" outlet
-	outlet_new((t_pxobject *)x, "signal");			// overflow outlet
+	x->out_bangoninit = outlet_new((t_pxobject *)x, "signal");	// "bang/click when samp begins" outlet; mod 2007.04.15
+	x->out_bangonoverflow = outlet_new((t_pxobject *)x, "signal");			// overflow outlet; mod 2007.04.15
 	outlet_new((t_pxobject *)x, "signal");			// signal outlet
 	
 	/* set buffer names */
@@ -227,8 +229,8 @@ void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count)
 	
 	if (count[5] && count[0]) {	// if input and output connected..
 		// output is computed
-		dsp_add(nw_pulsesamp_perform, 8, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
-			sp[5]->s_vec, sp[6]->s_vec, sp[7]->s_vec, sp[5]->s_n);
+		dsp_add(nw_pulsesamp_perform, 9, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
+			sp[5]->s_vec, sp[6]->s_vec, sp[7]->s_vec, sp[8]->s_vec, sp[5]->s_n);
 		#ifdef DEBUG
 			post("%s: output is being computed", OBJECT_NAME);
 		#endif /* DEBUG */
@@ -258,10 +260,9 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	float *in_gain = (float *)(w[4]);			//gain
 	t_float *out = (t_float *)(w[5]);			//signal output
 	t_float *out2 = (t_float *)(w[6]); 			//overflow
-	t_float *out3 = (t_float *)(w[7]); 			//sample count output; add 2007.04.10
-	//float *in_start = (float *)(w[7]);			// where to start reading buffer
-	//float *in_end = (float *)(w[8]);			// where to stop reading buffer
-	int vec_size = (int)(w[8]);					//vector size
+	t_float *out3 = (t_float *)(w[7]); 			//bang/click output; add 2007.04.13
+	t_float *out4 = (t_float *)(w[8]); 			//sample count output; add 2007.04.10
+	int vec_size = (int)(w[9]);					//vector size
 	t_buffer *s_ptr = x->snd_buf_ptr;
 	float *tab_s;
 	double s_step_size, g_gain;
@@ -271,10 +272,6 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	short interp_s, g_direction, of_status;
 	float last_pulse;
 	
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-	--out2;
-	--out3;		//add 2007.04.10
 	
 	/* check to make sure buffers are loaded with proper file types*/
 	if (x->x_obj.z_disabled)		// object is enabled
@@ -304,7 +301,7 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	count_samp = x->curr_count_samp;	//added 2007.04.10
 	
 	
-	while (--vec_size) {
+	while (vec_size--) {
 	
 		/* check bounds of window index */
 		if (index_s > size_s) {
@@ -330,11 +327,12 @@ t_int *nw_pulsesamp_perform(t_int *w)
 				//pulse tracking for overflow
 				of_status = OVERFLOW_OFF;
 			} else { // if not...
-				*++out = 0.0;
-				*++out2 = 0.0;
-				*++out3 = 0.0;	//add 2007.04.10
+				*out++ = 0.0;
+				*out2++ = 0.0;
+				*out3++ = 0.0;	//add 2007.04.10
+				*out4++ = 0.0;	//add 2007.04.10
 				last_pulse = *in_pulse;
-				++in_pulse, ++in_samp_inc, ++in_gain;
+				in_pulse++, in_samp_inc++, in_gain++;
 				continue;
 			}
 		}
@@ -353,11 +351,12 @@ t_int *nw_pulsesamp_perform(t_int *w)
 			/* check bounds of buffer index */
 			if (index_s > index_s_end) {			// change 2005.10.10
 				index_s = size_s + s_step_size;
-				*++out = 0.0;
-				*++out2 = 0.0;
-				*++out3 = 0.0;	//add 2007.04.10
+				*out++ = 0.0;
+				*out2++ = 0.0;
+				*out3++ = 0.0;
+				*out4++ = 0.0;	//add 2007.04.10
 				last_pulse = *in_pulse;
-				++in_pulse, ++in_samp_inc, ++in_gain;
+				in_pulse++, in_samp_inc++, in_gain++;
 				#ifdef DEBUG
 					post("%s: end of grain", OBJECT_NAME);
 				#endif /* DEBUG */
@@ -370,11 +369,12 @@ t_int *nw_pulsesamp_perform(t_int *w)
 			/* check bounds of buffer index */
 			if (index_s < index_s_start) {			// change 2005.10.10
 				index_s = size_s + s_step_size;
-				*++out = 0.0;
-				*++out2 = 0.0;
-				*++out3 = 0.0;	//add 2007.04.10
+				*out++ = 0.0;
+				*out2++ = 0.0;
+				*out3++ = 0.0;
+				*out4++ = 0.0;	//add 2007.04.10
 				last_pulse = *in_pulse;
-				++in_pulse, ++in_samp_inc, ++in_gain;
+				in_pulse++, in_samp_inc++, in_gain++;
 				#ifdef DEBUG
 					post("%s: end of grain", OBJECT_NAME);
 				#endif /* DEBUG */
@@ -392,22 +392,29 @@ t_int *nw_pulsesamp_perform(t_int *w)
 		}
 		
 		/* multiply snd_out by win_value */
-		*++out = snd_out * g_gain;
+		*out++ = snd_out * g_gain;
 		
 		if (of_status) {
-			*++out2 = *in_pulse;
+			*out2++ = *in_pulse;
 		} else {
-			*++out2 = 0.0;
+			*out2++ = 0.0;
 		}
 		
-		*++out3 = (double)count_samp++;	//add 2007.04.10
+		if (!count_samp) {	// click with first sample out
+			*out3++ = 1.0;
+		} else {	// otherwise send zero
+			*out3++ = 0.0;
+		}
+		
+		*out4++ = (double)count_samp;	//add 2007.04.10
 		
 		/* update last output variables */
 		last_pulse = *in_pulse;
 		last_s = snd_out;
 		
 		//advance input pointers
-		++in_pulse, ++in_samp_inc, ++in_gain;
+		in_pulse++, in_samp_inc++, in_gain++;
+		count_samp++;	//add 2007.04.10
 	}	
 	
 	/* update last output variables */
@@ -417,16 +424,17 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	x->overflow_status = of_status;
 	x->curr_count_samp = count_samp;	//added 2007.04.10
 		
-	return (w + 9);
+	return (w + 10);
 
 zero:
 		while (--vec_size) {
-			*++out = 0.0;
-			*++out2 = -1.0;
-			*++out3 = 0.0;	//add 2007.04.10
+			*out++ = 0.0;
+			*out2++ = -1.0;
+			*out3++ = 0.0;
+			*out4++ = 0.0;	//add 2007.04.10
 		}
 out:
-		return (w + 9);
+		return (w + 10);
 }	
 
 /********************************************************************************
@@ -442,11 +450,9 @@ t_int *nw_pulsesamp_perform0(t_int *w)
 	t_float *out = (t_float *)(w[1]);
 	int vec_size = (int)(w[2]);
 
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-
-	while (--vec_size >= 0) {
-		*++out = 0.;
+	
+	while (vec_size-- >= 0) {
+		*out++ = 0.;
 	}
 
 	return (w + 3);
@@ -804,13 +810,13 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 	} else if (msg==ASSIST_OUTLET) {
 		switch (arg) {
 			case 0:
-				strcpy(s, "(signal) sample output");
+				strcpy(s, "(signal) sampler output");
 				break;
 			case 1:
-				strcpy(s, "(signal) pulse overflow");
+				strcpy(s, "(click) overflow");
 				break;
 			case 2:
-				strcpy(s, "(bang) when sample starts");
+				strcpy(s, "(click/bang) init");
 				break;
 			case 3:
 				strcpy(s, "(signal) sample count");
