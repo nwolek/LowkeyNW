@@ -17,6 +17,7 @@
 ** 2004/03/22 added outlet to report the values used in producing grain
 ** 2004/06/?? converted to log2 values for grain duration
 ** 2005/02/03 switched to linear interp; INTERP_ON now default for windowing; added "b_inuse" check
+** 2006/11/24 moved to Xcode; fixed "b_inuse" bug
 ** 
 */
 
@@ -337,6 +338,10 @@ t_int *grainpulsel2_perform(t_int *w)
 		/* check bounds of window index */
 		if (index_w > (size_w - w_step_size)) {
 			if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
+				//restore "b_inuse"; added 2006.11.24
+				s_ptr->b_inuse = saveinuse_s;		// 2006.11.24
+				w_ptr->b_inuse = saveinuse_w;		// 2006.11.24
+				
 				grainpulsel2_initGrain(x, *in_pos_start, *in_length, *in_pitch_mult);
 				
 				// get grain option settings
@@ -347,6 +352,8 @@ t_int *grainpulsel2_perform(t_int *w)
 				index_s = x->curr_snd_pos;
 				index_w = x->curr_win_pos;
 				// get buffer info
+				s_ptr = x->snd_buf_ptr;
+				w_ptr = x->win_buf_ptr;
 				tab_s = s_ptr->b_samples;
 				tab_w = w_ptr->b_samples;
 				size_s = s_ptr->b_frames;
@@ -354,6 +361,12 @@ t_int *grainpulsel2_perform(t_int *w)
 				//last_s = x->snd_last_out;	//removed 2005.02.03
 				//last_w = x->win_last_out;	//removed 2005.02.03
 				//last_pulse = *in_pulse; //redundant, line 371, 2002.10.23
+				
+				// set "b_inuse" to true again; added 2006.11.24
+				saveinuse_s = s_ptr->b_inuse;		// 2006.11.24
+				s_ptr->b_inuse = true;				// 2006.11.24
+				saveinuse_w = w_ptr->b_inuse;		// 2006.11.24
+				w_ptr->b_inuse = true;				// 2006.11.24
 				
 				//pulse tracking for overflow, added 2002.10.28
 				of_status = OVERFLOW_OFF;

@@ -1,5 +1,5 @@
 /*
-** train.shift~.c
+** train_shift~.c
 **
 ** MSP object
 ** generates evenly shifted train signals
@@ -8,6 +8,7 @@
 ** 2002/08/23 removed old resource assist strings
 ** 2002/09/24 added getinfo message
 ** 2002/11/19 removed old table code, making Carbon compatable
+** 2006/11/24 moved to Xcode
 ** 
 */
 
