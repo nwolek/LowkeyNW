@@ -7,6 +7,8 @@
 ** 
 ** 2004/08/05 started
 ** 2004/08/07 working
+** 2006/11/24 moved to Xcode; fixed "b_inuse" bug
+** 2009/09/12 attempt to fix dirty problems
 ** 
 */
 
@@ -243,12 +245,20 @@ t_int *recordplus_perform(t_int *w)
 					++r_stage; // MONITOR_ON
 					if (recordplus_updatebuff(x)) 
 					{
+						// restore "b_inse"; 2006.11.24
+						s_ptr->b_inuse = saveinuse;
+						
 						s_ptr = x->snd_buf_ptr;
 						s_tab = s_ptr->b_samples;
 						s_size = s_ptr->b_frames;
 						sync_v = x->sync_val;
 						sync_s = x->sync_step;
 						r_pos = x->rec_position;
+						
+						// set "b_inuse" to true; 2006.11.24
+						saveinuse = s_ptr->b_inuse;
+						s_ptr->b_inuse = true;
+						
 					}
 					break;
 				case MONITOR_ON:
@@ -313,7 +323,7 @@ t_int *recordplus_perform(t_int *w)
 	
 	// update modtime
 	if (r_pos > saverpos)
-		s_ptr->b_modtime = systime_ticks();
+		object_method( (t_buffer *)x->snd_buf_ptr, gensym(ÓdirtyÓ) );
 	
 	// update global vars
 	x->rec_stage = r_stage;
