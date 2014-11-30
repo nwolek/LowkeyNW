@@ -1,5 +1,5 @@
 /*
-** cpPan~.c
+** nw_cppan~.c
 **
 ** MSP object
 ** allows mono input signal to be panned across two output channels
@@ -10,6 +10,8 @@
 ** 2002/08/23 removed resource dependent code, finally fixed table properly
 ** 2002/09/23 added getinfo message
 ** 2002/11/19 made Carbon compatable
+** 2004/08/05 windows compatibility updates by TAP
+** 2006/11/23 moved to Xcode
 */
 
 
@@ -20,7 +22,7 @@
 
 //#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"cpPan~"		// name of the object
+#define OBJECT_NAME		"nw.cppan~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
