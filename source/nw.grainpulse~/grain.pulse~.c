@@ -17,6 +17,8 @@
 ** 2004/03/22 added outlet to report the values used in producing grain
 ** 2005/01/25 replace allpass interp with linear interp; added "b_inuse" check
 ** 2005/02/03 finish move to linear interp; INTERP_ON now default for windowing
+** 2006/11/22 moved to Xcode; fixed "b_inuse" bug
+** 2008/04/22 added gain inlet/functionality
 ** 
 */
 
@@ -68,6 +70,7 @@ typedef struct _grainpulse
 	double grain_pos_start;	// in samples
 	double grain_length;	// in milliseconds
 	double grain_pitch;		// as multiplier
+	double grain_gain;		// linear gain mult; add 2008.04.22
 	double grain_sound_length;	// in milliseconds
 	double win_step_size;	// in samples
 	double snd_step_size;	// in samples
@@ -80,11 +83,13 @@ typedef struct _grainpulse
 	double next_grain_pos_start;	// in milliseconds
 	double next_grain_length;		// in milliseconds
 	double next_grain_pitch;		// as multiplier
+	double next_grain_gain;			// linear gain mult; add 2008.04.22
 	short next_grain_direction;		// forward or reverse
 	// signal or control grain info
 	short grain_pos_start_connected;	// <--
 	short grain_length_connected;		// <--
 	short grain_pitch_connected;		// <--
+	short grain_gain_connected;			// add 2008.04.22
 	// grain tracking info
 	short grain_stage;
 	long curr_grain_samp;				// removed 2003.08.03
@@ -102,7 +107,7 @@ void *grainpulse_new(t_symbol *snd, t_symbol *win);
 t_int *grainpulse_perform(t_int *w);
 t_int *grainpulse_perform0(t_int *w);
 void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
-		float in_pitch_mult);
+		float in_pitch_mult, float in_gain_mult);
 void grainpulse_reportoninit(t_grainpulse *x, t_symbol *s, short argc, t_atom argv);
 void grainpulse_dsp(t_grainpulse *x, t_signal **sp, short *count);
 void grainpulse_setsnd(t_grainpulse *x, t_symbol *s);
@@ -181,7 +186,7 @@ returns:		nothing
 void *grainpulse_new(t_symbol *snd, t_symbol *win)
 {
 	t_grainpulse *x = (t_grainpulse *)newobject(this_class);
-	dsp_setup((t_pxobject *)x, 4);					// four inlets
+	dsp_setup((t_pxobject *)x, 5);					// five inlets; change 2008.04.22
 	x->out_reportoninit = outlet_new((t_pxobject *)x, 0L);	// report settings outlet
 			// added 2004.03.22
 	outlet_new((t_pxobject *)x, "signal");			// one outlet
@@ -199,6 +204,7 @@ void *grainpulse_new(t_symbol *snd, t_symbol *win)
 	x->grain_pos_start = x->next_grain_pos_start = 0.0;
 	x->grain_length = x->next_grain_length = 50.0;
 	x->grain_pitch = x->next_grain_pitch = 1.0;
+	x->grain_gain = x->next_grain_gain = 1.0;
 	x->win_step_size = x->snd_step_size = 0.0;
 	x->curr_snd_pos = 0.0;
 	x->curr_win_pos = 0.0;
@@ -236,21 +242,22 @@ void grainpulse_dsp(t_grainpulse *x, t_signal **sp, short *count)
 	grainpulse_setsnd(x, x->snd_sym);
 	grainpulse_setwin(x, x->win_sym);
 	
-	/* test inlet 2 and 3 for signal data */
+	/* test inlets for signal data */
 	x->grain_pos_start_connected = count[1];
 	x->grain_length_connected = count[2];
 	x->grain_pitch_connected = count[3];
+	x->grain_gain_connected = count[4];	// add 2008.04.22; incremented num below
 	
-	x->output_sr = sp[4]->s_sr;
+	x->output_sr = sp[5]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
 	//set overflow status, added 2002.10.28
 	x->overflow_status = OVERFLOW_OFF;
 	
-	if (count[4] && count[0]) {	// if input and output connected..
+	if (count[5] && count[0]) {	// if input and output connected..
 		// output is computed
-		dsp_add(grainpulse_perform, 8, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
-			sp[3]->s_vec, sp[4]->s_vec, sp[5]->s_vec, sp[4]->s_n);
+		dsp_add(grainpulse_perform, 9, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
+			sp[3]->s_vec, sp[4]->s_vec, sp[5]->s_vec, sp[6]->s_vec, sp[5]->s_n);
 		#ifdef DEBUG
 			post("%s: output is being computed", OBJECT_NAME);
 		#endif /* DEBUG */
@@ -280,14 +287,15 @@ t_int *grainpulse_perform(t_int *w)
 	float *in_pos_start = (float *)(w[3]);
 	float *in_length = (float *)(w[4]);
 	float *in_pitch_mult = (float *)(w[5]);
-	t_float *out = (t_float *)(w[6]);
-	t_float *out2 = (t_float *)(w[7]); 	//overflow, added 2002.10.23
-	int vec_size = (int)(w[8]);
+	float *in_gain_mult = (float *)(w[6]);	// add 2008.04.22
+	t_float *out = (t_float *)(w[7]);
+	t_float *out2 = (t_float *)(w[8]); 	//overflow, added 2002.10.23
+	int vec_size = (int)(w[9]);
 	t_buffer *s_ptr = x->snd_buf_ptr;
 	t_buffer *w_ptr = x->win_buf_ptr;
 	float *tab_s, *tab_w;
 	double s_step_size, w_step_size;
-	double  snd_out, win_out; //, last_s, last_w; removed 2005.01.25
+	double  snd_out, win_out, gain_scale; //, last_s, last_w; removed 2005.01.25; add gain_scale 2008.04.22
 	double index_s, index_w, temp_index_frac;
 	long size_s, size_w, saveinuse_s, saveinuse_w, temp_index_int;
 	short interp_s, interp_w, g_direction, of_status;	//of_status added 2002.10.28
@@ -331,13 +339,18 @@ t_int *grainpulse_perform(t_int *w)
 	//last_s = x->snd_last_out;	 removed 2005.01.25
 	//last_w = x->win_last_out;  removed 2005.01.25
 	last_pulse = x->last_pulse_in;
+	gain_scale = x->grain_gain;		//add 2008.04.22
 	
 	while (--vec_size) {
 		
 		/* check bounds of window index */
 		if (index_w > (size_w - w_step_size)) {
 			if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
-				grainpulse_initGrain(x, *in_pos_start, *in_length, *in_pitch_mult);
+				//reset in use; 2006.11.22
+				s_ptr->b_inuse = saveinuse_s;
+				w_ptr->b_inuse = saveinuse_w;
+				
+				grainpulse_initGrain(x, *in_pos_start, *in_length, *in_pitch_mult, *in_gain_mult);
 				
 				// get grain option settings
 				g_direction = x->grain_direction;
@@ -347,6 +360,8 @@ t_int *grainpulse_perform(t_int *w)
 				index_s = x->curr_snd_pos;
 				index_w = x->curr_win_pos;
 				// get buffer info
+				s_ptr = x->snd_buf_ptr;
+				w_ptr = x->win_buf_ptr;
 				tab_s = s_ptr->b_samples;
 				tab_w = w_ptr->b_samples;
 				size_s = s_ptr->b_frames;
@@ -354,6 +369,13 @@ t_int *grainpulse_perform(t_int *w)
 				//last_s = x->snd_last_out;  removed 2005.01.25
 				//last_w = x->win_last_out;	 removed 2005.01.25
 				//last_pulse = *in_pulse; //redundant, line 371, 2002.10.23
+				gain_scale = x->grain_gain;		//add 2008.04.22
+				
+				// set "in use" back to true; 2006.11.22
+				saveinuse_s = s_ptr->b_inuse;
+				s_ptr->b_inuse = true;
+				saveinuse_w = w_ptr->b_inuse;
+				w_ptr->b_inuse = true;
 				
 				//pulse tracking for overflow, added 2002.10.28
 				of_status = OVERFLOW_OFF;
@@ -361,7 +383,7 @@ t_int *grainpulse_perform(t_int *w)
 				*++out = 0.0;
 				*++out2 = 0.0;	//added 2002.10.23
 				last_pulse = *in_pulse;
-				++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult;
+				++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult, ++in_gain_mult;
 				continue;
 			}
 		}
@@ -439,7 +461,7 @@ t_int *grainpulse_perform(t_int *w)
 		}
 		
 		/* multiply snd_out by win_value */
-		*++out = snd_out * win_out;
+		*++out = snd_out * win_out * gain_scale;	// mod 2008.04.22
 		
 		if (of_status) {
 			*++out2 = *in_pulse;
@@ -453,7 +475,7 @@ t_int *grainpulse_perform(t_int *w)
 		//last_w = win_out; removed 2005.01.25
 		
 		// advance other pointers
-		++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult;
+		++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult, ++in_gain_mult;
 		
 	}
 	
@@ -469,7 +491,7 @@ t_int *grainpulse_perform(t_int *w)
 	s_ptr->b_inuse = saveinuse_s;
 	w_ptr->b_inuse = saveinuse_w;
 
-	return (w + 9);
+	return (w + 10);
 
 zero:
 		while (--vec_size) {
@@ -477,7 +499,7 @@ zero:
 			*++out2 = -1.0;
 		}
 out:
-		return (w + 9);
+		return (w + 10);
 }	
 
 /********************************************************************************
@@ -505,18 +527,19 @@ t_int *grainpulse_perform0(t_int *w)
 
 /********************************************************************************
 void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
-		float in_pitch_mult)
+		float in_pitch_mult, float in_gain_mult)
 
 inputs:			x					-- pointer to this object
 				in_pos_start		-- offset within sampled buffer
 				in_length			-- length of grain
 				in_pitch_mult		-- sample playback speed, 1 = normal
+				in_gain_mult		-- scales gain output, 1 = no change
 description:	initializes grain vars; called from perform method when pulse is 
 		received
 returns:		nothing 
 ********************************************************************************/
 void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
-		float in_pitch_mult)
+		float in_pitch_mult, float in_gain_mult)
 {
 	t_buffer *s_ptr;
 	t_buffer *w_ptr;
@@ -560,6 +583,13 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		x->grain_pitch = in_pitch_mult;
 	} else { // if pitch multiplier at control rate
 		x->grain_pitch = x->next_grain_pitch;
+	}
+	
+	// add 2008.04.22
+	if (x->grain_gain_connected) { // if gain multiplier is at audio rate
+		x->grain_gain = in_gain_mult;
+	} else { // if gain multiplier at control rate
+		x->grain_gain = x->next_grain_gain;
 	}
 	
 	// compute amount of sound file for grain
@@ -742,6 +772,10 @@ void grainpulse_float(t_grainpulse *x, double f)
 	{
 		x->next_grain_pitch = f;
 	}
+	else if (x->x_obj.z_in == 4) // if inlet 5; add 2008.04.22
+	{
+		x->next_grain_gain = f;
+	}
 	else if (x->x_obj.z_in == 0)
 	{
 		post("%s: left inlet does not accept floats", OBJECT_NAME);
@@ -776,6 +810,10 @@ void grainpulse_int(t_grainpulse *x, long l)
 	else if (x->x_obj.z_in == 3) // if inlet 4
 	{
 		x->next_grain_pitch = (double) l;
+	}
+	else if (x->x_obj.z_in == 4) // if inlet 5
+	{
+		x->next_grain_gain = (double) l;
 	}
 	else if (x->x_obj.z_in == 0)
 	{
@@ -891,6 +929,9 @@ void grainpulse_assist(t_grainpulse *x, t_object *b, long msg, long arg, char *s
 				break;
 			case 3:
 				strcpy(s, "(signal/float) grain pitch multiplier, 1.0 = unchanged");
+				break;
+			case 4:
+				strcpy(s, "(signal/float) grain gain multiplier, 1.0 = unchanged");
 				break;
 		}
 	} else if (msg==ASSIST_OUTLET) {
