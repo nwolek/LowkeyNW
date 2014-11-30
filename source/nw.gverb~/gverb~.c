@@ -9,6 +9,8 @@
 ** 2002.08.20 fixed mistake in output of reverb network
 ** 2002/09/24 added getinfo message
 ** 2003/01/27 moved to CW8
+** 2006/11/18 moved to Xcode; compiled for UB; added denormal protection
+** 2006/11/19 change denormal protection to square injection; compiler issue?
 ** 
 */
 
@@ -21,7 +23,7 @@
 
 //#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"gverb~"		// name of the object
+#define OBJECT_NAME		"nw.gverb~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -53,8 +55,8 @@
 #define AP_MODDEPTH_1	16.11
 #define AP_MODDEPTH_2	15.87
 
-// fix for denormal
-#define TOOSMALL		0.0000000000000000000000001f
+// fix for denormal through square injection of dc offset
+#define TINY_DC		0.0000000000000000000000001f
 
 void *this_class;		// required global pointer to this class
 
@@ -91,6 +93,9 @@ typedef struct _gverb
 	double output_sr;
 	double output_msr;
 	double output_1overmsr;
+	
+	// maintain dc_offset for square injection
+	double sqinject_val;
 	
 } t_gverb;
 
@@ -171,6 +176,9 @@ void *gverb_new(double d)
 	x->output_msr = x->output_sr * 0.001;
 	x->output_1overmsr = 1.0 / x->output_msr;
 	
+	// initialize square injection value
+	x->sqinject_val = TINY_DC;
+	
 	x->verb_decay_coeff = 
 			pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
 	
@@ -230,7 +238,7 @@ t_int *gverb_perform(t_int *w)
 	float x7L, x8L, x9L, x10L, x11L, x12L, x13L, x14L;
 	float x7R, x8R, x9R, x10R, x11R, x12R, x13R, x14R;
 			// initialize variables for loop
-	float fDecay, lastout_L, lastout_R;
+	float fDecay, lastout_L, lastout_R, sqinject_val;
 	
 	t_gverb *x = (t_gverb *)(w[1]);		// create local pointer to this object
 	t_float *in_dry = (t_float *)(w[2]);	// create local pointer to dry input
@@ -246,9 +254,13 @@ t_int *gverb_perform(t_int *w)
 	lastout_L = x->lastout_L;
 	lastout_R = x->lastout_R;
 	
+	// flip sign on square inhection for each block
+	sqinject_val = x->sqinject_val * -1.0;
+	
 	while (--vector_size)					// compute for each sample in vector
 	{
-		val_dry = *in_dry + TOOSMALL;					// grab input values
+		val_dry = *in_dry;				// grab input values
+		val_dry += sqinject_val;//TINY_DC;		// add small dc offset to protect against denormal
 		val_decay = *in_decay;
 		
 		val_wet1 = val_wet2 = 0.0;		// zero output before each cycle
@@ -279,8 +291,8 @@ t_int *gverb_perform(t_int *w)
 		/* split*/
 		
 		// add recursion
-		x7L = x6 + lastout_R;// + TOOSMALL;
-		x7R = x6 + lastout_L;// + TOOSMALL;
+		x7L = x6 + lastout_R;
+		x7R = x6 + lastout_L;
 		// allpass_mod 0 & 1
 		rbb_compute_allpassMod(&x7L, x->apFilters_mod, &x8L);
 		rbb_compute_allpassMod(&x7R, x->apFilters_mod + 1, &x8R);
@@ -291,8 +303,8 @@ t_int *gverb_perform(t_int *w)
 		rbb_compute_lowPass2(&x9L, x->lpFilters + 1, &x10L);
 		rbb_compute_lowPass2(&x9R, x->lpFilters + 2, &x10R);
 		// * decay
-		x11L = fDecay * x10L;// + TOOSMALL;
-		x11R = fDecay * x10R;// + TOOSMALL;
+		x11L = fDecay * x10L;
+		x11R = fDecay * x10R;
 		// allpass_long 0 & 1
 		rbb_compute_allpassLong(&x11L, x->apFilters_long, &x12L);
 		rbb_compute_allpassLong(&x11R, x->apFilters_long + 1, &x12R);
@@ -316,6 +328,7 @@ t_int *gverb_perform(t_int *w)
 	
 	x->lastout_L = lastout_L;
 	x->lastout_R = lastout_R;
+	x->sqinject_val = sqinject_val;
 	
 	return(w + 7);							// pointer to next argument index
 	
@@ -572,6 +585,9 @@ void gverb_free(t_gverb *x)
 	rbb_allpass_mod *apm_ptr = x->apFilters_mod;
 	rbb_delaybuff_short *sd_ptr = x->delayBuffs_small;
 	
+	// must be first
+	dsp_free((t_pxobject *)x);
+	
 	// osc table
 	rbb_free_sinTable(ot_ptr);
 	
@@ -599,7 +615,7 @@ void gverb_free(t_gverb *x)
 		rbb_free_shortDelay(sd_ptr + curr_num);
 	}
 	
-	dsp_free((t_pxobject *)x);
+	
 }
 
 /* the following methods are only compiled into the code during debugging*/
