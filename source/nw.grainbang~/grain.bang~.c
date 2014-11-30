@@ -1,5 +1,5 @@
 /*
-** grain.bang~.c
+** grain_bang~.c
 **
 ** MSP object
 ** sends out a single grains when it receives a bang 
@@ -14,6 +14,7 @@
 ** 2004/01/27 length must now be greater than zero
 ** 2005/02/02 change to linear interp
 ** 2005/02/03 INTERP_ON is now default for windowing; added "b_inuse" check
+** 2006/11/22 update to Xcode; fix buffer in use bug
 ** 
 */
 
@@ -320,6 +321,11 @@ t_int *grainbang_perform(t_int *w)
 		/* check bounds of window index */
 		if (index_w > size_w) {
 			if (x->grain_stage == NEW_GRAIN) { // if bang...
+				
+				// restore buffer in use state; 2006.11.22
+				s_ptr->b_inuse = saveinuse_s;
+				w_ptr->b_inuse = saveinuse_w;
+				
 				grainbang_initGrain(x, in_pos_start, in_length, in_pitch_mult);
 				
 				// get grain options
@@ -338,6 +344,12 @@ t_int *grainbang_perform(t_int *w)
 				size_w = w_ptr->b_frames;
 				//last_s = x->snd_last_out;	//removed 2005.02.02
 				//last_w = x->win_last_out;	//removed 2005.02.02
+				
+				// save buffer in use state; set to true; 2006.11.22
+				saveinuse_s = s_ptr->b_inuse;
+				s_ptr->b_inuse = true;
+				saveinuse_w = w_ptr->b_inuse;
+				w_ptr->b_inuse = true;
 				
 				/* move to next stage */
 				x->grain_stage = FINISH_GRAIN;

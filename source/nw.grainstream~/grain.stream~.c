@@ -11,6 +11,7 @@
 ** 2002/09/24 added getinfo message
 ** 2003/07/10 update to CW 8
 ** 2005/02/03 switched to linear interp; INTERP_ON now default for windowing; added "b_inuse" check
+** 2006/11/22 moved to Xcode; fixed buffer in use bug
 ** 
 */
 
@@ -303,26 +304,34 @@ t_int *grainstream_perform(t_int *w)
 				// ...then begin a new grain
 				
 				if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
+					s_ptr->b_inuse = saveinuse_s;	// restore b_inuse; 2006.11.22
 					x->snd_buf_ptr = x->next_snd_buf_ptr;
 					x->next_snd_buf_ptr = NULL;
 					//x->snd_last_out = 0.0;	//removed 2005.02.03
+					s_ptr = x->snd_buf_ptr;
+					saveinuse_s = s_ptr->b_inuse;	// 2006.11.22
+					s_ptr->b_inuse = true;			// 2006.11.22
 					
 					#ifdef DEBUG
 						post("%s: sound buffer pointer updated", OBJECT_NAME);
 					#endif /* DEBUG */
 				}
 				if (x->next_win_buf_ptr != NULL) {	//added 2002.07.24
+					w_ptr->b_inuse = saveinuse_w;	// restore b_inuse; 2006.11.22
 					x->win_buf_ptr = x->next_win_buf_ptr;
 					x->next_win_buf_ptr = NULL;
 					//x->win_last_out = 0.0;	//removed 2005.02.03
+					w_ptr = x->win_buf_ptr;
+					saveinuse_w = w_ptr->b_inuse;	// 2006.11.22
+					w_ptr->b_inuse = true;			// 2006.11.22
 					
 					#ifdef DEBUG
 						post("%s: window buffer pointer updated", OBJECT_NAME);
 					#endif /* DEBUG */
 				}
 				
-				s_ptr = x->snd_buf_ptr;
-				w_ptr = x->win_buf_ptr;
+				//
+				//
 				
 				x->grain_direction = x->next_grain_direction;
 				g_direction = x->grain_direction;

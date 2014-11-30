@@ -16,6 +16,7 @@
 ** 2005/01/27 scrapping allpass interp for linear
 ** 2005/02/02 new interp working
 ** 2005/02/03 INTERP_ON now default for window; added "b_inuse" check
+** 2006/11/18 moved to Xcode; fix buffer in use bug
 ** 
 */
 
@@ -86,6 +87,7 @@ typedef struct _gphasestereo
 
 void *gphasestereo_new(t_symbol *s, short argc, t_atom *argv);
 t_int *gphasestereo_perform(t_int *w);
+t_int *gphasestereo_perform0(t_int *w);
 void gphasestereo_dsp(t_gphasestereo *x, t_signal **sp, short *count);
 void gphasestereo_setsnd(t_gphasestereo *x, t_symbol *s, long chan);
 void gphasestereo_setwin(t_gphasestereo *x, t_symbol *s, long chan);
@@ -248,8 +250,19 @@ void gphasestereo_dsp(t_gphasestereo *x, t_signal **sp, short *count)
 	x->output_sr = sp[3]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
-	dsp_add(gphasestereo_perform, 7, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec,
-		sp[3]->s_vec, sp[4]->s_vec, sp[0]->s_n);
+	if (!count[3]) {	// nothing computed
+		//dsp_add(gphasestereo_perform0, 2, sp[3]->s_vec, sp[3]->s_n+1);
+		#ifdef DEBUG
+			post("%s: no output computed", OBJECT_NAME);
+		#endif /* DEBUG */
+	} else {		// output computed
+		dsp_add(gphasestereo_perform, 7, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec,
+			sp[3]->s_vec, sp[4]->s_vec, sp[0]->s_n);
+		#ifdef DEBUG
+			post("%s: output is being computed", OBJECT_NAME);
+		#endif /* DEBUG */
+	}
+	
 }
 
 /********************************************************************************
@@ -269,7 +282,7 @@ t_int *gphasestereo_perform(t_int *w)
 	t_float *in_pitch = (t_float *)(w[4]);
 	t_float *out = (t_float *)(w[5]);
 	t_float *out2 = (t_float *)(w[6]);
-	int vec_size = (int)(w[7]);
+	int vec_size = (int)(w[7]) + 1;
 	
 	t_buffer *s_ptr = x->snd_buf_ptr;
 	t_buffer *w_ptr = x->win_buf_ptr;
@@ -312,7 +325,7 @@ t_int *gphasestereo_perform(t_int *w)
 	interp_w = x->win_interp;
 	g_direction = x->grain_direction;
 	
-	while(vec_size--){
+	while (--vec_size) {
 		temp = *in_phasor;
 		temp *= frames_w;
 		index_w = temp;
@@ -327,22 +340,30 @@ t_int *gphasestereo_perform(t_int *w)
 			if (index_w < 10.0) {			// and is at beginning...
 					
 				if (gphasestereo_updatesnd(x)) {
+					s_ptr->b_inuse = saveinuse_s;		// reset old save in use, 2006.11.19
+					
 					s_ptr = x->snd_buf_ptr;
 					tab_s = s_ptr->b_samples;
 					frames_s = s_ptr->b_frames;
 					size_s = s_ptr->b_size;
 					nc_s = s_ptr->b_nchans;
+					saveinuse_s = s_ptr->b_inuse;		// 2006.11.19
+					s_ptr->b_inuse = true;				// 2006.11.19
 					
 					#ifdef DEBUG
 						post("%s: sound buffer pointer updated", OBJECT_NAME);
 					#endif /* DEBUG */
 				}
 				if (gphasestereo_updatewin(x)) {
+					w_ptr->b_inuse = saveinuse_w;		// reset old save in use, 2006.11.19
+				
 					w_ptr = x->win_buf_ptr;
 					tab_w = w_ptr->b_samples;
 					frames_w = w_ptr->b_frames;
 					size_w = w_ptr->b_size;
 					nc_w = w_ptr->b_nchans;
+					saveinuse_w = w_ptr->b_inuse;		// 2006.11.19
+					w_ptr->b_inuse = true;				// 2006.11.19
 					
 					#ifdef DEBUG
 						post("%s: window buffer pointer updated", OBJECT_NAME);
@@ -493,7 +514,7 @@ t_int *gphasestereo_perform(t_int *w)
 		last_index_w = index_w;
 		
 		/* advance pointers*/
-		in_phasor++, in_pos_start++, in_pitch++, out++, out2++;
+		++in_phasor, ++in_pos_start, ++in_pitch, ++out, ++out2;
 	}
 	
 	/* update last output variables */
@@ -510,15 +531,36 @@ t_int *gphasestereo_perform(t_int *w)
 	return (w + 8);
 	
 zero:
-	while(vec_size--) 
+	while (--vec_size >= 0) 
 	{
-		*out++ = 0.;
-		*out2++ = 0.;
+		*++out = 0.;
+		*++out2 = 0.;
 	}
 out:
 	return (w + 8);
 }
 
+/********************************************************************************
+t_int *gphasestereo_perform0(t_int *w)
+
+inputs:			w		-- array of signal vectors specified in "gphasestereo_dsp"
+description:	called at interrupt level to compute object's output; used when
+		nothing is connected to output; saves CPU cycles
+returns:		pointer to the next 
+********************************************************************************/
+t_int *gphasestereo_perform0(t_int *w)
+{
+	t_float *out = (t_float *)(w[1]);
+	int vec_size = (int)(w[2]) + 1;
+
+	--out;
+
+	while (--vec_size) {
+		*++out = 0.;
+	}
+
+	return (w + 3);
+}
 
 /********************************************************************************
 void gphasestereo_setsnd(t_gphasestereo *x, t_symbol *s, long chan)
