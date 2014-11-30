@@ -1,1 +1,609 @@
-/*** gverb~.c**** MSP object** msp implementation of Griesinger vst plugin** ** 2002/05/20 started by Nathan Wolek** 2002/07/16 first working version** 2002.08.20 fixed mistake in output of reverb network** 2002/09/24 added getinfo message** 2003/01/27 moved to CW8** */#ifndef __MAXMSP_EXTLIB	#define __MAXMSP_EXTLIB	#include "ext.h"		// required for all MAX external objects	#include "z_dsp.h"		// required for all MSP external objects#endif /* __MAXMSP_EXTLIB */#include "reverb_bb.h"	// defines structs for reverb network#ifndef __STRING_H	#define __STRING_H	#include <string.h>#endif /* __STRING_H */#ifndef __MATH_H	#define __MATH_H	#include <math.h>#endif /* __MATH_H *///#define DEBUG			//enable debugging messages#define OBJECT_NAME		"gverb~"		// name of the object/* for the assist method */#define ASSIST_INLET	1#define ASSIST_OUTLET	2// constant settings for the reverb algorithm#define MODRATE_MAX 1.0f			// max modulation rate#define EXCUR_MAX 20				// max depth of mod delay#define ALLPASS_SHORT_DELAY_VALUES {142, 107, 379, 277}	// delay settings#define ALLPASS_LONG_DELAY_VALUES {1800, 2656}	// delay settings#define ALLPASS_MOD_DELAY_INIT_VALUES {672, 908}	// initial delay settings#define DELAY_SMALL_VALUES {4453, 4217, 3720, 3163}	// short delay values#define LOWPASS_NUM 3			// number of lowpass filters#define ALLPASS_SHORT_NUM 4		// number of short buffered allpass filters#define ALLPASS_LONG_NUM 2		// number of long buffered allpass filters#define ALLPASS_MOD_NUM 2		// number of modulating buffered allpass filters#define DELAYBUFF_SMALL_NUM 4	// number of short delay lines// coefficients for reverb components#define IN_DIFF_1		0.750#define IN_DIFF_2		0.625#define DEC_DIFF_1		0.700#define DEC_DIFF_2		0.500#define DAMPING			0.0005#define BANDWIDTH		0.9995#define AP_MODRATE_1	1.13671#define AP_MODRATE_2	1.11718#define AP_MODDEPTH_1	16.11#define AP_MODDEPTH_2	15.87void *this_class;		// required global pointer to this class/* structure definition for this object */typedef struct _gverb{	t_pxobject x_obj;		// arrays to hold exact buffer lengths	long apShort_values[ALLPASS_SHORT_NUM];	long apLong_values[ALLPASS_LONG_NUM];	long smallDelay_values[DELAYBUFF_SMALL_NUM];	long apMod_init_values[ALLPASS_MOD_NUM];		// structs for reverb building blocks	rbb_sintable oscTable;	rbb_lowpass lpFilters[LOWPASS_NUM];	rbb_allpass_short apFilters_short[ALLPASS_SHORT_NUM];	rbb_allpass_long apFilters_long[ALLPASS_LONG_NUM];	rbb_allpass_mod apFilters_mod[ALLPASS_MOD_NUM];	rbb_delaybuff_short delayBuffs_small[DELAYBUFF_SMALL_NUM];		double verb_decay;					// in milliseconds	double verb_decay_1over;			// in milliseconds	double verb_decay_coeff;		float lastout_L;					// last output	float lastout_R; 		// inlet connections	short verb_decay_connected;		// sample rate info	double output_sr;	double output_msr;	double output_1overmsr;	} t_gverb;/* method definitions for this object */void *gverb_new(double d);void gverb_dsp(t_gverb *x, t_signal **sp, short *count);t_int *gverb_perform(t_int *w);void gverb_float(t_gverb *x, double f);void gverb_int(t_gverb *x, long l);void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s);void gverb_getinfo(t_gverb *x);void gverb_init(t_gverb *x);void gverb_free(t_gverb *x);/* method definitions for debugging this object */#ifdef DEBUG	#endif /* DEBUG *//********************************************************************************void main(void)inputs:			nothingdescription:	called the first time the object is used in MAX environment; 		defines inlets, outlets and accepted messagesreturns:		nothing********************************************************************************/void main(void){	setup((t_messlist **)&this_class, (method)gverb_new, (method)gverb_free, 			(short)sizeof(t_gverb), 0L, A_DEFFLOAT, 0);	addmess((method)gverb_dsp, "dsp", A_CANT, 0);		#ifdef DEBUG			#endif /* DEBUG */		/* bind method "gverb_float" to incoming floats */	addfloat((method)gverb_float);		/* bind method "gverb_int" to incoming ints */	addint((method)gverb_int);		/* bind method "gverb_assist" to the assistance message */	addmess((method)gverb_assist, "assist", A_CANT, 0);		/* bind method "gverb_getinfo" to the getinfo message */	addmess((method)gverb_getinfo, "getinfo", A_NOTHING, 0);		dsp_initclass();		#ifndef DEBUG			#endif /* DEBUG */}/********************************************************************************void *gverb_new(double d)inputs:			voiddescription:	called for each new instance of object in the MAX environment;		defines inlets and outlets; returns:		nothing********************************************************************************/void *gverb_new(double d){	t_gverb *x = (t_gverb *)newobject(this_class);		dsp_setup((t_pxobject *)x, 2);					// two inlets	outlet_new((t_pxobject *)x, "signal");			// left outlet	outlet_new((t_pxobject *)x, "signal");			// right outlet		/* setup variables */	x->verb_decay = d > 0.0 ? d : 1000.0;	x->verb_decay_1over = d > 0.0 ? 1.0 / d : 0.001;		// get sample rate info	x->output_sr = sys_getsr();	x->output_msr = x->output_sr * 0.001;	x->output_1overmsr = 1.0 / x->output_msr;		x->verb_decay_coeff = 			pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));		gverb_init(x);		x->x_obj.z_misc = Z_NO_INPLACE;		/* return a pointer to the new object */	return (x);}/********************************************************************************void gverb_dsp(t_gverb *x, t_signal **sp, short *count)inputs:			x		-- pointer to this object				sp		-- array of pointers to input & output signals				count	-- array of shorts detailing number of signals attached					to each inletdescription:	called when DSP call chain is built; adds object to signal flowreturns:		nothing********************************************************************************/void gverb_dsp(t_gverb *x, t_signal **sp, short *count){		// check inlet connection	x->verb_decay_connected = count[1];		// get sample rate info	x->output_sr = sp[2]->s_sr;	x->output_msr = x->output_sr * 0.001;	x->output_1overmsr = 1.0 / x->output_msr;		x->verb_decay_coeff = 			pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));		// update allpass mod with sampling rate	rbb_set_allpassMod_freq(x->apFilters_mod, AP_MODRATE_1, x->output_sr);	rbb_set_allpassMod_freq(((x->apFilters_mod) + 1), AP_MODRATE_2, x->output_sr);		dsp_add(gverb_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 			sp[3]->s_vec, sp[0]->s_n);	}/********************************************************************************t_int *gverb_perform(t_int *w)inputs:			w		-- array of signal vectors specified in "gverb_dsp"description:	called at interrupt level to compute object's output; used to 	compute the reverb signalreturns:		pointer to the next ********************************************************************************/t_int *gverb_perform(t_int *w){		float val_dry, val_decay, val_wet1, val_wet2;	float x2, x3, x4, x5, x6;	float x7L, x8L, x9L, x10L, x11L, x12L, x13L, x14L;	float x7R, x8R, x9R, x10R, x11R, x12R, x13R, x14R;			// initialize variables for loop	float fDecay, lastout_L, lastout_R;		t_gverb *x = (t_gverb *)(w[1]);		// create local pointer to this object	t_float *in_dry = (t_float *)(w[2]);	// create local pointer to dry input	t_float *in_decay = (t_float *)(w[3]);		// create local pointer to decay input	t_float *out_wet1 = (t_float *)(w[4]);	// create local pointer to wet1 output	t_float *out_wet2 = (t_float *)(w[5]);	// create local pointer to wet2 output	int vector_size = (int)(w[6]) + 1;		// create lacal var for vector size		if (x->x_obj.z_disabled)					// check if object is enabled		goto out;								// else skip processing		fDecay = x->verb_decay_coeff;	lastout_L = x->lastout_L;	lastout_R = x->lastout_R;		while (--vector_size)					// compute for each sample in vector	{		val_dry = *in_dry;					// grab input values		val_decay = *in_decay;				val_wet1 = val_wet2 = 0.0;		// zero output before each cycle				// zero computation points before each cycle		x2 = x3 = x4 = x5 = x6 = 0.0;		x7L = x8L = x9L = x10L = x11L = x12L = x13L = x14L = 0.0;		x7R = x8R = x9R = x10R = x11R = x12R = x13R = x14R = 0.0;				if (x->verb_decay_connected)	// if decay inlet has signal input..		{	// recompute decay coeff each sample			fDecay = pow(10.0, (-16416.0 * x->output_1overmsr / val_decay));		}				/***** begin processing of samples here *****/				// lowpass 0		rbb_compute_lowPass1(&val_dry, x->lpFilters, &x2);		// allpass_short 0		rbb_compute_allpassShort(&x2, x->apFilters_short, &x3);		// allpass_short 1		rbb_compute_allpassShort(&x3, x->apFilters_short + 1, &x4);		// allpass_short 2		rbb_compute_allpassShort(&x4, x->apFilters_short + 2, &x5);		// allpass_short 3		rbb_compute_allpassShort(&x5, x->apFilters_short + 3, &x6);				/* split*/				// add recursion		x7L = x6 + lastout_R;		x7R = x6 + lastout_L;		// allpass_mod 0 & 1		rbb_compute_allpassMod(&x7L, x->apFilters_mod, &x8L);		rbb_compute_allpassMod(&x7R, x->apFilters_mod + 1, &x8R);		// delaybuff_small 0 & 1		rbb_compute_shortDelay(&x8L, x->delayBuffs_small, &x9L);		rbb_compute_shortDelay(&x8R, x->delayBuffs_small + 1, &x9R);		// lowpass 1 & 2		rbb_compute_lowPass2(&x9L, x->lpFilters + 1, &x10L);		rbb_compute_lowPass2(&x9R, x->lpFilters + 2, &x10R);		// * decay		x11L = fDecay * x10L;		x11R = fDecay * x10R;		// allpass_long 0 & 1		rbb_compute_allpassLong(&x11L, x->apFilters_long, &x12L);		rbb_compute_allpassLong(&x11R, x->apFilters_long + 1, &x12R);		// delaybuff_small 2 & 3		rbb_compute_shortDelay(&x12L, x->delayBuffs_small + 2, &x13L);		rbb_compute_shortDelay(&x12R, x->delayBuffs_small + 3, &x13R);		// * decay		val_wet1 = fDecay * x13L;		val_wet2 = fDecay * x13R;				/***** end processing of samples here *****/				lastout_L = val_wet1;		lastout_R = val_wet2;				*out_wet1 = 1.2 * x9R - 0.6 * x12R + 0.6 * x13R - 0.6 * x9L - 0.6 * x12L - 0.6 * x13L;//x9L;//val_wet1; // output values		*out_wet2 = 1.2 * x9L - 0.6 * x12L + 0.6 * x13L - 0.6 * x9R - 0.6 * x12R - 0.6 * x13R;//x9R;//val_wet2;				++in_dry, ++in_decay, ++out_wet1, ++out_wet2;		// advance the pointers	}		x->lastout_L = lastout_L;	x->lastout_R = lastout_R;		return(w + 7);							// pointer to next argument index	out:			//when disabled	return(w + 7);}/********************************************************************************void gverb_float(t_gverb *x, double f)inputs:			x		-- pointer to our object				f		-- value of float inputdescription:	handles floats sent to inlets; inlet 2 sets "next_verb_decay_time" 		variable; returns:		nothing********************************************************************************/void gverb_float(t_gverb *x, double f){	if (x->x_obj.z_in == 1) // if inlet 2	{		if (f > 0) {			x->verb_decay = f;			x->verb_decay_1over = 1.0 / x->verb_decay;			x->verb_decay_coeff = 				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));			#ifdef DEBUG				post("%s: decay time is %f", OBJECT_NAME, x->verb_decay);				post("%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);			#endif /* DEBUG */		}		else		{			error("%s: decay time must be greater than zero", OBJECT_NAME);		}	}	else	{		post("%s: left inlet does not accept floats", OBJECT_NAME);	}}/********************************************************************************void gverb_int(t_gverb *x, long l)inputs:			x		-- pointer to our object				l		-- value of int inputdescription:	handles int sent to inlets; inlet 2 sets "next_verb_decay_time" 		variable; returns:		nothing********************************************************************************/void gverb_int(t_gverb *x, long l){	if (x->x_obj.z_in == 1) // if inlet 2	{		if (l > 0) {			x->verb_decay = (double) l;			x->verb_decay_1over = 1.0 / x->verb_decay;			x->verb_decay_coeff = 				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));			#ifdef DEBUG				post("%s: decay time is %f", OBJECT_NAME, x->verb_decay);				post("%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);			#endif /* DEBUG */		}		else		{			error("%s: decay time must be greater than zero", OBJECT_NAME);		}	}	else	{		error("%s: this inlet does not accept integers", OBJECT_NAME);	}}/********************************************************************************void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s)inputs:			x		-- pointer to our object				b		--				msg		--				arg		--				s		--description:	method called when "assist" message is received; allows inlets 		and outlets to display assist messages as the mouse passes over themreturns:		nothing********************************************************************************/void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s){	if (msg==ASSIST_INLET) {		switch (arg) {			case 0:				strcpy(s, "(signal) input");				break;			case 1:				strcpy(s, "(signal/float) reverb decay length in ms");				break;		}	} else if (msg==ASSIST_OUTLET) {		switch (arg) {			case 0:				strcpy(s, "(signal) left channel output");				break;			case 1:				strcpy(s, "(signal) right channel output");				break;		}	}		#ifdef DEBUG		post("%s: assist message displayed", OBJECT_NAME);	#endif /* DEBUG */}/********************************************************************************void gverb_getinfo(t_gverb *x)inputs:			x		-- pointer to our object				description:	method called when "getinfo" message is received; displays info		about object and last updatereturns:		nothing********************************************************************************/void gverb_getinfo(t_gverb *x){	post("%s object by Nathan Wolek", OBJECT_NAME);	post("Last updated on %s - www.nathanwolek.com", __DATE__);}/********************************************************************************void gverb_init(t_gverb *x)inputs:			x		-- pointer to our object				description:	initializes building blocks for the reverb algorithmreturns:		nothing********************************************************************************/void gverb_init(t_gverb *x){	int curr_num;	// local arrays for delay values	long temp_apsv[] = ALLPASS_SHORT_DELAY_VALUES;	long temp_aplv[] = ALLPASS_LONG_DELAY_VALUES;	long temp_sdv[] = DELAY_SMALL_VALUES;	long temp_apmv[] = ALLPASS_MOD_DELAY_INIT_VALUES;		// local pointers to building blocks	rbb_sintable *ot_ptr = &(x->oscTable);	rbb_lowpass *lpf_ptr = x->lpFilters;	rbb_allpass_short *aps_ptr = x->apFilters_short;	rbb_allpass_long *apl_ptr = x->apFilters_long;	rbb_allpass_mod *apm_ptr = x->apFilters_mod;	rbb_delaybuff_short *sd_ptr = x->delayBuffs_small;		// fill arrays with buffer lengths	curr_num = ALLPASS_SHORT_NUM;	while (--curr_num >= 0) {		x->apShort_values[curr_num] = temp_apsv[curr_num];	}		curr_num = ALLPASS_LONG_NUM;	while (--curr_num >= 0) {		x->apLong_values[curr_num] = temp_aplv[curr_num];	}		curr_num = DELAYBUFF_SMALL_NUM;	while (--curr_num >= 0) {		x->smallDelay_values[curr_num] = temp_sdv[curr_num];	}		curr_num = ALLPASS_MOD_NUM;	while (--curr_num >= 0) {		x->apMod_init_values[curr_num] = temp_apmv[curr_num];	}		// osc table	rbb_init_sinTable(ot_ptr);		// lowpass filters	curr_num = LOWPASS_NUM;	while (--curr_num >= 0) {		rbb_init_lowPass(lpf_ptr + curr_num);	}		// allpass short filters	curr_num = ALLPASS_SHORT_NUM;	while (--curr_num >= 0) {		rbb_init_allpassShort(aps_ptr + curr_num);		rbb_set_allpassShort_delay(aps_ptr + curr_num, x->apShort_values[curr_num]);	}		// allpass long filters	curr_num = ALLPASS_LONG_NUM;	while (--curr_num >= 0) {		rbb_init_allpassLong(apl_ptr + curr_num);		rbb_set_allpassLong_delay(apl_ptr + curr_num, x->apLong_values[curr_num]);	}		// allpass mod filters	curr_num = ALLPASS_MOD_NUM;	while (--curr_num >= 0) {		rbb_init_allpassMod(apm_ptr + curr_num, ot_ptr);		rbb_set_allpassMod_delay(apm_ptr + curr_num, x->apMod_init_values[curr_num]);	}		// short delay buffers	curr_num = DELAYBUFF_SMALL_NUM;	while (--curr_num >= 0) {		rbb_init_shortDelay(sd_ptr + curr_num);		rbb_set_shortDelay_delay(sd_ptr + curr_num, x->smallDelay_values[curr_num]);	}		rbb_set_lowPass_coeff(lpf_ptr, BANDWIDTH);	rbb_set_lowPass_coeff(lpf_ptr + 1, DAMPING);	rbb_set_lowPass_coeff(lpf_ptr + 2, DAMPING);		rbb_set_allpassShort_coeff(aps_ptr, IN_DIFF_1);	rbb_set_allpassShort_coeff(aps_ptr + 1, IN_DIFF_1);	rbb_set_allpassShort_coeff(aps_ptr + 2, IN_DIFF_2);	rbb_set_allpassShort_coeff(aps_ptr + 3, IN_DIFF_2);		rbb_set_allpassMod_coeff(apm_ptr, DEC_DIFF_1);	rbb_set_allpassMod_coeff(apm_ptr + 1, DEC_DIFF_1);		apm_ptr->oscDepth = AP_MODDEPTH_1;	(apm_ptr + 1)->oscDepth = AP_MODDEPTH_2;		rbb_set_allpassLong_coeff(apl_ptr, DEC_DIFF_2);	rbb_set_allpassLong_coeff(apl_ptr + 1, DEC_DIFF_2);		#ifdef DEBUG		post("%s: lowpass coeff is %f", OBJECT_NAME, (x->lpFilters)->coeff);	#endif /* DEBUG */		x->lastout_L = 0.0;	x->lastout_R = 0.0;}/********************************************************************************void gverb_free(t_gverb *x)inputs:			x		-- pointer to our object				description:	frees memory used by the reverb algorithmreturns:		nothing********************************************************************************/void gverb_free(t_gverb *x){	int curr_num;	// local pointers to building blocks	rbb_sintable *ot_ptr = &(x->oscTable);	rbb_allpass_short *aps_ptr = x->apFilters_short;	rbb_allpass_long *apl_ptr = x->apFilters_long;	rbb_allpass_mod *apm_ptr = x->apFilters_mod;	rbb_delaybuff_short *sd_ptr = x->delayBuffs_small;		// osc table	rbb_free_sinTable(ot_ptr);		// allpass short filters	curr_num = ALLPASS_SHORT_NUM;	while (--curr_num >= 0) {		rbb_free_allpassShort(aps_ptr + curr_num);	}		// allpass long filters	curr_num = ALLPASS_LONG_NUM;	while (--curr_num >= 0) {		rbb_free_allpassLong(apl_ptr + curr_num);	}		// allpass mod filters	curr_num = ALLPASS_MOD_NUM;	while (--curr_num >= 0) {		rbb_free_allpassMod(apm_ptr + curr_num);	}		// short delay buffers	curr_num = DELAYBUFF_SMALL_NUM;	while (--curr_num >= 0) {		rbb_free_shortDelay(sd_ptr + curr_num);	}		dsp_free((t_pxobject *)x);}/* the following methods are only compiled into the code during debugging*/#ifdef DEBUG#endif /* DEBUG */
+/*
+** gverb~.c
+**
+** MSP object
+** msp implementation of Griesinger vst plugin
+** 
+** 2002/05/20 started by Nathan Wolek
+** 2002/07/16 first working version
+** 2002.08.20 fixed mistake in output of reverb network
+** 2002/09/24 added getinfo message
+** 2003/01/27 moved to CW8
+** 
+*/
+
+#include "ext.h"		// required for all MAX external objects
+#include "z_dsp.h"		// required for all MSP external objects
+#include "reverb_bb.h"	// defines structs for reverb network
+#include <string.h>
+#include <math.h>
+
+
+//#define DEBUG			//enable debugging messages
+
+#define OBJECT_NAME		"gverb~"		// name of the object
+
+/* for the assist method */
+#define ASSIST_INLET	1
+#define ASSIST_OUTLET	2
+
+// constant settings for the reverb algorithm
+#define MODRATE_MAX 1.0f			// max modulation rate
+#define EXCUR_MAX 20				// max depth of mod delay
+#define ALLPASS_SHORT_DELAY_VALUES {142, 107, 379, 277}	// delay settings
+#define ALLPASS_LONG_DELAY_VALUES {1800, 2656}	// delay settings
+#define ALLPASS_MOD_DELAY_INIT_VALUES {672, 908}	// initial delay settings
+#define DELAY_SMALL_VALUES {4453, 4217, 3720, 3163}	// short delay values
+
+#define LOWPASS_NUM 3			// number of lowpass filters
+#define ALLPASS_SHORT_NUM 4		// number of short buffered allpass filters
+#define ALLPASS_LONG_NUM 2		// number of long buffered allpass filters
+#define ALLPASS_MOD_NUM 2		// number of modulating buffered allpass filters
+#define DELAYBUFF_SMALL_NUM 4	// number of short delay lines
+
+// coefficients for reverb components
+#define IN_DIFF_1		0.750
+#define IN_DIFF_2		0.625
+#define DEC_DIFF_1		0.700
+#define DEC_DIFF_2		0.500
+#define DAMPING			0.0005
+#define BANDWIDTH		0.9995
+#define AP_MODRATE_1	1.13671
+#define AP_MODRATE_2	1.11718
+#define AP_MODDEPTH_1	16.11
+#define AP_MODDEPTH_2	15.87
+
+// fix for denormal
+#define TOOSMALL		0.0000000000000000000000001f
+
+void *this_class;		// required global pointer to this class
+
+/* structure definition for this object */
+typedef struct _gverb
+{
+	t_pxobject x_obj;
+	
+	// arrays to hold exact buffer lengths
+	long apShort_values[ALLPASS_SHORT_NUM];
+	long apLong_values[ALLPASS_LONG_NUM];
+	long smallDelay_values[DELAYBUFF_SMALL_NUM];
+	long apMod_init_values[ALLPASS_MOD_NUM];
+	
+	// structs for reverb building blocks
+	rbb_sintable oscTable;
+	rbb_lowpass lpFilters[LOWPASS_NUM];
+	rbb_allpass_short apFilters_short[ALLPASS_SHORT_NUM];
+	rbb_allpass_long apFilters_long[ALLPASS_LONG_NUM];
+	rbb_allpass_mod apFilters_mod[ALLPASS_MOD_NUM];
+	rbb_delaybuff_short delayBuffs_small[DELAYBUFF_SMALL_NUM];
+	
+	double verb_decay;					// in milliseconds
+	double verb_decay_1over;			// in milliseconds
+	double verb_decay_coeff;
+	
+	float lastout_L;					// last output
+	float lastout_R; 
+	
+	// inlet connections
+	short verb_decay_connected;
+	
+	// sample rate info
+	double output_sr;
+	double output_msr;
+	double output_1overmsr;
+	
+} t_gverb;
+
+/* method definitions for this object */
+void *gverb_new(double d);
+void gverb_dsp(t_gverb *x, t_signal **sp, short *count);
+t_int *gverb_perform(t_int *w);
+void gverb_float(t_gverb *x, double f);
+void gverb_int(t_gverb *x, long l);
+void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s);
+void gverb_getinfo(t_gverb *x);
+void gverb_init(t_gverb *x);
+void gverb_free(t_gverb *x);
+/* method definitions for debugging this object */
+#ifdef DEBUG
+	
+#endif /* DEBUG */
+
+/********************************************************************************
+void main(void)
+
+inputs:			nothing
+description:	called the first time the object is used in MAX environment; 
+		defines inlets, outlets and accepted messages
+returns:		nothing
+********************************************************************************/
+void main(void)
+{
+	setup((t_messlist **)&this_class, (method)gverb_new, (method)gverb_free, 
+			(short)sizeof(t_gverb), 0L, A_DEFFLOAT, 0);
+	addmess((method)gverb_dsp, "dsp", A_CANT, 0);
+	
+	#ifdef DEBUG
+		
+	#endif /* DEBUG */
+	
+	/* bind method "gverb_float" to incoming floats */
+	addfloat((method)gverb_float);
+	
+	/* bind method "gverb_int" to incoming ints */
+	addint((method)gverb_int);
+	
+	/* bind method "gverb_assist" to the assistance message */
+	addmess((method)gverb_assist, "assist", A_CANT, 0);
+	
+	/* bind method "gverb_getinfo" to the getinfo message */
+	addmess((method)gverb_getinfo, "getinfo", A_NOTHING, 0);
+	
+	dsp_initclass();
+	
+	#ifndef DEBUG
+		
+	#endif /* DEBUG */
+}
+
+/********************************************************************************
+void *gverb_new(double d)
+
+inputs:			void
+description:	called for each new instance of object in the MAX environment;
+		defines inlets and outlets; 
+returns:		nothing
+********************************************************************************/
+void *gverb_new(double d)
+{
+	t_gverb *x = (t_gverb *)newobject(this_class);
+	
+	dsp_setup((t_pxobject *)x, 2);					// two inlets
+	outlet_new((t_pxobject *)x, "signal");			// left outlet
+	outlet_new((t_pxobject *)x, "signal");			// right outlet
+	
+	/* setup variables */
+	x->verb_decay = d > 0.0 ? d : 1000.0;
+	x->verb_decay_1over = d > 0.0 ? 1.0 / d : 0.001;
+	
+	// get sample rate info
+	x->output_sr = sys_getsr();
+	x->output_msr = x->output_sr * 0.001;
+	x->output_1overmsr = 1.0 / x->output_msr;
+	
+	x->verb_decay_coeff = 
+			pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
+	
+	gverb_init(x);
+	
+	x->x_obj.z_misc = Z_NO_INPLACE;
+	
+	/* return a pointer to the new object */
+	return (x);
+}
+
+/********************************************************************************
+void gverb_dsp(t_gverb *x, t_signal **sp, short *count)
+
+inputs:			x		-- pointer to this object
+				sp		-- array of pointers to input & output signals
+				count	-- array of shorts detailing number of signals attached
+					to each inlet
+description:	called when DSP call chain is built; adds object to signal flow
+returns:		nothing
+********************************************************************************/
+void gverb_dsp(t_gverb *x, t_signal **sp, short *count)
+{
+	
+	// check inlet connection
+	x->verb_decay_connected = count[1];
+	
+	// get sample rate info
+	x->output_sr = sp[2]->s_sr;
+	x->output_msr = x->output_sr * 0.001;
+	x->output_1overmsr = 1.0 / x->output_msr;
+	
+	x->verb_decay_coeff = 
+			pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
+	
+	// update allpass mod with sampling rate
+	rbb_set_allpassMod_freq(x->apFilters_mod, AP_MODRATE_1, x->output_sr);
+	rbb_set_allpassMod_freq(((x->apFilters_mod) + 1), AP_MODRATE_2, x->output_sr);
+	
+	dsp_add(gverb_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
+			sp[3]->s_vec, sp[0]->s_n);
+	
+}
+
+/********************************************************************************
+t_int *gverb_perform(t_int *w)
+
+inputs:			w		-- array of signal vectors specified in "gverb_dsp"
+description:	called at interrupt level to compute object's output; used to 
+	compute the reverb signal
+returns:		pointer to the next 
+********************************************************************************/
+t_int *gverb_perform(t_int *w)
+{	
+	float val_dry, val_decay, val_wet1, val_wet2;
+	float x2, x3, x4, x5, x6;
+	float x7L, x8L, x9L, x10L, x11L, x12L, x13L, x14L;
+	float x7R, x8R, x9R, x10R, x11R, x12R, x13R, x14R;
+			// initialize variables for loop
+	float fDecay, lastout_L, lastout_R;
+	
+	t_gverb *x = (t_gverb *)(w[1]);		// create local pointer to this object
+	t_float *in_dry = (t_float *)(w[2]);	// create local pointer to dry input
+	t_float *in_decay = (t_float *)(w[3]);		// create local pointer to decay input
+	t_float *out_wet1 = (t_float *)(w[4]);	// create local pointer to wet1 output
+	t_float *out_wet2 = (t_float *)(w[5]);	// create local pointer to wet2 output
+	int vector_size = (int)(w[6]) + 1;		// create lacal var for vector size
+	
+	if (x->x_obj.z_disabled)					// check if object is enabled
+		goto out;								// else skip processing
+	
+	fDecay = x->verb_decay_coeff;
+	lastout_L = x->lastout_L;
+	lastout_R = x->lastout_R;
+	
+	while (--vector_size)					// compute for each sample in vector
+	{
+		val_dry = *in_dry + TOOSMALL;					// grab input values
+		val_decay = *in_decay;
+		
+		val_wet1 = val_wet2 = 0.0;		// zero output before each cycle
+		
+		// zero computation points before each cycle
+		x2 = x3 = x4 = x5 = x6 = 0.0;
+		x7L = x8L = x9L = x10L = x11L = x12L = x13L = x14L = 0.0;
+		x7R = x8R = x9R = x10R = x11R = x12R = x13R = x14R = 0.0;
+		
+		if (x->verb_decay_connected)	// if decay inlet has signal input..
+		{	// recompute decay coeff each sample
+			fDecay = pow(10.0, (-16416.0 * x->output_1overmsr / val_decay));
+		}
+		
+		/***** begin processing of samples here *****/
+		
+		// lowpass 0
+		rbb_compute_lowPass1(&val_dry, x->lpFilters, &x2);
+		// allpass_short 0
+		rbb_compute_allpassShort(&x2, x->apFilters_short, &x3);
+		// allpass_short 1
+		rbb_compute_allpassShort(&x3, x->apFilters_short + 1, &x4);
+		// allpass_short 2
+		rbb_compute_allpassShort(&x4, x->apFilters_short + 2, &x5);
+		// allpass_short 3
+		rbb_compute_allpassShort(&x5, x->apFilters_short + 3, &x6);
+		
+		/* split*/
+		
+		// add recursion
+		x7L = x6 + lastout_R;// + TOOSMALL;
+		x7R = x6 + lastout_L;// + TOOSMALL;
+		// allpass_mod 0 & 1
+		rbb_compute_allpassMod(&x7L, x->apFilters_mod, &x8L);
+		rbb_compute_allpassMod(&x7R, x->apFilters_mod + 1, &x8R);
+		// delaybuff_small 0 & 1
+		rbb_compute_shortDelay(&x8L, x->delayBuffs_small, &x9L);
+		rbb_compute_shortDelay(&x8R, x->delayBuffs_small + 1, &x9R);
+		// lowpass 1 & 2
+		rbb_compute_lowPass2(&x9L, x->lpFilters + 1, &x10L);
+		rbb_compute_lowPass2(&x9R, x->lpFilters + 2, &x10R);
+		// * decay
+		x11L = fDecay * x10L;// + TOOSMALL;
+		x11R = fDecay * x10R;// + TOOSMALL;
+		// allpass_long 0 & 1
+		rbb_compute_allpassLong(&x11L, x->apFilters_long, &x12L);
+		rbb_compute_allpassLong(&x11R, x->apFilters_long + 1, &x12R);
+		// delaybuff_small 2 & 3
+		rbb_compute_shortDelay(&x12L, x->delayBuffs_small + 2, &x13L);
+		rbb_compute_shortDelay(&x12R, x->delayBuffs_small + 3, &x13R);
+		// * decay
+		val_wet1 = fDecay * x13L;
+		val_wet2 = fDecay * x13R;
+		
+		/***** end processing of samples here *****/
+		
+		lastout_L = val_wet1;
+		lastout_R = val_wet2;
+		
+		*out_wet1 = 1.2 * x9R - 0.6 * x12R + 0.6 * x13R - 0.6 * x9L - 0.6 * x12L - 0.6 * x13L;//x9L;//val_wet1; // output values
+		*out_wet2 = 1.2 * x9L - 0.6 * x12L + 0.6 * x13L - 0.6 * x9R - 0.6 * x12R - 0.6 * x13R;//x9R;//val_wet2;
+		
+		++in_dry, ++in_decay, ++out_wet1, ++out_wet2;		// advance the pointers
+	}
+	
+	x->lastout_L = lastout_L;
+	x->lastout_R = lastout_R;
+	
+	return(w + 7);							// pointer to next argument index
+	
+out:			//when disabled
+	return(w + 7);
+}
+
+/********************************************************************************
+void gverb_float(t_gverb *x, double f)
+
+inputs:			x		-- pointer to our object
+				f		-- value of float input
+description:	handles floats sent to inlets; inlet 2 sets "next_verb_decay_time" 
+		variable; 
+returns:		nothing
+********************************************************************************/
+void gverb_float(t_gverb *x, double f)
+{
+	if (x->x_obj.z_in == 1) // if inlet 2
+	{
+		if (f > 0) {
+			x->verb_decay = f;
+			x->verb_decay_1over = 1.0 / x->verb_decay;
+			x->verb_decay_coeff = 
+				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
+			#ifdef DEBUG
+				post("%s: decay time is %f", OBJECT_NAME, x->verb_decay);
+				post("%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);
+			#endif /* DEBUG */
+		}
+		else
+		{
+			error("%s: decay time must be greater than zero", OBJECT_NAME);
+		}
+	}
+	else
+	{
+		post("%s: left inlet does not accept floats", OBJECT_NAME);
+	}
+}
+
+/********************************************************************************
+void gverb_int(t_gverb *x, long l)
+
+inputs:			x		-- pointer to our object
+				l		-- value of int input
+description:	handles int sent to inlets; inlet 2 sets "next_verb_decay_time" 
+		variable; 
+returns:		nothing
+********************************************************************************/
+void gverb_int(t_gverb *x, long l)
+{
+	if (x->x_obj.z_in == 1) // if inlet 2
+	{
+		if (l > 0) {
+			x->verb_decay = (double) l;
+			x->verb_decay_1over = 1.0 / x->verb_decay;
+			x->verb_decay_coeff = 
+				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
+			#ifdef DEBUG
+				post("%s: decay time is %f", OBJECT_NAME, x->verb_decay);
+				post("%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);
+			#endif /* DEBUG */
+		}
+		else
+		{
+			error("%s: decay time must be greater than zero", OBJECT_NAME);
+		}
+	}
+	else
+	{
+		error("%s: this inlet does not accept integers", OBJECT_NAME);
+	}
+}
+
+/********************************************************************************
+void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s)
+
+inputs:			x		-- pointer to our object
+				b		--
+				msg		--
+				arg		--
+				s		--
+description:	method called when "assist" message is received; allows inlets 
+		and outlets to display assist messages as the mouse passes over them
+returns:		nothing
+********************************************************************************/
+void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s)
+{
+	if (msg==ASSIST_INLET) {
+		switch (arg) {
+			case 0:
+				strcpy(s, "(signal) input");
+				break;
+			case 1:
+				strcpy(s, "(signal/float) reverb decay length in ms");
+				break;
+		}
+	} else if (msg==ASSIST_OUTLET) {
+		switch (arg) {
+			case 0:
+				strcpy(s, "(signal) left channel output");
+				break;
+			case 1:
+				strcpy(s, "(signal) right channel output");
+				break;
+		}
+	}
+	
+	#ifdef DEBUG
+		post("%s: assist message displayed", OBJECT_NAME);
+	#endif /* DEBUG */
+}
+
+/********************************************************************************
+void gverb_getinfo(t_gverb *x)
+
+inputs:			x		-- pointer to our object
+				
+description:	method called when "getinfo" message is received; displays info
+		about object and last update
+returns:		nothing
+********************************************************************************/
+void gverb_getinfo(t_gverb *x)
+{
+	post("%s object by Nathan Wolek", OBJECT_NAME);
+	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+}
+
+/********************************************************************************
+void gverb_init(t_gverb *x)
+
+inputs:			x		-- pointer to our object
+				
+description:	initializes building blocks for the reverb algorithm
+returns:		nothing
+********************************************************************************/
+void gverb_init(t_gverb *x)
+{
+	int curr_num;
+	// local arrays for delay values
+	long temp_apsv[] = ALLPASS_SHORT_DELAY_VALUES;
+	long temp_aplv[] = ALLPASS_LONG_DELAY_VALUES;
+	long temp_sdv[] = DELAY_SMALL_VALUES;
+	long temp_apmv[] = ALLPASS_MOD_DELAY_INIT_VALUES;
+	
+	// local pointers to building blocks
+	rbb_sintable *ot_ptr = &(x->oscTable);
+	rbb_lowpass *lpf_ptr = x->lpFilters;
+	rbb_allpass_short *aps_ptr = x->apFilters_short;
+	rbb_allpass_long *apl_ptr = x->apFilters_long;
+	rbb_allpass_mod *apm_ptr = x->apFilters_mod;
+	rbb_delaybuff_short *sd_ptr = x->delayBuffs_small;
+	
+	// fill arrays with buffer lengths
+	curr_num = ALLPASS_SHORT_NUM;
+	while (--curr_num >= 0) {
+		x->apShort_values[curr_num] = temp_apsv[curr_num];
+	}
+	
+	curr_num = ALLPASS_LONG_NUM;
+	while (--curr_num >= 0) {
+		x->apLong_values[curr_num] = temp_aplv[curr_num];
+	}
+	
+	curr_num = DELAYBUFF_SMALL_NUM;
+	while (--curr_num >= 0) {
+		x->smallDelay_values[curr_num] = temp_sdv[curr_num];
+	}
+	
+	curr_num = ALLPASS_MOD_NUM;
+	while (--curr_num >= 0) {
+		x->apMod_init_values[curr_num] = temp_apmv[curr_num];
+	}
+	
+	// osc table
+	rbb_init_sinTable(ot_ptr);
+	
+	// lowpass filters
+	curr_num = LOWPASS_NUM;
+	while (--curr_num >= 0) {
+		rbb_init_lowPass(lpf_ptr + curr_num);
+	}
+	
+	// allpass short filters
+	curr_num = ALLPASS_SHORT_NUM;
+	while (--curr_num >= 0) {
+		rbb_init_allpassShort(aps_ptr + curr_num);
+		rbb_set_allpassShort_delay(aps_ptr + curr_num, x->apShort_values[curr_num]);
+	}
+	
+	// allpass long filters
+	curr_num = ALLPASS_LONG_NUM;
+	while (--curr_num >= 0) {
+		rbb_init_allpassLong(apl_ptr + curr_num);
+		rbb_set_allpassLong_delay(apl_ptr + curr_num, x->apLong_values[curr_num]);
+	}
+	
+	// allpass mod filters
+	curr_num = ALLPASS_MOD_NUM;
+	while (--curr_num >= 0) {
+		rbb_init_allpassMod(apm_ptr + curr_num, ot_ptr);
+		rbb_set_allpassMod_delay(apm_ptr + curr_num, x->apMod_init_values[curr_num]);
+	}
+	
+	// short delay buffers
+	curr_num = DELAYBUFF_SMALL_NUM;
+	while (--curr_num >= 0) {
+		rbb_init_shortDelay(sd_ptr + curr_num);
+		rbb_set_shortDelay_delay(sd_ptr + curr_num, x->smallDelay_values[curr_num]);
+	}
+	
+	rbb_set_lowPass_coeff(lpf_ptr, BANDWIDTH);
+	rbb_set_lowPass_coeff(lpf_ptr + 1, DAMPING);
+	rbb_set_lowPass_coeff(lpf_ptr + 2, DAMPING);
+	
+	rbb_set_allpassShort_coeff(aps_ptr, IN_DIFF_1);
+	rbb_set_allpassShort_coeff(aps_ptr + 1, IN_DIFF_1);
+	rbb_set_allpassShort_coeff(aps_ptr + 2, IN_DIFF_2);
+	rbb_set_allpassShort_coeff(aps_ptr + 3, IN_DIFF_2);
+	
+	rbb_set_allpassMod_coeff(apm_ptr, DEC_DIFF_1);
+	rbb_set_allpassMod_coeff(apm_ptr + 1, DEC_DIFF_1);
+	
+	apm_ptr->oscDepth = AP_MODDEPTH_1;
+	(apm_ptr + 1)->oscDepth = AP_MODDEPTH_2;
+	
+	rbb_set_allpassLong_coeff(apl_ptr, DEC_DIFF_2);
+	rbb_set_allpassLong_coeff(apl_ptr + 1, DEC_DIFF_2);
+	
+	#ifdef DEBUG
+		post("%s: lowpass coeff is %f", OBJECT_NAME, (x->lpFilters)->coeff);
+	#endif /* DEBUG */
+	
+	x->lastout_L = 0.0;
+	x->lastout_R = 0.0;
+}
+
+/********************************************************************************
+void gverb_free(t_gverb *x)
+
+inputs:			x		-- pointer to our object
+				
+description:	frees memory used by the reverb algorithm
+returns:		nothing
+********************************************************************************/
+void gverb_free(t_gverb *x)
+{
+	int curr_num;
+	// local pointers to building blocks
+	rbb_sintable *ot_ptr = &(x->oscTable);
+	rbb_allpass_short *aps_ptr = x->apFilters_short;
+	rbb_allpass_long *apl_ptr = x->apFilters_long;
+	rbb_allpass_mod *apm_ptr = x->apFilters_mod;
+	rbb_delaybuff_short *sd_ptr = x->delayBuffs_small;
+	
+	// osc table
+	rbb_free_sinTable(ot_ptr);
+	
+	// allpass short filters
+	curr_num = ALLPASS_SHORT_NUM;
+	while (--curr_num >= 0) {
+		rbb_free_allpassShort(aps_ptr + curr_num);
+	}
+	
+	// allpass long filters
+	curr_num = ALLPASS_LONG_NUM;
+	while (--curr_num >= 0) {
+		rbb_free_allpassLong(apl_ptr + curr_num);
+	}
+	
+	// allpass mod filters
+	curr_num = ALLPASS_MOD_NUM;
+	while (--curr_num >= 0) {
+		rbb_free_allpassMod(apm_ptr + curr_num);
+	}
+	
+	// short delay buffers
+	curr_num = DELAYBUFF_SMALL_NUM;
+	while (--curr_num >= 0) {
+		rbb_free_shortDelay(sd_ptr + curr_num);
+	}
+	
+	dsp_free((t_pxobject *)x);
+}
+
+/* the following methods are only compiled into the code during debugging*/
+#ifdef DEBUG
+
+#endif /* DEBUG */
+
