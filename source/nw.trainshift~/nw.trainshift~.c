@@ -5,10 +5,6 @@
 ** generates evenly shifted train signals
 ** 
 ** 2001/08/29 started by Nathan Wolek
-** 2002/08/23 removed old resource assist strings
-** 2002/09/24 added getinfo message
-** 2002/11/19 removed old table code, making Carbon compatable
-** 2006/11/24 moved to Xcode
 ** 
 */
 
@@ -29,7 +25,7 @@
 #define OUTLET_MIN		2					// minimum number of outlets specifiable
 #define VEC_SIZE		OUTLET_MAX + 5		// size of vector array passed to perform method
 
-void *this_class;		// required global pointer to this class
+static t_class *trainshift_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _trainShift
@@ -66,12 +62,16 @@ void main(void)
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup(&this_class, trainShift_new, (method)dsp_free, (short)sizeof(t_trainShift), 0L, 
+	t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)trainShift_new, (method)dsp_free, (short)sizeof(t_trainShift), 0L,
 				A_DEFLONG, 0);
+    class_dspinit(c); // add standard functions to class
+    
 	addmess((method)trainShift_dsp, "dsp", A_CANT, 0);
 	
 	#ifdef DEBUG
@@ -90,11 +90,14 @@ void main(void)
 	/* bind method "trainShift_getinfo" to the getinfo message */
 	addmess((method)trainShift_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
+    class_register(CLASS_BOX, c); // register the class w max
+    trainshift_class = c;
 	
 	#ifndef DEBUG
 		
 	#endif /* DEBUG */
+    
+    return 0;
 }
 
 /********************************************************************************
@@ -138,7 +141,7 @@ void *trainShift_new(long outlets)
 {
 	long i;
 	
-	t_trainShift *x = (t_trainShift *)newobject(this_class);
+	t_trainShift *x = (t_trainShift *)object_alloc((t_class*) trainshift_class);
 	
 	// set outlets within limits
 	x->ts_outletcount = 
