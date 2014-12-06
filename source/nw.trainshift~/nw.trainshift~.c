@@ -10,10 +10,11 @@
 
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"train.shift~"		// name of the object
 
@@ -51,10 +52,7 @@ void trainShift_float(t_trainShift *x, double f);
 void trainShift_int(t_trainShift *x, long l);
 void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s);
 void trainShift_getinfo(t_trainShift *x);
-/* method definitions for debugging this object */
-#ifdef DEBUG
-	void trainShift_index(t_trainShift *x, long value)
-#endif /* DEBUG */
+
 
 /********************************************************************************
 void main(void)
@@ -74,10 +72,6 @@ int C74_EXPORT main(void)
     
 	addmess((method)trainShift_dsp, "dsp", A_CANT, 0);
 	
-	#ifdef DEBUG
-		addmess((method)trainShift_index, "index", A_DEFLONG, 0);
-	#endif /* DEBUG */
-	
 	/* bind method "trainShift_float" to the float message */
 	addfloat((method)trainShift_float);
 	
@@ -93,8 +87,8 @@ int C74_EXPORT main(void)
     class_register(CLASS_BOX, c); // register the class w max
     trainshift_class = c;
 	
-	#ifndef DEBUG
-		
+	#ifdef DEBUG
+		post("%s: main function was called", OBJECT_NAME);
 	#endif /* DEBUG */
     
     return 0;
@@ -159,6 +153,10 @@ void *trainShift_new(long outlets)
 	x->ts_shortest_pulse = 2000.0 / sys_getsr();
 	
 	x->ts_obj.z_misc = Z_NO_INPLACE;
+    
+    #ifdef DEBUG
+        post("%s: new function was called", OBJECT_NAME);
+    #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
 	return (x);
@@ -400,27 +398,3 @@ void trainShift_getinfo(t_trainShift *x)
 	post("%s object by Nathan Wolek", OBJECT_NAME);
 	post("Last updated on %s - www.nathanwolek.com", __DATE__);
 }
-
-/* the following methods are only compiled into the code during debugging*/
-#ifdef DEBUG	
-/********************************************************************************
-void trainShift_index(t_trainShift *x, long value)
-
-inputs:			x		-- pointer to this object
-				value	-- argument from "ps_table" message; sets table index
-description:	inquire the array values for a specified outlet index
-returns:		nothing
-********************************************************************************/
-	void trainShift_index(t_trainShift *x, long value)
-	{
-		if (value >= 0 && value <= (TABLE_SIZE - 1)) 
-		{
-			post("%s: the index for outlet %ld is %f", 
-						OBJECT_NAME, value+1, x->ps_currIndex[value]);
-		}
-		else
-		{
-			post("%s: value %ld is out of array bounds", OBJECT_NAME, value);
-		}
-	}
-#endif /* DEBUG */
