@@ -16,7 +16,7 @@
 
 #define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"train.shift~"		// name of the object
+#define OBJECT_NAME		"nw.trainshift~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -70,19 +70,19 @@ int C74_EXPORT main(void)
 				A_DEFLONG, 0);
     class_dspinit(c); // add standard functions to class
     
-	addmess((method)trainShift_dsp, "dsp", A_CANT, 0);
+	class_addmethod(c, (method)trainShift_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "trainShift_float" to the float message */
-	addfloat((method)trainShift_float);
+	class_addmethod(c, (method)trainShift_float, "float", A_FLOAT, 0);
 	
 	/* bind method "trainShift_int" to the int message */
-	addfloat((method)trainShift_int);
+	class_addmethod(c, (method)trainShift_int, "int", A_LONG, 0);
 	
 	/* bind method "trainShift_assist" to the assistance message */
-	addmess((method)trainShift_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)trainShift_assist, "assist", A_CANT, 0);
 	
 	/* bind method "trainShift_getinfo" to the getinfo message */
-	addmess((method)trainShift_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)trainShift_getinfo, "getinfo", A_NOTHING, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     trainshift_class = c;
@@ -135,7 +135,7 @@ void *trainShift_new(long outlets)
 {
 	long i;
 	
-	t_trainShift *x = (t_trainShift *)object_alloc((t_class*) trainshift_class);
+	t_trainShift *x = (t_trainShift *) object_alloc((t_class*) trainshift_class);
 	
 	// set outlets within limits
 	x->ts_outletcount = 
@@ -243,7 +243,7 @@ t_int *trainShift_perform(t_int *w)
 	if (x->ts_width_connected) {			// if audio rate connection...
 		temp = *(float *)(w[5]);			// grab audio rate width input
 		if (temp >= 0.0 && temp <= 1.0) {	// check restrictions...
-			x->ts_width_ratio;				// set global
+			x->ts_width_ratio = temp;		// set global
 		}
 	}
 	curr_width = x->ts_width_ratio;			// grab control rate width input
@@ -375,7 +375,7 @@ void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s
 		}
 	} else if (msg==ASSIST_OUTLET) {
 		which_outlet = arg + 1;
-		sprintf(out_mess, "(signal) pulse output %ld of %ld", which_outlet, num_out);
+		sprintf(out_mess, "(signal) pulse output %hd of %hd", which_outlet, num_out);
 		strcpy(s, out_mess);
 	}
 	
