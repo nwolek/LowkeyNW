@@ -5,21 +5,18 @@
 ** generates evenly shifted phase signals
 ** 
 ** 2001/08/09 started by Nathan Wolek
-** 2002/08/23 removed old resource assist strings
-** 2002/09/24 added getinfo message
-** 2002/11/19 removed old table code, made Carbon compatible
-** 2006/11/24 moved to Xcode
 ** 
 */
 
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"phasor.shift~"		// name of the object
+#define OBJECT_NAME		"nw.phasorshift~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -33,7 +30,7 @@
 #define OUTLET_MIN		2					// minimum number of outlets specifiable
 #define VEC_SIZE		OUTLET_MAX + 4		// size of vector array passed to perform method
 
-void *this_class;		// required global pointer to this class
+static t_class *phasorshift_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _phasorShift
@@ -56,10 +53,6 @@ void phasorShift_float(t_phasorShift *x, double f);
 void phasorShift_int(t_phasorShift *x, long l);
 void phasorShift_assist(t_phasorShift *x, t_object *b, long msg, long arg, char *s);
 void phasorShift_getinfo(t_phasorShift *x);
-/* method definitions for debugging this object */
-#ifdef DEBUG
-	void phasorShift_index(t_phasorShift *x, long value);
-#endif /* DEBUG */
 float allpassInterp(float *in_array, float index, float last_out, long buf_length);
 
 /********************************************************************************
@@ -68,35 +61,39 @@ void main(void)
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup(&this_class, phasorShift_new, (method)dsp_free, (short)sizeof(t_phasorShift), 0L, 
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)phasorShift_new, (method)dsp_free, (short)sizeof(t_phasorShift), 0L,
 				A_DEFLONG, 0);
-	addmess((method)phasorShift_dsp, "dsp", A_CANT, 0);
-	
-	#ifdef DEBUG
-		addmess((method)phasorShift_index, "index", A_DEFLONG, 0);
-	#endif /* DEBUG */
+    class_dspinit(c); // add standard functions to class
+    
+	class_addmethod(c, (method)phasorShift_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "phasorShift_float" to the float message */
-	addfloat((method)phasorShift_float);
+	class_addmethod(c, (method)phasorShift_float, "float", A_FLOAT, 0);
 	
 	/* bind method "phasorShift_int" to the int message */
-	addfloat((method)phasorShift_int);
+	class_addmethod(c, (method)phasorShift_int, "int", A_LONG, 0);
 	
 	/* bind method "phasorShift_assist" to the assistance message */
-	addmess((method)phasorShift_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)phasorShift_assist, "assist", A_CANT, 0);
 	
 	/* bind method "phasorShift_getinfo" to the getinfo message */
-	addmess((method)phasorShift_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)phasorShift_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
-	
-	#ifndef DEBUG
-		
-	#endif /* DEBUG */
+    class_register(CLASS_BOX, c); // register the class w max
+    phasorshift_class = c;
+    
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
+
 }
 
 /********************************************************************************
@@ -140,7 +137,7 @@ void *phasorShift_new(long outlets)
 {
 	long i;
 	
-	t_phasorShift *x = (t_phasorShift *)newobject(this_class);
+	t_phasorShift *x = (t_phasorShift *) object_alloc((t_class*) phasorshift_class);
 	
 	// set outlets within limits
 	x->ps_outletcount = 
@@ -156,6 +153,10 @@ void *phasorShift_new(long outlets)
 	x->ps_freq = 20.0;								// default freq to 20.0
 	
 	x->ps_obj.z_misc = Z_NO_INPLACE;
+    
+    #ifdef DEBUG
+        post("%s: new function was called", OBJECT_NAME);
+    #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
 	return (x);
@@ -330,7 +331,7 @@ void phasorShift_assist(t_phasorShift *x, t_object *b, long msg, long arg, char 
 		}
 	} else if (msg==ASSIST_OUTLET) {
 		which_outlet = arg + 1;
-		sprintf(out_mess, "(signal) phasor output %ld of %ld", which_outlet, num_out);
+		sprintf(out_mess, "(signal) phasor output %hd of %hd", which_outlet, num_out);
 		strcpy(s, out_mess);
 	}
 	
@@ -354,26 +355,4 @@ void phasorShift_getinfo(t_phasorShift *x)
 	post("Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
-/* the following methods are only compiled into the code during debugging*/
-#ifdef DEBUG	
-/********************************************************************************
-void phasorShift_index(t_phasorShift *x, long value)
 
-inputs:			x		-- pointer to this object
-				value	-- argument from "ps_table" message; sets table index
-description:	inquire the array values for a specified outlet index
-returns:		nothing
-********************************************************************************/
-	void phasorShift_index(t_phasorShift *x, long value)
-	{
-		if (value >= 0 && value <= (TABLE_SIZE - 1)) 
-		{
-			post("%s: the index for outlet %ld is %f", 
-						OBJECT_NAME, value+1, x->ps_currIndex[value]);
-		}
-		else
-		{
-			post("%s: value %ld is out of array bounds", OBJECT_NAME, value);
-		}
-	}
-#endif /* DEBUG */
