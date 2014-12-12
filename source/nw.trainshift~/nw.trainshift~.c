@@ -1,10 +1,12 @@
 /*
-** train_shift~.c
+** nw.trainshift~.c
 **
 ** MSP object
 ** generates evenly shifted train signals
-** 
 ** 2001/08/29 started by Nathan Wolek
+** 
+** Copyright © 2001,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
 ** 
 */
 

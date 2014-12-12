@@ -1,10 +1,12 @@
 /*
-** phasor.shift~.c
+** nw.phasorshift~.c
 **
 ** MSP object
 ** generates evenly shifted phase signals
-** 
 ** 2001/08/09 started by Nathan Wolek
+**
+** Copyright © 2001,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
 ** 
 */
 
