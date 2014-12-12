@@ -16,7 +16,7 @@
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.phasorshift~"		// name of the object
 
