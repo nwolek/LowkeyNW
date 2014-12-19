@@ -50,6 +50,7 @@ void trainShift_setIndexArray(t_trainShift *x);
 void *trainShift_new(long outlets);
 void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count);
 t_int *trainShift_perform(t_int *w);
+void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void trainShift_float(t_trainShift *x, double f);
 void trainShift_int(t_trainShift *x, long l);
 void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s);
@@ -280,6 +281,47 @@ t_int *trainShift_perform(t_int *w)
 	}
 out:
 	return(w + VEC_SIZE + 1);		// pointer to next vector
+}
+
+/********************************************************************************
+ void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,
+ long numouts, long vectorsize, long flags, void *userparam)
+ 
+ inputs:			x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,
+                            long numouts, long vectorsize, long flags, void *userparam)
+{
+    t_double *in1 = ins[0];
+    long n, m;
+    t_double curr_length, curr_width, curr_step_size;   // local vars for interval, width and step size
+    long samp_rate = 44100; // temporary to stop error
+    
+    curr_length = x->ts_interval_ms;
+    x->ts_step_size = 1000.0 / (curr_length * samp_rate);
+    curr_step_size = x->ts_step_size;
+    
+    n = vectorsize;
+    while(n--)
+    {
+        m = numouts;
+        while(m--)
+        {
+            
+        }
+        
+    }
+    
 }
 
 /********************************************************************************
