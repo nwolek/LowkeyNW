@@ -50,7 +50,7 @@ void trainShift_setIndexArray(t_trainShift *x);
 void *trainShift_new(long outlets);
 void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count);
 t_int *trainShift_perform(t_int *w);
-void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void trainShift_float(t_trainShift *x, double f);
 void trainShift_int(t_trainShift *x, long l);
 void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s);
@@ -299,17 +299,23 @@ out:
  description:	called at interrupt level to compute object's output at 64-bit
  returns:		nothing
  ********************************************************************************/
-void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,
+void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,
                             long numouts, long vectorsize, long flags, void *userparam)
 {
-    t_double *in1 = ins[0];
+    t_double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
+    t_double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
     long n, m;
-    t_double curr_length, curr_width, curr_step_size;   // local vars for interval, width and step size
-    long samp_rate = 44100; // temporary to stop error
+    double samp_rate = 44100.; // temporary to stop error
+    t_double curr_step_size = 1000.0 / (curr_length * samp_rate);   // local vars for interval, width and step size
     
-    curr_length = x->ts_interval_ms;
-    x->ts_step_size = 1000.0 / (curr_length * samp_rate);
-    curr_step_size = x->ts_step_size;
+    // check constraints
+    if (curr_length < x->ts_shortest_pulse) curr_length = x->ts_shortest_pulse;
+    if (curr_width < 0.) curr_width = 1 / samp_rate;
+    if (curr_width > 1.) curr_width = 1.;
+    
+    // update object variables
+    x->ts_interval_ms = curr_length;
+    x->ts_step_size = curr_step_size;
     
     n = vectorsize;
     while(n--)
