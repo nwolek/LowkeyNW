@@ -287,10 +287,16 @@ void *phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, lon
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     t_double *in1 = ins[0];
-    int n = vectorsize;
+    int n, m;
+    
+    n = vectorsize;
     while(n--)
     {
-        
+        m = numouts;
+        while(m--)
+        {
+            
+        }
         
     }
     
