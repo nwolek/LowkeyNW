@@ -42,6 +42,7 @@ typedef struct _trainShift
 	short		ts_interval_connected;
 	short		ts_width_connected;
 	float		ts_shortest_pulse;
+    double      ts_samp_rate;
 	
 } t_trainShift;	
 
@@ -185,7 +186,8 @@ void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
 	x->ts_interval_connected = count[0];
 	x->ts_width_connected = count[1];
 	
-	x->ts_shortest_pulse = 2000.0 / sp[2]->s_sr;
+    x->ts_samp_rate = sp[2]->s_sr;
+	x->ts_shortest_pulse = 2000.0 / x->ts_samp_rate;
 	
 	if (x->ts_interval_ms < x->ts_shortest_pulse)
 		x->ts_interval_ms = x->ts_shortest_pulse;
@@ -305,12 +307,11 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
     t_double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
     t_double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
     long n, m;
-    double samp_rate = 44100.; // temporary to stop error
-    t_double curr_step_size = 1000.0 / (curr_length * samp_rate);   // local vars for interval, width and step size
+    t_double curr_step_size = 1000.0 / (curr_length * x->ts_samp_rate);   // local vars for interval, width and step size
     
     // check constraints
     if (curr_length < x->ts_shortest_pulse) curr_length = x->ts_shortest_pulse;
-    if (curr_width < 0.) curr_width = 1 / samp_rate;
+    if (curr_width < 0.) curr_width = 1 / x->ts_samp_rate;
     if (curr_width > 1.) curr_width = 1.;
     
     // update object variables
