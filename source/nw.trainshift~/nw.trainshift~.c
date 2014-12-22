@@ -16,7 +16,7 @@
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.trainshift~"		// name of the object
 
@@ -349,7 +349,7 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars for outlets, interval, width, step size and index
-    t_double *out = outs[0];
+    t_double *curr_out[numouts];
     t_double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
     t_double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
     double curr_step_size;
@@ -358,6 +358,13 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
     // local vars used for while loop
     double temp;
     long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
     
     // check constraints
     if (curr_length < x->ts_shortest_pulse) curr_length = x->ts_shortest_pulse;
@@ -386,14 +393,14 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
                 temp += 1.0;
             
             if (temp <= curr_width) {
-                *out = 1.0;		// save to output
+                *(curr_out[m]) = 1.0;		// save to output
             } else {
-                *out = 0.0;		// save to output
+                *(curr_out[m]) = 0.0;		// save to output
             }
             
             temp -= curr_step_size;		// advance index
             currIndex[m] = (float)temp;	// save next index
-            out++;			// advance current vector pointer
+            (curr_out[m])++;			// advance the outlet pointer
             
         }
         
