@@ -50,6 +50,8 @@ typedef struct _trainShift
 void trainShift_setIndexArray(t_trainShift *x);
 void *trainShift_new(long outlets);
 void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count);
+void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags);
 t_int *trainShift_perform(t_int *w);
 void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void trainShift_float(t_trainShift *x, double f);
@@ -87,6 +89,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "trainShift_getinfo" to the getinfo message */
 	class_addmethod(c, (method)trainShift_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "trainShift_dsp64" to the dsp64 message */
+    class_addmethod(c, (method)trainShift_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     trainshift_class = c;
@@ -189,6 +194,7 @@ void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
     x->ts_samp_rate = sp[2]->s_sr;
 	x->ts_shortest_pulse = 2000.0 / x->ts_samp_rate;
 	
+    // TODO: not sure this is needed, since constraints happen in float and perform methods
 	if (x->ts_interval_ms < x->ts_shortest_pulse)
 		x->ts_interval_ms = x->ts_shortest_pulse;
 	
@@ -206,6 +212,35 @@ void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
 	#ifdef DEBUG
 		post("%s: output sampling rate is %f", OBJECT_NAME, sp[2]->s_sr);
 	#endif /* DEBUG */
+
+}
+
+/********************************************************************************
+ void trainShift_dsp64()
+ 
+ inputs:			x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    // check if inlets are connected at audio rate
+    x->ts_interval_connected = count[0];
+    x->ts_width_connected = count[1];
+    
+    // save other info to object vars
+    x->ts_samp_rate = samplerate;
+    x->ts_shortest_pulse = 2000.0 / x->ts_samp_rate;
+    
+    // add the perform routine to the signal chain
+    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)trainShift_perform64, 0, NULL);
 
 }
 
@@ -311,7 +346,7 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
     float *currIndex = x->ts_currIndex; // TODO: upgrade to double later
     
     // local vars used for while loop
-    double temp;
+    t_double temp;
     long n, m;
     
     // check constraints
@@ -332,7 +367,7 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
         m = numouts;
         while(m--)
         {
-            temp = (double)(currIndex[m]);
+            temp = (t_double)(currIndex[m]);
             
             // check bounds //
             while (temp < 0.0)
