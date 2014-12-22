@@ -16,7 +16,7 @@
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.phasorshift~"		// name of the object
 
@@ -50,6 +50,8 @@ typedef struct _phasorShift
 void phasorShift_setIndexArray(t_phasorShift *x);
 void *phasorShift_new(long outlets);
 void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count);
+void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double samplerate,
+                       long maxvectorsize, long flags);
 t_int *phasorShift_perform(t_int *w);
 void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
                             long numouts, long vectorsize, long flags, void *userparam);
@@ -88,6 +90,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "phasorShift_getinfo" to the getinfo message */
 	class_addmethod(c, (method)phasorShift_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "phasorShift_dsp64" to the dsp64 message */
+    class_addmethod(c, (method)phasorShift_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     phasorshift_class = c;
@@ -178,7 +183,12 @@ returns:		nothing
 ********************************************************************************/
 void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count)
 {
-	long i;
+	
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    long i;
 	
 	void *v[VEC_SIZE];
 	
@@ -199,6 +209,37 @@ void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count)
 		post("%s: output sampling rate is %f", OBJECT_NAME, sp[1]->s_sr);
 	#endif /* DEBUG */
 
+}
+
+/********************************************************************************
+ void phasorShift_dsp64()
+ 
+ inputs:	x		-- pointer to this object
+            dsp64		-- signal chain to which object belongs
+            count	-- array detailing number of signals attached to each inlet
+            samplerate -- number of samples per second
+            maxvectorsize -- sample frames per vector of audio
+            flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    // check if inlets are connected at audio rate
+    x->ps_inlet_connected = count[0];
+    
+    // save other info to object vars
+    // NOT NECESSARY
+    
+    // add the perform routine to the signal chain
+    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)phasorShift_perform64, 0, NULL);
+    
 }
 
 /********************************************************************************
