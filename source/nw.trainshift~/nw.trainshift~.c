@@ -16,7 +16,7 @@
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.trainshift~"		// name of the object
 
@@ -183,7 +183,12 @@ returns:		nothing
 ********************************************************************************/
 void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
 {
-	long i;
+    
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    long i;
 	
 	void *v[VEC_SIZE];
 	
@@ -230,6 +235,10 @@ void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
 void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double samplerate,
                       long maxvectorsize, long flags)
 {
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
     
     // check if inlets are connected at audio rate
     x->ts_interval_connected = count[0];
