@@ -362,7 +362,18 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
         m = numouts;
         while(m--)
         {
-            *(curr_out[m]) = 0.0;		// save to output
+            temp = (double)(currIndex[m]);
+            
+            // check bounds //
+            while (temp < 0.0)
+                temp += 1.0;
+            while (temp >= 1.0)
+                temp -= 1.0;
+            
+            *(curr_out[m]) = temp;		// save to output
+            
+            temp += curr_step_size;		// advance index
+            currIndex[m] = (float)temp;	// save next index
             (curr_out[m])++;			// advance the outlet pointer
         }
         
