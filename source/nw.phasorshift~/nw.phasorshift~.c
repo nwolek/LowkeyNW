@@ -51,7 +51,7 @@ void phasorShift_setIndexArray(t_phasorShift *x);
 void *phasorShift_new(long outlets);
 void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count);
 t_int *phasorShift_perform(t_int *w);
-void *phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
+void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
                             long numouts, long vectorsize, long flags, void *userparam);
 void phasorShift_float(t_phasorShift *x, double f);
 void phasorShift_int(t_phasorShift *x, long l);
@@ -283,11 +283,22 @@ out:
  description:	called at interrupt level to compute object's output at 64-bit
  returns:		nothing
  ********************************************************************************/
-void *phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
+void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
                             long numouts, long vectorsize, long flags, void *userparam)
 {
-    t_double *in1 = ins[0];
-    int n, m;
+    // local vars for outlets, interval, width, step size and index
+    t_double *curr_out[numouts];
+    
+    // local vars used for while loop
+    double temp;
+    long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
     
     n = vectorsize;
     while(n--)
@@ -295,7 +306,8 @@ void *phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, lon
         m = numouts;
         while(m--)
         {
-            
+            *(curr_out[m]) = 0.0;		// save to output
+            (curr_out[m])++;			// advance the outlet pointer
         }
         
     }
