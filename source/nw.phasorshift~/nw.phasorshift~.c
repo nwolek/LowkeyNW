@@ -331,6 +331,9 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
 {
     // local vars for outlets, interval, width, step size and index
     t_double *curr_out[numouts];
+    t_double curr_freq = x->ps_inlet_connected ?  *ins[0] : x->ps_freq;
+    double curr_step_size;
+    float *currIndex = x->ps_currIndex; // TODO: upgrade to double later
     
     // local vars used for while loop
     double temp;
@@ -342,6 +345,16 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
     {
         curr_out[m] = outs[m];
     }
+    
+    // check constraints
+    // NOT NECESSARY
+    
+    // then compute step size
+    curr_step_size = curr_freq / x->ps_samp_rate;
+    
+    // update object variables
+    x->ps_freq = curr_freq;
+    x->ps_stepsize = curr_step_size;
     
     n = vectorsize;
     while(n--)
