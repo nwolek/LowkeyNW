@@ -43,6 +43,7 @@ typedef struct _phasorShift
 	float 		ps_freq;
 	float		ps_stepsize;
 	short		ps_inlet_connected;
+    double      ps_samp_rate;
 	
 } t_phasorShift;	
 
@@ -193,6 +194,7 @@ void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count)
 	void *v[VEC_SIZE];
 	
 	x->ps_inlet_connected = count[0];
+    x->ps_samp_rate = sp[2]->s_sr;
 	
 	v[0] = x;
 	v[1] = &(sp[1]->s_n);
@@ -235,7 +237,7 @@ void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double s
     x->ps_inlet_connected = count[0];
     
     // save other info to object vars
-    // NOT NECESSARY
+    x->ps_samp_rate = samplerate;
     
     // add the perform routine to the signal chain
     dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)phasorShift_perform64, 0, NULL);
