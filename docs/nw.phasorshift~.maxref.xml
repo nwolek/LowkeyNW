@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.phasorshift~" module="msp" category="LowkeyNW, MSP Generators">
+
+	<digest>
+		Evenly-spaced phase ramp signals
+	</digest>
+	
+	<description>
+		Outputs phase signals like <o>phasor~</o> with evenly-spaced phase relationships between the outlets.
+		Originally created for use with <o>grain.phase~</o> object, but there are other applications.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Time</metadata>
+		<metadata name="tag">Generator</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal/float">
+			<digest>Frequency in Hertz</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: the generated phase ramp output. Each outlet will be evenly spaced across the period.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="num-outlets" optional="1" type="number">
+			<digest>Sets the number of outlets. Defaults to minimum 2. Maximum is 64</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="phasor~"/>
+		<seealso name="line~"/>
+		<seealso name="saw~"/>
+	</seealsolist>
+	
+</c74object>

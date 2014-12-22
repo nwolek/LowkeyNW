@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.trainshift~" module="msp" category="LowkeyNW, MSP Generators">
+
+	<digest>
+		Evenly-spaced pulse signals
+	</digest>
+	
+	<description>
+		Outputs pulse signals like 'train~' with evenly-spaced phase relationships between the outlets.
+		Originally created for use with 'grain.pulse~' object, but there are other applications.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Time</metadata>
+		<metadata name="tag">Generator</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal/float">
+			<digest>Interval between pulses in milliseconds.</digest>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>Pulse width or duty cycle between 0.0 to 1.0 </digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: the generated pulse output. Each outlet will be evenly spaced across the interval.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="num-outlets" optional="1" type="number">
+			<digest>Sets the number of outlets. Defaults to minimum 2. Maximum is 64</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="train~"/>
+		<seealso name="click~"/>
+	</seealsolist>
+	
+</c74object>
