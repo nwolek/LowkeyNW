@@ -49,8 +49,11 @@ typedef struct _cpPan
 void cpPan_fillTables(t_cpPan *x);
 void *cpPan_new(double initial_pos);
 void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count);
+void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
+                  long maxvectorsize, long flags);
 t_int *cpPan_perform1(t_int *w);
 t_int *cpPan_perform2(t_int *w);
+void cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void cpPan_float(t_cpPan *x, double f);
 void cpPan_setPosVars(t_cpPan *x, double f);
 void cpPan_assist(t_cpPan *x, t_object *b, long msg, long arg, char *s);
@@ -92,6 +95,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "cpPan_getinfo" to the getinfo message */
 	class_addmethod(c, (method)cpPan_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "cpPan_dsp64" to the dsp64 message */
+    class_addmethod(c, (method)cpPan_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     trainshift_class = c;
@@ -203,6 +209,31 @@ void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count)
 }
 
 /********************************************************************************
+ void cpPan_dsp64()
+ 
+ inputs:    x		-- pointer to this object
+            dsp64		-- signal chain to which object belongs
+            count	-- array detailing number of signals attached to each inlet
+            samplerate -- number of samples per second
+            maxvectorsize -- sample frames per vector of audio
+            flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    // add the perform routine to the signal chain
+    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64, 0, NULL);
+    
+}
+
+/********************************************************************************
 t_int *cpPan_perform1(t_int *w)
 
 inputs:			w		-- array of signal vectors specified in "cpPan_dsp"
@@ -283,6 +314,46 @@ t_int *cpPan_perform2(t_int *w)
 		++in, ++outL, ++outR, ++pan_in;		// advance the pointers
 	}
 	return(w + 7);							// pointer to next argument index
+}
+
+/********************************************************************************
+ void *cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+ long numouts, long vectorsize, long flags, void *userparam)
+ 
+ inputs:	x		--
+            dsp64   --
+            ins     --
+            numins  --
+            outs    --
+            numouts --
+            vectorsize --
+            flags   --
+            userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+                          long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *outL = outs[0];
+    t_double *outR = outs[1];
+    
+    // local vars used for while loop
+    long n;
+    
+    // check constraints
+    
+    n = vectorsize;
+    while(n--)
+    {
+        *(outL) = 0.0;		// save to output
+        *(outR) = 0.0;		// save to output
+        ++outL, ++outR;     // advance the pointers
+    }
+    
+    // update object variables
+    
 }
 
 /********************************************************************************
