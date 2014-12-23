@@ -67,29 +67,40 @@ void main(void)
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup(&this_class, cpPan_new, (method)dsp_free, (short)sizeof(t_cpPan), 0L, 
-				A_DEFFLOAT, 0);
-	addmess((method)cpPan_dsp, "dsp", A_CANT, 0);
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)cpPan_new, (method)dsp_free, (short)sizeof(t_cpPan), 0L,
+                  A_DEFFLOAT, 0);
+    class_dspinit(c); // add standard functions to class
+    
+	class_addmethod(c, (method)cpPan_dsp, "dsp", A_CANT, 0);
 	
 	#ifdef DEBUG
-		addmess((method)cpPan_table, "table", A_DEFLONG, 0);
-		addmess((method)cpPan_position, "position", 0);
+		class_addmethod(c, (method)cpPan_table, "table", A_DEFLONG, 0);
+		class_addmethod(c, (method)cpPan_position, "position", 0);
 	#endif /* DEBUG */
 	
 	/* bind method "cpPan_float" to the assistance message */
-	addfloat((method)cpPan_float);
+	class_addmethod(c, (method)cpPan_float, "float", A_FLOAT, 0);
 	
 	/* bind method "cpPan_assist" to the assistance message */
-	addmess((method)cpPan_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)cpPan_assist, "assist", A_CANT, 0);
 	
 	/* bind method "cpPan_getinfo" to the getinfo message */
-	addmess((method)cpPan_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)cpPan_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
+    class_register(CLASS_BOX, c); // register the class w max
+    trainshift_class = c;
+    
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
 	
 }
 
