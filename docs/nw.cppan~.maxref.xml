@@ -50,6 +50,42 @@
 		</objarg>
 	</objarglist>
 	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control pan position. If a <m>signal</m> is also connected to the inlet, <m>float</m> messages will be ignored. Any numbers sent to the left inlet will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In left inlet: Monoaural signal to be panned across the two outlets.
+				<br />
+				<br />
+				In right inlet: Specifies the pan position between 0. and 1, with hard left equivalent to 0 and hard right equivalent to 1. Values of 0.5 would represent the signal being equally balanced between the left and right output channels.
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
 	<!--SEEALSO-->
 	<seealsolist>
 		<seealso name="gain~"/>

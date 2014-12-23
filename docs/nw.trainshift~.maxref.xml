@@ -46,6 +46,53 @@
 		</objarg>
 	</objarglist>
 	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="int">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control pulse interval. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored. Because the pulse width must be between 0 and 1, integers sent to the right inlet will be ignored.
+			</description>
+		</method>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control pulse interval and pulse width. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In left inlet: Specifies the pulse interval in milliseconds, of a pulse train sent out the left outlet.
+				<br />
+				<br />
+				In right inlet: Specifies the pulse width between 0. and 1. The signal values represent a fraction of the pulse interval that will be devoted to the &quot;on&quot; part of the pulse (signal value of 1). Values of 0.5 would represent being &quot;on&quot; for half of the interval.
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
 	<!--SEEALSO-->
 	<seealsolist>
 		<seealso name="train~"/>

@@ -43,6 +43,50 @@
 		</objarg>
 	</objarglist>
 	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="int">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Set frequency in Hertz
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control frequency. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored. 
+			</description>
+		</method>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Set frequency in Hertz
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control frequency. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Set frequency in Hertz
+			</digest>
+			<description>
+				In left inlet: Specifies the frequency in Hertz, of all phase ramps.
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
 	<!--SEEALSO-->
 	<seealsolist>
 		<seealso name="phasor~"/>
