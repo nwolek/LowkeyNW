@@ -163,7 +163,7 @@ returns:		nothing
 ********************************************************************************/
 void *gverb_new(double d)
 {
-	t_gverb *x = (t_gverb *)newobject(this_class);
+	t_gverb *x = (t_gverb *)object_alloc((t_class*) gverb_class);
 	
 	dsp_setup((t_pxobject *)x, 2);					// two inlets
 	outlet_new((t_pxobject *)x, "signal");			// left outlet
@@ -187,6 +187,10 @@ void *gverb_new(double d)
 	gverb_init(x);
 	
 	x->x_obj.z_misc = Z_NO_INPLACE;
+    
+    #ifdef DEBUG
+        post("%s: new function was called", OBJECT_NAME);
+    #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
 	return (x);
@@ -205,6 +209,10 @@ returns:		nothing
 void gverb_dsp(t_gverb *x, t_signal **sp, short *count)
 {
 	
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
 	// check inlet connection
 	x->verb_decay_connected = count[1];
 	
