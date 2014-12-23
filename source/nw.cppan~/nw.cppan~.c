@@ -1,26 +1,23 @@
 /*
-** nw_cppan~.c
+** nw.cppan~.c
 **
 ** MSP object
 ** allows mono input signal to be panned across two output channels
-** 
 ** 2001/03/22 started by Nathan Wolek
-** 2001/03/23 finished by Nathan Wolek
-** 2002/07/11 fixed problem at 1.0 on tip from Ben Nevile
-** 2002/08/23 removed resource dependent code, finally fixed table properly
-** 2002/09/23 added getinfo message
-** 2002/11/19 made Carbon compatable
-** 2004/08/05 windows compatibility updates by TAP
-** 2006/11/23 moved to Xcode
+**
+** Copyright © 2001,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include <math.h>		// required for certain math functions
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.cppan~"		// name of the object
 
@@ -34,7 +31,7 @@
 #define DtoR 			2.0 * 3.1415927 / 360.0
 						// allows easy conversion from degrees to radians
 
-void *this_class;		// required global pointer to this class
+static t_class *trainshift_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _cpPan
