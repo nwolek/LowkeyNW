@@ -54,7 +54,7 @@
 // fix for denormal through square injection of dc offset
 #define TINY_DC		0.0000000000000000000000001f
 
-static t_class *trainshift_class;		// required global pointer to this class
+static t_class *gverb_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _gverb
@@ -111,40 +111,46 @@ void gverb_free(t_gverb *x);
 #endif /* DEBUG */
 
 /********************************************************************************
-void main(void)
+int main(void)
 
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup((t_messlist **)&this_class, (method)gverb_new, (method)gverb_free, 
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)gverb_new, (method)gverb_free,
 			(short)sizeof(t_gverb), 0L, A_DEFFLOAT, 0);
-	addmess((method)gverb_dsp, "dsp", A_CANT, 0);
-	
-	#ifdef DEBUG
-		
-	#endif /* DEBUG */
+    class_dspinit(c); // add standard functions to class
+    
+    class_addmethod(c, (method)gverb_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "gverb_float" to incoming floats */
-	addfloat((method)gverb_float);
+	class_addmethod(c, (method)gverb_float, "float", A_FLOAT, 0);
 	
 	/* bind method "gverb_int" to incoming ints */
-	addint((method)gverb_int);
+	class_addmethod(c, (method)gverb_int, "int", A_LONG, 0);
 	
 	/* bind method "gverb_assist" to the assistance message */
-	addmess((method)gverb_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)gverb_assist, "assist", A_CANT, 0);
 	
 	/* bind method "gverb_getinfo" to the getinfo message */
-	addmess((method)gverb_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)gverb_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "gverb_dsp64" to the dsp64 message */
+    //class_addmethod(c, (method)gverb_dsp64, "dsp64", A_CANT, 0);
+    
+    class_register(CLASS_BOX, c); // register the class w max
+    gverb_class = c;
 	
-	dsp_initclass();
-	
-	#ifndef DEBUG
-		
-	#endif /* DEBUG */
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
 }
 
 /********************************************************************************
