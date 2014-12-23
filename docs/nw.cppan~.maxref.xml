@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.cppan~" module="msp" category="LowkeyNW, MSP Processing">
+
+	<digest>
+		Pan mono input across two outputs
+	</digest>
+	
+	<description>
+		Takes a mono audio input and pans it across two output channels using a constant power formula found in Roads 1996, p 460-1. 
+		Processing uses an internal table of 1024 samples to reduce CPU load. 
+		Panning position can be controlled by a signal or float input.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Processing</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>Audio signal: mono signal to be panned.</digest>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>Panning position between 0.0 to 1.0.</digest>
+			<description>Input should be limited to values between 0. and 1., with hard left equivalent to 0 and hard right equivalent to 1.</description>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: Left channel output.</digest>
+		</outlet>
+		<outlet id="1" type="signal">
+			<digest>Audio signal: Right channel output.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="pan-position" optional="1" type="float">
+			<digest>Initial panning position, default is 0.</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="gain~"/>
+		<seealso name="*~"/>
+	</seealsolist>
+	
+</c74object>
