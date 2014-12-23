@@ -148,7 +148,7 @@ returns:		nothing
 ********************************************************************************/
 void *cpPan_new(double initial_pos)
 {
-	t_cpPan *x = (t_cpPan *)newobject(this_class);
+	t_cpPan *x = (t_cpPan *) object_alloc((t_class*) trainshift_class);
 	
 	dsp_setup((t_pxobject *)x, 2);					// two inlets
 	outlet_new((t_pxobject *)x, "signal");			// left outlet
@@ -159,6 +159,10 @@ void *cpPan_new(double initial_pos)
 	
 	x->x_obj.z_misc = Z_NO_INPLACE;
 	
+    #ifdef DEBUG
+        post("%s: new function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
 	/* return a pointer to the new object */
 	return (x);
 }
