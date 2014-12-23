@@ -17,7 +17,7 @@
 #include <math.h>		// required for certain math functions
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.cppan~"		// name of the object
 
@@ -53,7 +53,8 @@ void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
                   long maxvectorsize, long flags);
 t_int *cpPan_perform1(t_int *w);
 t_int *cpPan_perform2(t_int *w);
-void cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void cpPan_perform64a(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void cpPan_float(t_cpPan *x, double f);
 void cpPan_setPosVars(t_cpPan *x, double f);
 void cpPan_assist(t_cpPan *x, t_object *b, long msg, long arg, char *s);
@@ -228,8 +229,20 @@ void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
         post("%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
-    // add the perform routine to the signal chain
-    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64, 0, NULL);
+    if (count[1])
+    {
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64a, 0, NULL);
+        #ifdef DEBUG
+            post("%s: pan values are being updated at audio rate", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
+    else
+    {
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64c, 0, NULL);
+        #ifdef DEBUG
+            post("%s: pan values are being updated at control rate", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
     
 }
 
@@ -317,7 +330,7 @@ t_int *cpPan_perform2(t_int *w)
 }
 
 /********************************************************************************
- void *cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+ void *cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
  long numouts, long vectorsize, long flags, void *userparam)
  
  inputs:	x		--
@@ -332,27 +345,100 @@ t_int *cpPan_perform2(t_int *w)
  description:	called at interrupt level to compute object's output at 64-bit
  returns:		nothing
  ********************************************************************************/
-void cpPan_perform64(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+void cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
                           long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars
+    t_double *in = ins[0];
     t_double *outL = outs[0];
     t_double *outR = outs[1];
+    double multL = x->curr_multL;			// get current left channel multiplier
+    double multR = x->curr_multR;			// get current right channel multiplier
     
     // local vars used for while loop
+    double valL, valR;
     long n;
     
     // check constraints
+    // completed by cpPan_setPosVars(), so we don't repeat here
     
     n = vectorsize;
     while(n--)
     {
-        *(outL) = 0.0;		// save to output
-        *(outR) = 0.0;		// save to output
-        ++outL, ++outR;     // advance the pointers
+        valL = *in;
+        *outL = multL * valL;				// multiply left value by table value
+        
+        valR = *in;
+        *outR = multR * valR;				// multiply right value by table value
+        
+        ++in, ++outL, ++outR;				// advance the pointers
     }
     
     // update object variables
+    // none changed, so we don't need to make updates
+    
+}
+
+/********************************************************************************
+ void *cpPan_perform64a(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+ long numouts, long vectorsize, long flags, void *userparam)
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void cpPan_perform64a(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
+                      long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *in = ins[0];
+    t_double *pan_in = ins[1];
+    t_double *outL = outs[0];
+    t_double *outR = outs[1];
+    float *tabL = x->table_left;			// create local pointer to left table, TODO: update to doubles
+    float *tabR = x->table_right;			// create local pointer to right table, TODO: update to doubles
+    
+    // local vars used for while loop
+    double valL, valR, pan_val;
+    long n, pan_index;
+    
+    n = vectorsize;
+    while(n--)
+    {
+        pan_val = *pan_in;								// get "pan_val"
+        
+        // check constraints
+        if (pan_val < 0.0)			// if less than 0
+        {
+            pan_val = 0.0;
+        }
+        else if (pan_val > 1.0)		// if greater than table length
+        {
+            pan_val = 1.0;
+        }
+        
+        pan_index = (long) ((pan_val * (float)(TABLE_SIZE - 1)) + 0.5);
+        // set "pan_index"
+        
+        valL = *in;
+        *outL = tabL[pan_index] * valL;				// multiply left value by table value
+        
+        valR = *in;
+        *outR = tabR[pan_index] * valR;				// multiply right value by table value
+        
+        ++in, ++outL, ++outR, ++pan_in;				// advance the pointers
+    }
+    
+    // update object variables
+    x->curr_pos = (float)pan_val;
     
 }
 
