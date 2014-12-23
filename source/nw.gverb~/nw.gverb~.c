@@ -1,27 +1,23 @@
 /*
-** gverb~.c
+** nw.gverb~.c
 **
 ** MSP object
 ** msp implementation of Griesinger vst plugin
-** 
 ** 2002/05/20 started by Nathan Wolek
-** 2002/07/16 first working version
-** 2002.08.20 fixed mistake in output of reverb network
-** 2002/09/24 added getinfo message
-** 2003/01/27 moved to CW8
-** 2006/11/18 moved to Xcode; compiled for UB; added denormal protection
-** 2006/11/19 change denormal protection to square injection; compiler issue?
+**
+** Copyright © 2002,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
 ** 
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "reverb_bb.h"	// defines structs for reverb network
 #include <string.h>
 #include <math.h>
 
-
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.gverb~"		// name of the object
 
@@ -58,7 +54,7 @@
 // fix for denormal through square injection of dc offset
 #define TINY_DC		0.0000000000000000000000001f
 
-void *this_class;		// required global pointer to this class
+static t_class *trainshift_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _gverb
