@@ -179,7 +179,12 @@ returns:		nothing
 ********************************************************************************/
 void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count)
 {
-	if (count[1])
+    
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    if (count[1])
 	{
 		dsp_add(cpPan_perform2, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
 				sp[3]->s_vec, sp[0]->s_n);
