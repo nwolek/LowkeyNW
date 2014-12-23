@@ -1,2 +1,3 @@
 max objectfile phasor.shift~ nw.phasorshift~;
 max objectfile train.shift~ nw.trainshift~;
+max objectfile cpPan~ nw.cppan~;
