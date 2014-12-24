@@ -1,30 +1,24 @@
 /*
-** nw_pulsesamp~.c
-** © 2002-2007, lowkey digital studio
+** nw.pulsesamp~.c
 **
 ** MSP object
-** play sample through when pulse is received 
-** 
+** play samples from buffer when pulse is received
 ** 2002/2/24 started by Nathan Wolek, based on bangsamp~ & grain.pulse~
-**  >>> missing time ???
-** 2004/2/24 restored messages to distribute to some people
-** 2004/3/10 added "bang on init" outlet
-** 2005/10/10 added start and end points; 
-** 2006/11/18 moved to Xcode; compiled for UB
-** 2007/04/10 added sample count outlet
-** 2007/04/15 mod bang outlet to be combo bang/click; mod increment pre to post
 **
-** 
+** Copyright Â© 2002,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"nw_pulsesamp~"		// name of the object
+#define OBJECT_NAME		"nw.pulsesamp~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -47,7 +41,7 @@
 #define OVERFLOW_OFF		0
 #define OVERFLOW_ON			1
 
-void *this_class;		// required global pointing to this class
+static t_class *pulsesamp_class;		// required global pointing to this class
 
 typedef struct _nw_pulsesamp
 {
