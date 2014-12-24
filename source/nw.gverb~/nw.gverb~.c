@@ -98,7 +98,10 @@ typedef struct _gverb
 /* method definitions for this object */
 void *gverb_new(double d);
 void gverb_dsp(t_gverb *x, t_signal **sp, short *count);
+void gverb_dsp64(t_gverb *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags);
 t_int *gverb_perform(t_int *w);
+void gverb_perform64(t_gverb *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void gverb_float(t_gverb *x, double f);
 void gverb_int(t_gverb *x, long l);
 void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s);
@@ -141,7 +144,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)gverb_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "gverb_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)gverb_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)gverb_dsp64, "dsp64", A_CANT, 0);
     
     class_register(CLASS_BOX, c); // register the class w max
     gverb_class = c;
@@ -231,6 +234,45 @@ void gverb_dsp(t_gverb *x, t_signal **sp, short *count)
 	dsp_add(gverb_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
 			sp[3]->s_vec, sp[0]->s_n);
 	
+}
+
+/********************************************************************************
+ void gverb_dsp64()
+ 
+ inputs:			x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void gverb_dsp64(t_gverb *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    // check inlet connection
+    x->verb_decay_connected = count[1];
+    
+    // get sample rate info
+    x->output_sr = samplerate;
+    x->output_msr = x->output_sr * 0.001;
+    x->output_1overmsr = 1.0 / x->output_msr;
+    
+    x->verb_decay_coeff =
+    pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
+    
+    // update allpass mod with sampling rate
+    rbb_set_allpassMod_freq(x->apFilters_mod, AP_MODRATE_1, x->output_sr);
+    rbb_set_allpassMod_freq(((x->apFilters_mod) + 1), AP_MODRATE_2, x->output_sr);
+    
+    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)gverb_perform64, 0, NULL);
+    
 }
 
 /********************************************************************************
@@ -344,6 +386,47 @@ t_int *gverb_perform(t_int *w)
 	
 out:			//when disabled
 	return(w + 7);
+}
+
+/********************************************************************************
+ void *gverb_perform64(t_gverb *x, t_object *dsp64, double **ins, long numins, double **outs,
+ long numouts, long vectorsize, long flags, void *userparam)
+ 
+ inputs:			x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void gverb_perform64(t_gverb *x, t_object *dsp64, double **ins, long numins, double **outs,
+                          long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *out_wet1 = outs[0];
+    t_double *out_wet2 = outs[1];
+    
+    // local vars used for while loop
+    long n;
+    
+    // check constraints
+    
+    n = vectorsize;
+    while(n--)
+    {
+        *out_wet1 = 0.;
+        *out_wet2 = 0.;
+        
+        ++out_wet1, ++out_wet2;		// advance the pointers
+    }
+    
+    // update object variables
+    
 }
 
 /********************************************************************************
