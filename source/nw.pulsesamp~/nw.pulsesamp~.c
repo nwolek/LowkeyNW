@@ -87,7 +87,9 @@ typedef struct _nw_pulsesamp
 void *nw_pulsesamp_new(t_symbol *snd);
 t_int *nw_pulsesamp_perform(t_int *w);
 t_int *nw_pulsesamp_perform0(t_int *w);
+void nw_pulsesamp_perform64zero(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count);
+void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s);
 void nw_pulsesamp_float(t_nw_pulsesamp *x, double f);
 void nw_pulsesamp_int(t_nw_pulsesamp *x, long l);
@@ -141,6 +143,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "nw_pulsesamp_getinfo" to the getinfo message */
 	class_addmethod(c, (method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "nw_pulsesamp_dsp64" to the dsp64 message */
+    //class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     pulsesamp_class = c;
@@ -247,6 +252,28 @@ void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count)
 		#endif /* DEBUG */
 	}
 	
+}
+
+/********************************************************************************
+void nw_pulsesamp_dsp64()
+
+inputs:     x		-- pointer to this object
+            dsp64		-- signal chain to which object belongs
+            count	-- array detailing number of signals attached to each inlet
+            samplerate -- number of samples per second
+            maxvectorsize -- sample frames per vector of audio
+            flags --
+description:	called when 64 bit DSP call chain is built; adds object to signal flow
+returns:		nothing
+********************************************************************************/
+void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double samplerate,
+                 long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
 }
 
 /********************************************************************************
@@ -462,6 +489,49 @@ t_int *nw_pulsesamp_perform0(t_int *w)
 	}
 
 	return (w + 3);
+}
+
+/********************************************************************************
+void *nw_pulsesamp_perform64zero()
+
+inputs:	x		--
+        dsp64   --
+        ins     --
+        numins  --
+        outs    --
+        numouts --
+        vectorsize --
+        flags   --
+        userparam  --
+description:	called at interrupt level to compute object's output at 64-bit,
+    writes zeros to every outlet
+returns:		nothing
+********************************************************************************/
+void nw_pulsesamp_perform64zero(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,
+                      long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *curr_out[numouts];
+    long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
+    
+    n = vectorsize;
+    while(n--)
+    {
+        m = numouts;
+        while(m--)
+        {
+            *(curr_out[m]) = 0.0;		// save to output
+            (curr_out[m])++;			// advance the outlet pointer
+        }
+    }
+    
 }
 
 /********************************************************************************
