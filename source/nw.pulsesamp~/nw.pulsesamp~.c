@@ -145,7 +145,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "nw_pulsesamp_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     pulsesamp_class = c;
@@ -273,6 +273,9 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
     #ifdef DEBUG
         post("%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
+    
+    // add the perform routine to the signal chain
+    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)nw_pulsesamp_perform64zero, 0, NULL);
     
 }
 
