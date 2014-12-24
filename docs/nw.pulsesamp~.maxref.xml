@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.pulsesamp~" module="msp" category="LowkeyNW, MSP Sampling">
+
+	<digest>
+		Trigger samples with a pulse signal
+	</digest>
+	
+	<description>
+		MORE HERE
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Sampling</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal/float">
+			<digest>MORE HERE</digest>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>MORE HERE</digest>
+		</inlet>
+		<inlet id="2" type="signal/float">
+			<digest>MORE HERE</digest>
+		</inlet>
+		<inlet id="3" type="signal/float">
+			<digest>MORE HERE</digest>
+		</inlet>
+		<inlet id="4" type="signal/float">
+			<digest>MORE HERE</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: MORE HERE</digest>
+		</outlet>
+		<outlet id="1" type="signal">
+			<digest>Audio signal: MORE HERE</digest>
+		</outlet>
+		<outlet id="2" type="signal/float">
+			<digest>Audio signal: MORE HERE, bang output on playback start</digest>
+		</outlet>
+		<outlet id="3" type="signal">
+			<digest>Audio signal: MORE HERE</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="buffer-name" optional="0" type="symbol">
+			<digest>
+				Buffer object name
+			</digest>
+			<description>
+				The first argument names the <o>buffer~</o> object whose sample memory is used by this object for playback.
+			</description>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="int">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control sampling increment, gain multiplier, start time and end time. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control sampling increment, gain multiplier, start time and end time. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In inlet 1: MORE HERE
+				<br />
+				<br />
+				In inlet 2: MORE HERE
+				<br />
+				<br />
+				In inlet 3: MORE HERE
+				<br />
+				<br />
+				In inlet 4: MORE HERE
+				<br />
+				<br />
+				In inlet 5: MORE HERE
+				<br />
+				<br />
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="buffer~"/>
+		<seealso name="play~"/>
+		<seealso name="groove~" />
+		<seealso name="record~" />
+		<seealso name="wave~" />
+		<seealso name="index~" />
+	</seealsolist>
+	
+</c74object>
