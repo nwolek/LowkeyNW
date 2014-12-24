@@ -165,7 +165,7 @@ returns:		nothing
 ********************************************************************************/
 void *nw_pulsesamp_new(t_symbol *snd)
 {
-	t_nw_pulsesamp *x = (t_nw_pulsesamp *)newobject(this_class);
+	t_nw_pulsesamp *x = (t_nw_pulsesamp *) object_alloc((t_class*) pulsesamp_class);
 	dsp_setup((t_pxobject *)x, 5);					// five inlets
 	outlet_new((t_pxobject *)x, "signal");			// sample count outlet; add 2007.04.10
 	x->out_bangoninit = outlet_new((t_pxobject *)x, "signal");	// "bang/click when samp begins" outlet; mod 2007.04.15
@@ -210,7 +210,12 @@ returns:		nothing
 ********************************************************************************/
 void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count)
 {
-	/* set buffers */
+	
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
 	nw_pulsesamp_setsnd(x, x->snd_sym);
 	
 	/* set current snd position to 1 more than length */
