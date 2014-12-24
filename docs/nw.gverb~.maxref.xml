@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.gverb~" module="msp" category="LowkeyNW, MSP Processing">
+
+	<digest>
+		Stereo reverb effect
+	</digest>
+	
+	<description>
+		Processes the audio input to produce two-channels of de-correlated reverb output.
+		This stereo reverb is in the style of those designed by David Griesinger of Lexicon, which were detailed in Jon Dattorro’s <a href="https://ccrma.stanford.edu/~dattorro/EffectDesignPart1.pdf">September 1997 AES article</a>.  
+		Be aware that this object only generates the wet signal, therefore you must add the dry back into the mix yourself.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Processing</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>Audio signal: mono input signal.</digest>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>Decay time in milliseconds.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: Left channel output.</digest>
+		</outlet>
+		<outlet id="1" type="signal">
+			<digest>Audio signal: Right channel output.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="decay-time" optional="1" type="float">
+			<digest>Initial reverb decay time in milliseconds.</digest>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Set decay time in milliseconds
+			</digest>
+			<description>
+				In right inlet: Numbers can be used instead of signal objects to reverb decay time. If a <m>signal</m> is also connected to the inlet, <m>float</m> messages will be ignored. Any numbers sent to the left inlet will be ignored.
+			</description>
+		</method>
+		<method name="int">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Set decay time in milliseconds
+			</digest>
+			<description>
+				In right inlet: Numbers can be used instead of signal objects to reverb decay time. If a <m>signal</m> is also connected to the inlet, <m>int</m> messages will be ignored. Any numbers sent to the left inlet will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In left inlet: Dry signal to be processed for wet reverb output.
+				<br />
+				<br />
+				In right inlet: Specifies the reverb decay time in milliseconds. Note that a <m>signal</m> attached to this inlet will cause the reverb parameters to be re-computed every sample, resulting in higher CPU usage. 
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="cverb~"/>
+		<seealso name="allpass~"/>
+		<seealso name="comb~"/>
+	</seealsolist>
+	
+</c74object>
