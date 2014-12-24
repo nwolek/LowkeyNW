@@ -17,7 +17,7 @@
 #include <string.h>
 #include <math.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.gverb~"		// name of the object
 
@@ -79,8 +79,8 @@ typedef struct _gverb
 	double verb_decay_1over;			// in milliseconds
 	double verb_decay_coeff;
 	
-	float lastout_L;					// last output
-	float lastout_R; 
+	double lastout_L;					// last output
+	double lastout_R;
 	
 	// inlet connections
 	short verb_decay_connected;
@@ -303,8 +303,8 @@ t_int *gverb_perform(t_int *w)
 		goto out;								// else skip processing
 	
 	fDecay = x->verb_decay_coeff;
-	lastout_L = x->lastout_L;
-	lastout_R = x->lastout_R;
+	lastout_L = (float)(x->lastout_L);
+	lastout_R = (float)(x->lastout_R);
 	
 	// flip sign on square inhection for each block
 	sqinject_val = x->sqinject_val * -1.0;
@@ -407,11 +407,23 @@ out:			//when disabled
 void gverb_perform64(t_gverb *x, t_object *dsp64, double **ins, long numins, double **outs,
                           long numouts, long vectorsize, long flags, void *userparam)
 {
-    // local vars
+    // local vars for inlets/outlets
+    t_double *in_dry = ins[0];
+    t_double *in_decay = ins[1];
     t_double *out_wet1 = outs[0];
     t_double *out_wet2 = outs[1];
     
-    // local vars used for while loop
+    // local vars for object vars
+    double fDecay = x->verb_decay_coeff;
+    double lastout_L = x->lastout_L;
+    double lastout_R = x->lastout_R;
+    double sqinject_val = x->sqinject_val * -1.0; // flip sign each time
+    
+    // local vars used for while loop, TODO: upgrade to doubles
+    double val_dry, val_decay, val_wet1, val_wet2;
+    float val_dry_float, x2, x3, x4, x5, x6;
+    float x7L, x8L, x9L, x10L, x11L, x12L, x13L, x14L;
+    float x7R, x8R, x9R, x10R, x11R, x12R, x13R, x14R;
     long n;
     
     // check constraints
@@ -419,13 +431,79 @@ void gverb_perform64(t_gverb *x, t_object *dsp64, double **ins, long numins, dou
     n = vectorsize;
     while(n--)
     {
-        *out_wet1 = 0.;
-        *out_wet2 = 0.;
+        val_dry = *in_dry;				// grab input values
+        val_dry += sqinject_val;//TINY_DC;		// add small dc offset to protect against denormal
+        val_dry_float = (float)val_dry; // TODO: needed before double upgrade
+        val_decay = *in_decay;
         
-        ++out_wet1, ++out_wet2;		// advance the pointers
+        val_wet1 = val_wet2 = 0.0;		// zero output before each cycle
+        
+        // zero computation points before each cycle
+        x2 = x3 = x4 = x5 = x6 = 0.0;
+        x7L = x8L = x9L = x10L = x11L = x12L = x13L = x14L = 0.0;
+        x7R = x8R = x9R = x10R = x11R = x12R = x13R = x14R = 0.0;
+        
+        if (x->verb_decay_connected)	// if decay inlet has signal input..
+        {	// recompute decay coeff each sample
+            fDecay = pow(10.0, (-16416.0 * x->output_1overmsr / val_decay));
+        }
+        
+        /***** begin processing of samples here *****/
+        
+        // lowpass 0
+        rbb_compute_lowPass1(&val_dry_float, x->lpFilters, &x2);
+        // allpass_short 0
+        rbb_compute_allpassShort(&x2, x->apFilters_short, &x3);
+        // allpass_short 1
+        rbb_compute_allpassShort(&x3, x->apFilters_short + 1, &x4);
+        // allpass_short 2
+        rbb_compute_allpassShort(&x4, x->apFilters_short + 2, &x5);
+        // allpass_short 3
+        rbb_compute_allpassShort(&x5, x->apFilters_short + 3, &x6);
+        
+        /* split*/
+        
+        // add recursion
+        x7L = x6 + lastout_R;
+        x7R = x6 + lastout_L;
+        // allpass_mod 0 & 1
+        rbb_compute_allpassMod(&x7L, x->apFilters_mod, &x8L);
+        rbb_compute_allpassMod(&x7R, x->apFilters_mod + 1, &x8R);
+        // delaybuff_small 0 & 1
+        rbb_compute_shortDelay(&x8L, x->delayBuffs_small, &x9L);
+        rbb_compute_shortDelay(&x8R, x->delayBuffs_small + 1, &x9R);
+        // lowpass 1 & 2
+        rbb_compute_lowPass2(&x9L, x->lpFilters + 1, &x10L);
+        rbb_compute_lowPass2(&x9R, x->lpFilters + 2, &x10R);
+        // * decay
+        x11L = fDecay * x10L;
+        x11R = fDecay * x10R;
+        // allpass_long 0 & 1
+        rbb_compute_allpassLong(&x11L, x->apFilters_long, &x12L);
+        rbb_compute_allpassLong(&x11R, x->apFilters_long + 1, &x12R);
+        // delaybuff_small 2 & 3
+        rbb_compute_shortDelay(&x12L, x->delayBuffs_small + 2, &x13L);
+        rbb_compute_shortDelay(&x12R, x->delayBuffs_small + 3, &x13R);
+        // * decay
+        val_wet1 = fDecay * x13L;
+        val_wet2 = fDecay * x13R;
+        
+        /***** end processing of samples here *****/
+        
+        lastout_L = val_wet1;
+        lastout_R = val_wet2;
+        
+        *out_wet1 = 1.2 * x9R - 0.6 * x12R + 0.6 * x13R - 0.6 * x9L - 0.6 * x12L - 0.6 * x13L;
+        *out_wet2 = 1.2 * x9L - 0.6 * x12L + 0.6 * x13L - 0.6 * x9R - 0.6 * x12R - 0.6 * x13R;
+        
+        ++in_dry, ++in_decay, ++out_wet1, ++out_wet2;		// advance the pointers
     }
     
     // update object variables
+    x->verb_decay_coeff = fDecay;
+    x->lastout_L = lastout_L;
+    x->lastout_R = lastout_R;
+    x->sqinject_val = sqinject_val;
     
 }
 
