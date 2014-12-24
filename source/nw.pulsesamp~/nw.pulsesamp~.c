@@ -104,48 +104,55 @@ double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_
 t_symbol *ps_buffer;
 
 /********************************************************************************
-void main(void)
+int main(void)
 
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup((t_messlist **)&this_class, (method)nw_pulsesamp_new, (method)dsp_free, 
-			(short)sizeof(t_nw_pulsesamp), 0L, A_SYM, 0);
-	addmess((method)nw_pulsesamp_dsp, "dsp", A_CANT, 0);
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)nw_pulsesamp_new, (method)dsp_free,
+                  (short)sizeof(t_nw_pulsesamp), 0L, A_SYM, 0);
+    class_dspinit(c); // add standard functions to class
+    
+    class_addmethod(c, (method)nw_pulsesamp_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "nw_pulsesamp_setsnd" to the 'setSound' message */
-	addmess((method)nw_pulsesamp_setsnd, "setSound", A_SYM, 0);
+	class_addmethod(c, (method)nw_pulsesamp_setsnd, "setSound", A_SYM, 0);
 	
 	/* bind method "nw_pulsesamp_float" to incoming floats */
-	addfloat((method)nw_pulsesamp_float);
+	class_addmethod(c, (method)nw_pulsesamp_float, "float", A_FLOAT, 0);
 	
 	/* bind method "nw_pulsesamp_int" to incoming ints */
-	addint((method)nw_pulsesamp_int);
+	class_addmethod(c, (method)nw_pulsesamp_int, "int", A_LONG, 0);
 	
 	/* bind method "nw_pulsesamp_reverse" to the direction message */
-	addmess((method)nw_pulsesamp_reverse, "reverse", A_LONG, 0);
+	class_addmethod(c, (method)nw_pulsesamp_reverse, "reverse", A_LONG, 0);
 	
 	/* bind method "nw_pulsesamp_sndInterp" to the sndInterp message */
-	addmess((method)nw_pulsesamp_sndInterp, "sndInterp", A_LONG, 0);
+	class_addmethod(c, (method)nw_pulsesamp_sndInterp, "sndInterp", A_LONG, 0);
 	
 	/* bind method "nw_pulsesamp_assist" to the assistance message */
-	addmess((method)nw_pulsesamp_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)nw_pulsesamp_assist, "assist", A_CANT, 0);
 	
 	/* bind method "nw_pulsesamp_getinfo" to the getinfo message */
-	addmess((method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
+    class_register(CLASS_BOX, c); // register the class w max
+    pulsesamp_class = c;
 	
 	/* needed for 'buffer~' work, checks for validity of buffer specified */
 	ps_buffer = gensym("buffer~");
 	
-	#ifndef DEBUG
-		
-	#endif /* DEBUG */
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
 }
 
 /********************************************************************************
