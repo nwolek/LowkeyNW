@@ -44,7 +44,7 @@
 	
 	<!--ARGUMENTS-->
 	<objarglist>
-		<objarg name="decay-time" optional="1" type="float">
+		<objarg name="decay-time" optional="0" type="float">
 			<digest>Initial reverb decay time in milliseconds.</digest>
 		</objarg>
 	</objarglist>
