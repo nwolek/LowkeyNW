@@ -316,6 +316,13 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	if (x->snd_buf_ptr == NULL)		// buffer pointer is defined
 		goto zero;
 	
+    // get buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
 	// get interpolation options
 	interp_s = x->snd_interp;
 	
@@ -328,10 +335,7 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	index_s = x->curr_snd_pos;
 	index_s_start = x->grain_start; //add 2005.10.10
 	index_s_end = x->grain_end; //add 2005.10.10
-	// get buffer info
-    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-	tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
-	size_s = buffer_getframecount(snd_object);
+	// get history from last vector
 	last_s = x->snd_last_out;
 	last_pulse = x->last_pulse_in;		//added 2004.03.15
 	count_samp = x->curr_count_samp;	//added 2007.04.10
@@ -688,10 +692,9 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 	
 	if (buffer_ref_exists(b)) {
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
-        t_float *tab_b = buffer_locksamples(b_object);
         
-		if (buffer_getchannelcount(b_object) != 1 || !tab_b) {
-			error("%s: buffer~ > %s < must have a mono file loaded", OBJECT_NAME, s->s_name);
+		if (buffer_getchannelcount(b_object) != 1) {
+			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // make current buffer
@@ -713,8 +716,6 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 				#endif /* DEBUG */
 			}
 		}
-        
-        buffer_unlocksamples(b_object);
         
 	} else {
 		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
