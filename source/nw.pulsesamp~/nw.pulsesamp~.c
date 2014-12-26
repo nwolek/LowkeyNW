@@ -48,8 +48,8 @@ typedef struct _nw_pulsesamp
 	t_pxobject x_obj;
 	// sound buffer info
 	t_symbol *snd_sym;
-	t_buffer *snd_buf_ptr;
-	t_buffer *next_snd_buf_ptr;		//added 2002.07.24
+	t_buffer_ref *snd_buf_ptr;
+	t_buffer_ref *next_snd_buf_ptr;
 	double snd_last_out;
 	//long snd_buf_length;	//removed 2002.07.11
 	short snd_interp;
@@ -145,7 +145,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "nw_pulsesamp_dsp64" to the dsp64 message */
-    class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
+    //class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     pulsesamp_class = c;
@@ -224,7 +224,8 @@ void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count)
 	nw_pulsesamp_setsnd(x, x->snd_sym);
 	
 	/* set current snd position to 1 more than length */
-	x->curr_snd_pos = (float)((x->snd_buf_ptr)->b_frames) + 1.0;
+    t_buffer_obj *snd_object =  buffer_ref_getobject(x->snd_buf_ptr);
+	x->curr_snd_pos = (float)(buffer_getframecount(snd_object)) + 1.0;
 	
 	/* test inlet 2 and 3 for signal data */
 	x->grain_samp_inc_connected = count[1];
@@ -299,8 +300,8 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	t_float *out3 = (t_float *)(w[7]); 			//bang/click output; add 2007.04.13
 	t_float *out4 = (t_float *)(w[8]); 			//sample count output; add 2007.04.10
 	int vec_size = (int)(w[9]);					//vector size
-	t_buffer *s_ptr = x->snd_buf_ptr;
-	float *tab_s;
+	t_buffer_obj *snd_object;
+	t_float *tab_s;
 	double s_step_size, g_gain;
 	float  snd_out, last_s;
 	double index_s, index_s_start, index_s_end;  //change 2005.10.10
@@ -312,9 +313,7 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	/* check to make sure buffers are loaded with proper file types*/
 	if (x->x_obj.z_disabled)		// object is enabled
 		goto out;
-	if (s_ptr == NULL)				// buffer pointers are defined
-		goto zero;
-	if (!s_ptr->b_valid)			// files are loaded
+	if (x->snd_buf_ptr == NULL)		// buffer pointer is defined
 		goto zero;
 	
 	// get interpolation options
@@ -330,8 +329,9 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	index_s_start = x->grain_start; //add 2005.10.10
 	index_s_end = x->grain_end; //add 2005.10.10
 	// get buffer info
-	tab_s = s_ptr->b_samples;
-	size_s = s_ptr->b_frames;
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+	tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
+	size_s = buffer_getframecount(snd_object);
 	last_s = x->snd_last_out;
 	last_pulse = x->last_pulse_in;		//added 2004.03.15
 	count_samp = x->curr_count_samp;	//added 2007.04.10
@@ -354,9 +354,9 @@ t_int *nw_pulsesamp_perform(t_int *w)
 				index_s_start = x->grain_start; //add 2005.10.10
 				index_s_end = x->grain_end;		// add 2005.10.10
 				// get buffer info
-				s_ptr = x->snd_buf_ptr;
-				tab_s = s_ptr->b_samples;
-				size_s = s_ptr->b_frames;
+				snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
+                size_s = buffer_getframecount(snd_object);
 				last_s = x->snd_last_out;
 				count_samp = x->curr_count_samp;	//add 2007.04.10
 				
@@ -459,7 +459,8 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	x->last_pulse_in = last_pulse;
 	x->overflow_status = of_status;
 	x->curr_count_samp = count_samp;	//added 2007.04.10
-		
+    
+    buffer_unlocksamples(snd_object);
 	return (w + 10);
 
 zero:
@@ -552,7 +553,7 @@ returns:		nothing
 void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain, 
 	float in_start, float in_end)
 {
-	t_buffer *s_ptr;
+    t_buffer_obj	*snd_object;
 	//long temp, pretemp;
 	
 	#ifdef DEBUG
@@ -569,7 +570,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 		#endif /* DEBUG */
 	}
 	
-	s_ptr = x->snd_buf_ptr;
+	snd_object = buffer_ref_getobject(x->snd_buf_ptr);
 	
 	x->grain_direction = x->next_grain_direction;
 	
@@ -581,7 +582,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	}
 	
 	// compute sound buffer step size per vector sample
-	x->snd_step_size = x->grain_samp_inc * s_ptr->b_sr * x->output_1oversr;
+	x->snd_step_size = x->grain_samp_inc * buffer_getsamplerate(snd_object) * x->output_1oversr;
 	
 	if (x->grain_gain_connected) { // if gain multiplier is at audio rate
 		x->grain_gain = in_gain;
@@ -598,7 +599,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	}
 	
 	// convert start to samples
-	x->grain_start = (long)((x->grain_start * s_ptr->b_msr) + 0.5);
+	x->grain_start = (long)((x->grain_start * buffer_getmillisamplerate(snd_object)) + 0.5);
 	
 	if (x->grain_end_connected) { // if end is at audio rate
 		x->grain_end = in_end;
@@ -607,10 +608,11 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	}
 	
 	// convert end to samples
-	x->grain_end = (long)((x->grain_end * s_ptr->b_msr) + 0.5);
+	x->grain_end = (long)((x->grain_end * buffer_getmillisamplerate(snd_object)) + 0.5);
 	
 	// test if end within bounds
-	if (x->grain_end < 0. || x->grain_end > (double)(s_ptr->b_frames)) x->grain_end = (double)(s_ptr->b_frames);
+	if (x->grain_end < 0. || x->grain_end > (double)(buffer_getframecount(snd_object))) x->grain_end =
+        (double)(buffer_getframecount(snd_object));
 	// test if start within bounds
 	if (x->grain_start < 0. || x->grain_start > x->grain_end) x->grain_start = 0.;
 	
@@ -682,11 +684,14 @@ returns:		nothing
 ********************************************************************************/
 void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 {
-	t_buffer *b;
+	t_buffer_ref *b = buffer_ref_new((t_object*)x, s);;
 	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
-			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+	if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        t_float *tab_b = buffer_locksamples(b_object);
+        
+		if (buffer_getchannelcount(b_object) != 1 || !tab_b) {
+			error("%s: buffer~ > %s < must have a mono file loaded", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // make current buffer
@@ -708,6 +713,9 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 				#endif /* DEBUG */
 			}
 		}
+        
+        buffer_unlocksamples(b_object);
+        
 	} else {
 		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
 		x->next_snd_buf_ptr = NULL;
