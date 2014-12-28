@@ -599,7 +599,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     t_double *out_grain_start = outs[2];
     t_double *out_sample_count = outs[3];
     
-    // local vars for audio buffer
+    // local vars for snd buffer
     t_buffer_obj *snd_object;
     t_float *tab_s;
     float snd_out;
@@ -613,6 +613,36 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     short interp_s, g_direction, of_status;
     long n;
     
+    /* check to make sure buffers are loaded with proper file types*/
+    if (x->x_obj.z_disabled)		// object is enabled
+        goto out;
+    if (x->snd_buf_ptr == NULL)     // buffer pointer is defined
+        goto zero;
+    
+    // get snd buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get snd index info
+    index_s_start = x->grain_start;
+    index_s_end = x->grain_end;
+    s_step_size = x->snd_step_size;
+    
+    // get grain options
+    g_gain = x->grain_gain;
+    interp_s = x->snd_interp;
+    g_direction = x->grain_direction;
+    
+    // get history from last vector
+    last_s = x->snd_last_out;
+    index_s = x->curr_snd_pos;
+    last_pulse = x->last_pulse_in;
+    of_status = x->overflow_status;
+    count_samp = x->curr_count_samp;
+    
     n = vectorsize;
     while(n--)
     {
@@ -622,6 +652,30 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         ++in_pulse, ++in_sample_increment, ++in_gain, ++in_start, ++in_end;
         ++out_signal, ++out_overflow, ++out_grain_start, ++out_sample_count;
     }
+    
+    // update object history for next vector
+    x->snd_last_out = last_s;
+    x->curr_snd_pos = index_s;
+    x->last_pulse_in = last_pulse;
+    x->overflow_status = of_status;
+    x->curr_count_samp = count_samp;
+    
+    buffer_unlocksamples(snd_object);
+    return;
+
+// alternate blank output
+zero:
+    n = vectorsize;
+    while(n--)
+    {
+        *out_signal++ = 0.;
+        *out_overflow++ = -1.;
+        *out_grain_start++ = 0.;
+        *out_sample_count++ = 0.;
+    }
+
+out:
+    return;
     
 }
 
