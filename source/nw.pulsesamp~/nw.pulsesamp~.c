@@ -88,6 +88,7 @@ void *nw_pulsesamp_new(t_symbol *snd);
 t_int *nw_pulsesamp_perform(t_int *w);
 t_int *nw_pulsesamp_perform0(t_int *w);
 void nw_pulsesamp_perform64zero(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count);
 void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s);
@@ -275,8 +276,35 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
         post("%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
-    // add the perform routine to the signal chain
-    dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)nw_pulsesamp_perform64zero, 0, NULL);
+    /* set buffers */
+    nw_pulsesamp_setsnd(x, x->snd_sym);
+    
+    /* set current snd position to 1 more than length */
+    t_buffer_obj *snd_object =  buffer_ref_getobject(x->snd_buf_ptr);
+    x->curr_snd_pos = (float)(buffer_getframecount(snd_object)) + 1.0;
+    
+    /* test inlets for signal data */
+    x->grain_samp_inc_connected = count[1];
+    x->grain_gain_connected = count[2];
+    x->grain_start_connected = count[3];
+    x->grain_end_connected = count[4];
+    
+    x->output_sr = samplerate;
+    x->output_1oversr = 1.0 / x->output_sr;
+    
+    //set overflow status
+    x->overflow_status = OVERFLOW_OFF;
+    
+    if (count[5] && count[0]) {	// if input and output connected..
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)nw_pulsesamp_perform64, 0, NULL);
+    } else {
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
     
 }
 
@@ -538,6 +566,61 @@ void nw_pulsesamp_perform64zero(t_nw_pulsesamp *x, t_object *dsp64, double **ins
             *(curr_out[m]) = 0.0;		// save to output
             (curr_out[m])++;			// advance the outlet pointer
         }
+    }
+    
+}
+
+/********************************************************************************
+ void *nw_pulsesamp_perform64()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,
+                                long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars outlets and inlets
+    t_double *in_pulse = ins[0];
+    t_double *in_sample_increment = ins[1];
+    t_double *in_gain = ins[2];
+    t_double *in_start = ins[3];
+    t_double *in_end = ins[4];
+    t_double *out_signal = outs[0];
+    t_double *out_overflow = outs[1];
+    t_double *out_grain_start = outs[2];
+    t_double *out_sample_count = outs[3];
+    
+    // local vars for audio buffer
+    t_buffer_obj *snd_object;
+    t_float *tab_s;
+    float snd_out;
+    long size_s;
+    
+    // local vars for object vars and while loop
+    double index_s, index_s_start, index_s_end;
+    double s_step_size, g_gain;
+    float last_s, last_pulse;
+    long count_samp;
+    short interp_s, g_direction, of_status;
+    long n;
+    
+    n = vectorsize;
+    while(n--)
+    {
+        
+        
+        // advance all pointers
+        ++in_pulse, ++in_sample_increment, ++in_gain, ++in_start, ++in_end;
+        ++out_signal, ++out_overflow, ++out_grain_start, ++out_sample_count;
     }
     
 }
