@@ -146,7 +146,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)nw_pulsesamp_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "nw_pulsesamp_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     pulsesamp_class = c;
@@ -647,6 +647,45 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     while(n--)
     {
         
+        /* check bounds of window index */
+        if (index_s > size_s) {
+            if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
+                nw_pulsesamp_initGrain(x, *in_sample_increment, *in_gain, 0., 0.);
+                
+                /* set local vars */
+                // get grain options
+                g_gain = x->grain_gain;
+                g_direction = x->grain_direction;
+                // get pointer info
+                s_step_size = x->snd_step_size;
+                index_s = x->curr_snd_pos;
+                index_s_start = x->grain_start;
+                index_s_end = x->grain_end;
+                // get buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
+                size_s = buffer_getframecount(snd_object);
+                last_s = x->snd_last_out;
+                count_samp = x->curr_count_samp;
+                
+                //pulse tracking for overflow
+                of_status = OVERFLOW_OFF;
+            } else { // if not...
+                *out_signal = 0.0;
+                *out_overflow = 0.0;
+                *out_grain_start = 0.0;
+                *out_sample_count = 0.0;
+                last_pulse = *in_pulse;
+                goto advance_pointers;
+            }
+        }
+        
+        //pulse tracking for overflow
+        if (!of_status) {
+            if (last_pulse == 1.0 && *in_pulse == 0.0) { // if grain on & pulse ends...
+                of_status = OVERFLOW_ON;	//start overflowing
+            }
+        }
         
         // advance snd index
         if (g_direction == FORWARD_GRAINS) {	// if forward...
