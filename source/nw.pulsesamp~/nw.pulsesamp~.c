@@ -648,6 +648,35 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     {
         
         
+        // get value from the snd buffer samples
+        if (interp_s == INTERP_OFF) {
+            snd_out = tab_s[(long)index_s];
+        } else {
+            snd_out = allpassInterp(tab_s, (float)index_s, last_s, size_s);
+        }
+        
+        // multiply snd_out by gain value
+        *out_signal = snd_out * g_gain;
+        
+        if (of_status) {
+            *out_overflow = 1.0;
+        } else {
+            *out_overflow = 0.0;
+        }
+        
+        if (!count_samp) {
+            *out_grain_start = 1.0;
+        } else {
+            *out_grain_start = 0.0;
+        }
+        
+        *out_sample_count = (double)count_samp;
+        
+        // update vars for last output
+        last_pulse = *in_pulse;
+        last_s = snd_out;
+        count_samp++;
+        
         // advance all pointers
         ++in_pulse, ++in_sample_increment, ++in_gain, ++in_start, ++in_end;
         ++out_signal, ++out_overflow, ++out_grain_start, ++out_sample_count;
