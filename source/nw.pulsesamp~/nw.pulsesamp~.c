@@ -648,6 +648,43 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     {
         
         
+        // advance snd index
+        if (g_direction == FORWARD_GRAINS) {	// if forward...
+            index_s += s_step_size;		// add to sound index
+            
+            /* check bounds of buffer index */
+            if (index_s > index_s_end) {
+                index_s = size_s + s_step_size;
+                *out_signal = 0.0;
+                *out_overflow = 0.0;
+                *out_grain_start = 0.0;
+                *out_sample_count = 0.0;
+                last_pulse = *in_pulse;
+                #ifdef DEBUG
+                    post("%s: end of grain", OBJECT_NAME);
+                #endif /* DEBUG */
+                goto advance_pointers;
+            }
+            
+        } else {	// if reverse...
+            index_s -= s_step_size;		// subtract from sound index
+            
+            /* check bounds of buffer index */
+            if (index_s < index_s_start) {
+                index_s = size_s + s_step_size;
+                *out_signal = 0.0;
+                *out_overflow = 0.0;
+                *out_grain_start = 0.0;
+                *out_sample_count = 0.0;
+                last_pulse = *in_pulse;
+                #ifdef DEBUG
+                    post("%s: end of grain", OBJECT_NAME);
+                #endif /* DEBUG */
+                goto advance_pointers;
+            }
+            
+        }
+        
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
             snd_out = tab_s[(long)index_s];
@@ -677,6 +714,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         last_s = snd_out;
         count_samp++;
         
+advance_pointers:
         // advance all pointers
         ++in_pulse, ++in_sample_increment, ++in_gain, ++in_start, ++in_end;
         ++out_signal, ++out_overflow, ++out_grain_start, ++out_sample_count;
