@@ -16,7 +16,7 @@
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.pulsesamp~"		// name of the object
 
@@ -1090,7 +1090,7 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 				strcpy(s, "(signal) audio channel 1");
 				break;
 			case 1:
-				strcpy(s, "(signal) audio channel 2");
+				strcpy(s, "(signal) audio channel 2 COMING SOON");
 				break;
 			case 2:
 				strcpy(s, "(signal) sample count");
