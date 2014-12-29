@@ -649,26 +649,45 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         /* check bounds of window index */
         if (count_samp == -1) {
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
+                buffer_unlocksamples(snd_object);
+                
                 nw_pulsesamp_initGrain(x, *in_sample_increment, *in_gain, 0., 0.);
                 
-                /* set local vars */
-                // get grain options
-                g_gain = x->grain_gain;
-                g_direction = x->grain_direction;
-                // get pointer info
-                s_step_size = x->snd_step_size;
-                index_s = x->curr_snd_pos;
+                /* update local vars again */
+                
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_overflow = 0.0;
+                    *out_grain_start = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    last_pulse = *in_pulse;
+                    goto advance_pointers;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get snd index info
                 index_s_start = x->grain_start;
                 index_s_end = x->grain_end;
-                // get buffer info
-                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-                tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
-                size_s = buffer_getframecount(snd_object);
+                s_step_size = x->snd_step_size;
+                
+                // get grain options
+                g_gain = x->grain_gain;
+                interp_s = x->snd_interp;
+                g_direction = x->grain_direction;
+                
+                // other history
                 last_s = x->snd_last_out;
+                index_s = x->curr_snd_pos;
+                last_pulse = x->last_pulse_in;
+                /*** of_status = x->overflow_status; ***/
                 count_samp = x->curr_count_samp;
                 
-                //pulse tracking for overflow
+                // BUT this stays off until duty cycle ends
                 of_status = OVERFLOW_OFF;
+                
             } else { // if not...
                 *out_signal = 0.0;
                 *out_overflow = 0.0;
@@ -776,7 +795,7 @@ zero:
         *out_signal++ = 0.;
         *out_overflow++ = -1.;
         *out_grain_start++ = 0.;
-        *out_sample_count++ = 0.;
+        *out_sample_count++ = -1.;
     }
 
 out:
