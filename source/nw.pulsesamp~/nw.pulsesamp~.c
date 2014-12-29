@@ -820,17 +820,15 @@ returns:		nothing
 void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain, 
 	float in_start, float in_end)
 {
-    t_buffer_obj	*snd_object;
-	//long temp, pretemp;
-	
 	#ifdef DEBUG
 		post("%s: initializing grain", OBJECT_NAME);
 	#endif /* DEBUG */
+    
+    t_buffer_obj	*snd_object;
 	
-	if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
+	if (x->next_snd_buf_ptr != NULL) {
 		x->snd_buf_ptr = x->next_snd_buf_ptr;
 		x->next_snd_buf_ptr = NULL;
-		//x->snd_last_out = 0.0; // removed 2002.12.09, duplicated below
 		
 		#ifdef DEBUG
 			post("%s: buffer pointer updated", OBJECT_NAME);
@@ -839,40 +837,26 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	
 	snd_object = buffer_ref_getobject(x->snd_buf_ptr);
 	
-	x->grain_direction = x->next_grain_direction;
+	/* should input variables be at audio or control rate ? */
 	
-	/* test if variables should be at audio or control rate */
-	if (x->grain_samp_inc_connected) { // if samp_inc is at audio rate
-		x->grain_samp_inc = in_samp_inc;
-	} else { // if samp_inc is at control rate
-		x->grain_samp_inc = x->next_grain_samp_inc;
-	}
+    x->grain_samp_inc = x->grain_samp_inc_connected ? in_samp_inc : x->next_grain_samp_inc;
+    
+    x->grain_gain = x->grain_gain_connected ? in_gain : x->next_grain_gain;
 	
+    x->grain_start = x->grain_start_connected ? in_start : x->next_grain_start;
+    
+    x->grain_end = x->grain_end_connected ? in_end : x->next_grain_end;
+    
+    /* compute dependent variables */
+    
 	// compute sound buffer step size per vector sample
 	x->snd_step_size = x->grain_samp_inc * buffer_getsamplerate(snd_object) * x->output_1oversr;
 	
-	if (x->grain_gain_connected) { // if gain multiplier is at audio rate
-		x->grain_gain = in_gain;
-	} else { // if pitch multiplier at control rate
-		x->grain_gain = x->next_grain_gain;
-	}
-	
-	/* start add 2005.10.10 */
-	
-	if (x->grain_start_connected) { // if start is at audio rate
-		x->grain_start = in_start;
-	} else { // if start at control rate
-		x->grain_start = x->next_grain_start;
-	}
+    // update grain direction
+    x->grain_direction = x->next_grain_direction;
 	
 	// convert start to samples
 	x->grain_start = (long)((x->grain_start * buffer_getmillisamplerate(snd_object)) + 0.5);
-	
-	if (x->grain_end_connected) { // if end is at audio rate
-		x->grain_end = in_end;
-	} else { // if end at control rate
-		x->grain_end = x->next_grain_end;
-	}
 	
 	// convert end to samples
 	x->grain_end = (long)((x->grain_end * buffer_getmillisamplerate(snd_object)) + 0.5);
@@ -880,46 +864,9 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	// test if end within bounds
 	if (x->grain_end < 0. || x->grain_end > (double)(buffer_getframecount(snd_object))) x->grain_end =
         (double)(buffer_getframecount(snd_object));
-	// test if start within bounds
+	
+    // test if start within bounds
 	if (x->grain_start < 0. || x->grain_start > x->grain_end) x->grain_start = 0.;
-	
-	/* zx not working, try again later
-	// search for start zx
-	temp = (long)(x->grain_start);
-	pretemp = --temp;
-	while (true)
-	{
-		if (s_ptr->b_samples[pretemp] < 0. && s_ptr->b_samples[temp] >= 0.) {
-			break;
-		}
-		--temp, --pretemp;
-		if (pretemp < 0) 
-		{
-			temp = 0;
-			break;
-		}
-	}
-	x->grain_start = (double)temp;
-	
-	// search for end zx
-	temp = (long)(x->grain_end);
-	pretemp = --temp;
-	while (true)
-	{
-		if (s_ptr->b_samples[pretemp] < 0. && s_ptr->b_samples[temp] >= 0.) {
-			break;
-		}
-		++temp, ++pretemp;
-		if (pretemp >= s_ptr->b_frames) 
-		{
-			temp = s_ptr->b_frames;
-			break;
-		}
-	}
-	x->grain_end = (double)temp;
-	*/
-	
-	/* end add 2005.10.10 */
 	
 	// set initial sound position based on direction
 	if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
@@ -930,7 +877,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	
 	// reset history
 	x->snd_last_out = 0.0;
-	x->curr_count_samp = -1;		// add 2007.04.10
+	x->curr_count_samp = -1;
 	
 	// send bang out to notify of beginning samp
 	defer(x, (void *)nw_pulsesamp_bangoninit,0L,0,0L); //added 2004.03.10
