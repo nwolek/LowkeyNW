@@ -79,9 +79,6 @@ typedef struct _nw_pulsesamp
 	float last_pulse_in;
 	double output_sr;
 	double output_1oversr;
-	//bang outlets
-	void *out_bangoninit;		// add 2004.03.10
-	void *out_bangonoverflow;	// add 2007.04.15
 } t_nw_pulsesamp;
 
 void *nw_pulsesamp_new(t_symbol *snd);
@@ -94,7 +91,6 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
 void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s);
 void nw_pulsesamp_float(t_nw_pulsesamp *x, double f);
 void nw_pulsesamp_int(t_nw_pulsesamp *x, long l);
-void nw_pulsesamp_bangoninit(t_nw_pulsesamp *x, t_symbol *s, short argc, t_atom argv);
 void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain, float in_start, float in_end);
 void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l);
 void nw_pulsesamp_reverse(t_nw_pulsesamp *x, long l);
@@ -173,10 +169,10 @@ void *nw_pulsesamp_new(t_symbol *snd)
 {
 	t_nw_pulsesamp *x = (t_nw_pulsesamp *) object_alloc((t_class*) pulsesamp_class);
 	dsp_setup((t_pxobject *)x, 5);					// five inlets
-	outlet_new((t_pxobject *)x, "signal");			// sample count outlet; add 2007.04.10
-	x->out_bangoninit = outlet_new((t_pxobject *)x, "signal");	// "bang/click when samp begins" outlet; mod 2007.04.15
-	x->out_bangonoverflow = outlet_new((t_pxobject *)x, "signal");			// overflow outlet; mod 2007.04.15
-	outlet_new((t_pxobject *)x, "signal");			// signal outlet
+	outlet_new((t_pxobject *)x, "signal");			// overflow outlet
+	outlet_new((t_pxobject *)x, "signal");          // sample count outlet
+	outlet_new((t_pxobject *)x, "signal");			// signal ch2 outlet
+	outlet_new((t_pxobject *)x, "signal");			// signal ch1 outlet
 	
 	/* set buffer names */
 	x->snd_sym = snd;
@@ -591,9 +587,9 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     t_double *in_start = ins[3];
     t_double *in_end = ins[4];
     t_double *out_signal = outs[0];
-    t_double *out_overflow = outs[1];
-    t_double *out_grain_start = outs[2];
-    t_double *out_sample_count = outs[3];
+    t_double *out_signal2 = outs[1];
+    t_double *out_sample_count = outs[2];
+    t_double *out_overflow = outs[3];
     
     // local vars for snd buffer
     t_buffer_obj *snd_object;
@@ -657,8 +653,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                 tab_s = buffer_locksamples(snd_object);
                 if (!tab_s)	{	// buffer samples were not accessible
                     *out_signal = 0.0;
+                    *out_signal2 = 0.0;
                     *out_overflow = 0.0;
-                    *out_grain_start = 0.0;
                     *out_sample_count = (double)count_samp;
                     last_pulse = *in_pulse;
                     goto advance_pointers;
@@ -687,8 +683,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                 
             } else { // if not...
                 *out_signal = 0.0;
+                *out_signal2 = 0.0;
                 *out_overflow = 0.0;
-                *out_grain_start = 0.0;
                 *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 goto advance_pointers;
@@ -710,8 +706,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             if (index_s > index_s_end) {
                 count_samp = -1;
                 *out_signal = 0.0;
+                *out_signal2 = 0.0;
                 *out_overflow = 0.0;
-                *out_grain_start = 0.0;
                 *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
@@ -727,8 +723,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             if (index_s < index_s_start) {
                 count_samp = -1;
                 *out_signal = 0.0;
+                *out_signal2 = 0.0;
                 *out_overflow = 0.0;
-                *out_grain_start = 0.0;
                 *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
@@ -751,17 +747,12 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         
         // multiply snd_out by gain value
         *out_signal = snd_out * g_gain;
+        *out_signal2 = 0.;
         
         if (of_status) {
             *out_overflow = *in_pulse;
         } else {
             *out_overflow = 0.0;
-        }
-        
-        if (!count_samp) {
-            *out_grain_start = 1.0;
-        } else {
-            *out_grain_start = 0.0;
         }
         
         *out_sample_count = (double)count_samp;
@@ -773,7 +764,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
 advance_pointers:
         // advance all pointers
         ++in_pulse, ++in_sample_increment, ++in_gain, ++in_start, ++in_end;
-        ++out_signal, ++out_overflow, ++out_grain_start, ++out_sample_count;
+        ++out_signal, ++out_signal2, ++out_overflow, ++out_sample_count;
     }
     
     // update object history for next vector
@@ -792,8 +783,8 @@ zero:
     while(n--)
     {
         *out_signal++ = 0.;
+        *out_signal2++ = 0.;
         *out_overflow++ = -1.;
-        *out_grain_start++ = 0.;
         *out_sample_count++ = -1.;
     }
 
@@ -876,9 +867,6 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	// reset history
 	x->snd_last_out = 0.0;
 	x->curr_count_samp = -1;
-	
-	// send bang out to notify of beginning samp
-	defer(x, (void *)nw_pulsesamp_bangoninit,0L,0,0L); //added 2004.03.10
 	
 	#ifdef DEBUG
 		post("%s: beginning of grain", OBJECT_NAME);
@@ -1003,21 +991,6 @@ void nw_pulsesamp_int(t_nw_pulsesamp *x, long l)
 }
 
 /********************************************************************************
-void nw_pulsesamp_bangoninit(t_nw_pulsesamp *x, t_symbol *s, short argc, t_atom argv)
-
-inputs:			x		-- pointer to our object
-description:	sends bangs when samp is initialized; allows external settings
-	to advance; extra arguments allow for use of defer method
-returns:		nothing
-********************************************************************************/
-void nw_pulsesamp_bangoninit(t_nw_pulsesamp *x, t_symbol *s, short argc, t_atom argv)
-{
-	if (sys_getdspstate()) {
-		outlet_bang(x->out_bangoninit);
-	}
-}
-
-/********************************************************************************
 void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l)
 
 inputs:			x		-- pointer to our object
@@ -1088,7 +1061,7 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 	if (msg==ASSIST_INLET) {
 		switch (arg) {
 			case 0:
-				strcpy(s, "(signal) pulse to output a grain");
+				strcpy(s, "(signal) pulse outputs buffer segment");
 				break;
 			case 1:
 				strcpy(s, "(signal/float) sample increment, 1.0 = normal");
@@ -1106,16 +1079,16 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 	} else if (msg==ASSIST_OUTLET) {
 		switch (arg) {
 			case 0:
-				strcpy(s, "(signal) sampler output");
+				strcpy(s, "(signal) audio channel 1");
 				break;
 			case 1:
-				strcpy(s, "(click) overflow");
+				strcpy(s, "(signal) audio channel 2");
 				break;
 			case 2:
-				strcpy(s, "(click/bang) init");
+				strcpy(s, "(signal) sample count");
 				break;
 			case 3:
-				strcpy(s, "(signal) sample count");
+				strcpy(s, "(signal) overflow");
 				break;
 		}
 	}
