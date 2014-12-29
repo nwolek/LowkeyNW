@@ -651,7 +651,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
                 buffer_unlocksamples(snd_object);
                 
-                nw_pulsesamp_initGrain(x, *in_sample_increment, *in_gain, 0., 0.);
+                nw_pulsesamp_initGrain(x, *in_sample_increment, *in_gain, *in_start, *in_end);
                 
                 /* update local vars again */
                 
@@ -742,6 +742,9 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             
         }
         
+        // if we made it here, then we will actually start counting
+        count_samp++;
+        
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
             snd_out = tab_s[(long)index_s];
@@ -769,7 +772,6 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         // update vars for last output
         last_pulse = *in_pulse;
         last_s = snd_out;
-        count_samp++;
         
 advance_pointers:
         // advance all pointers
@@ -928,7 +930,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	
 	// reset history
 	x->snd_last_out = 0.0;
-	x->curr_count_samp = 0;		// add 2007.04.10
+	x->curr_count_samp = -1;		// add 2007.04.10
 	
 	// send bang out to notify of beginning samp
 	defer(x, (void *)nw_pulsesamp_bangoninit,0L,0,0L); //added 2004.03.10
