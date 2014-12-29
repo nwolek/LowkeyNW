@@ -192,7 +192,7 @@ void *nw_pulsesamp_new(t_symbol *snd)
 	x->snd_step_size = 1.0;
 	x->curr_snd_pos = 0.0;
 	x->last_pulse_in = 0.0;
-	x->curr_count_samp = 0;						// add 2007.04.10
+	x->curr_count_samp = -1;
 	
 	/* set flags to defaults */
 	x->snd_interp = INTERP_ON;
@@ -281,7 +281,6 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
     
     /* set current snd position to 1 more than length */
     t_buffer_obj *snd_object =  buffer_ref_getobject(x->snd_buf_ptr);
-    x->curr_snd_pos = (float)(buffer_getframecount(snd_object)) + 1.0;
     
     /* test inlets for signal data */
     x->grain_samp_inc_connected = count[1];
@@ -648,7 +647,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     {
         
         /* check bounds of window index */
-        if (index_s > size_s) {
+        if (count_samp == -1) {
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
                 nw_pulsesamp_initGrain(x, *in_sample_increment, *in_gain, 0., 0.);
                 
@@ -674,7 +673,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                 *out_signal = 0.0;
                 *out_overflow = 0.0;
                 *out_grain_start = 0.0;
-                *out_sample_count = 0.0;
+                *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 goto advance_pointers;
             }
@@ -693,11 +692,11 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             
             /* check bounds of buffer index */
             if (index_s > index_s_end) {
-                index_s = size_s + s_step_size;
+                count_samp = -1;
                 *out_signal = 0.0;
                 *out_overflow = 0.0;
                 *out_grain_start = 0.0;
-                *out_sample_count = 0.0;
+                *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
                     post("%s: end of grain", OBJECT_NAME);
@@ -710,11 +709,11 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
             
             /* check bounds of buffer index */
             if (index_s < index_s_start) {
-                index_s = size_s + s_step_size;
+                count_samp = -1;
                 *out_signal = 0.0;
                 *out_overflow = 0.0;
                 *out_grain_start = 0.0;
-                *out_sample_count = 0.0;
+                *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
                     post("%s: end of grain", OBJECT_NAME);
