@@ -133,6 +133,7 @@
 			</digest>
 			<description>
 				The word <m>set</m>, followed by the name of a <o>buffer~</o> object, uses that <o>buffer~</o> for playback.
+				Changes sent by the <m>set</m> message are deferred to the start of the next segment. 
 			</description>
 		</method>
 		<method name="reverse">
@@ -145,6 +146,7 @@
 			<description>
 				A <m>reverse 1</m> message will play the defined <o>buffer~</o> segment backwards.
 				A <m>reverse 0</m> message will play the defined <o>buffer~</o> segment forward.
+				Changes sent by the <m>reverse</m> message are deferred to the start of the next segment. 
 			</description>
 		</method>
 		<method name="interpolation">
