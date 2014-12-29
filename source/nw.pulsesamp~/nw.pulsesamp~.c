@@ -734,7 +734,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         *out_signal = snd_out * g_gain;
         
         if (of_status) {
-            *out_overflow = 1.0;
+            *out_overflow = *in_pulse;
         } else {
             *out_overflow = 0.0;
         }
