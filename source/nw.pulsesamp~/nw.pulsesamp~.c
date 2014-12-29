@@ -279,9 +279,6 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
     /* set buffers */
     nw_pulsesamp_setsnd(x, x->snd_sym);
     
-    /* set current snd position to 1 more than length */
-    t_buffer_obj *snd_object =  buffer_ref_getobject(x->snd_buf_ptr);
-    
     /* test inlets for signal data */
     x->grain_samp_inc_connected = count[1];
     x->grain_gain_connected = count[2];
