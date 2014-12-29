@@ -124,8 +124,8 @@ int C74_EXPORT main(void)
     
     class_addmethod(c, (method)nw_pulsesamp_dsp, "dsp", A_CANT, 0);
 	
-	/* bind method "nw_pulsesamp_setsnd" to the 'setSound' message */
-	class_addmethod(c, (method)nw_pulsesamp_setsnd, "setSound", A_SYM, 0);
+	/* bind method "nw_pulsesamp_setsnd" to the 'set' message */
+	class_addmethod(c, (method)nw_pulsesamp_setsnd, "set", A_SYM, 0);
 	
 	/* bind method "nw_pulsesamp_float" to incoming floats */
 	class_addmethod(c, (method)nw_pulsesamp_float, "float", A_FLOAT, 0);
