@@ -96,7 +96,6 @@ void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l);
 void nw_pulsesamp_reverse(t_nw_pulsesamp *x, long l);
 void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, char *s);
 void nw_pulsesamp_getinfo(t_nw_pulsesamp *x);
-float allpassInterp(float *in_array, float index, float last_out, long buf_length);
 double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_size, short in_chans);
 
 
@@ -322,10 +321,10 @@ t_int *nw_pulsesamp_perform(t_int *w)
 	int vec_size = (int)(w[9]);					//vector size
 	t_buffer_obj *snd_object;
 	t_float *tab_s;
-	double s_step_size, g_gain;
+	double s_step_size, g_gain, temp_index_frac;
 	float  snd_out, last_s;
-	double index_s, index_s_start, index_s_end;  //change 2005.10.10
-	long size_s, count_samp;	// change 2007.04.10
+	double index_s, index_s_start, index_s_end;
+	long size_s, count_samp, temp_index_int;
 	short interp_s, g_direction, of_status;
 	float last_pulse;
 	
@@ -443,12 +442,16 @@ t_int *nw_pulsesamp_perform(t_int *w)
 			
 		}
 		
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_s); // integer portion of index
+        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        
 		if (interp_s == INTERP_OFF) {
 			/* interpolation sounds better than following, but uses more CPU */
 			snd_out = tab_s[(long)index_s];
 		} else { // if INTERP_ON //
-			/* perform allpass interpolation on sound buffer output */
-			snd_out = allpassInterp(tab_s, (float)index_s, last_s, size_s);
+			/* perform interpolation on sound buffer output */
+			snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
 		}
 		
 		/* multiply snd_out by win_value */
@@ -603,7 +606,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     float last_s, last_pulse;
     long count_samp;
     short interp_s, g_direction, of_status;
-    long n;
+    long n, temp_index_int;
+    double temp_index_frac;
     
     /* check to make sure buffers are loaded with proper file types*/
     if (x->x_obj.z_disabled)		// object is enabled
@@ -738,11 +742,15 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         // if we made it here, then we will actually start counting
         count_samp++;
         
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_s); // integer portion of index
+        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
             snd_out = tab_s[(long)index_s];
         } else {
-            snd_out = allpassInterp(tab_s, (float)index_s, last_s, size_s);
+            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
         }
         
         // multiply snd_out by gain value
@@ -1111,34 +1119,6 @@ void nw_pulsesamp_getinfo(t_nw_pulsesamp *x)
 {
 	post("%s object by Nathan Wolek", OBJECT_NAME);
 	post("Last updated on %s - www.nathanwolek.com", __DATE__);
-}
-
-/********************************************************************************
-float allpassInterp(float *in_array, float index, float last_out, long buf_length)
-
-inputs:			*in_array -- name of array of input values
-				index -- floating point index value to interpolate
-				last_out -- value of last interpolated output
-description:	performs allpass interpolation on an input array and returns the
-	results to a location specified by a pointer; implements filter as specified
-	in Dattorro 2: J. Audio Eng. Soc., Vol 45, No 10, 1997 October
-returns:		interpolated output
-********************************************************************************/
-float allpassInterp(float *in_array, float index, float last_out, long buf_length)
-{
-	// index = i.frac
-	long index_i = (long)index;					// i
-	long index_iP1 = index_i + 1;				// i + 1
-	float index_frac = index - (float)index_i;	// frac
-	float out;
-	
-	// make sure that index_iP1 is not out of range
-	while (index_iP1 >= buf_length) index_iP1 -= buf_length;
-	
-	// formula as on bottom of page 765 of above Dattorro article
-	out = in_array[index_i] + index_frac * (in_array[index_iP1] - last_out);
-	
-	return out;
 }
 
 /********************************************************************************
