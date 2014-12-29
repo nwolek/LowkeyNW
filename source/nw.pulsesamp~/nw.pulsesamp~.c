@@ -136,8 +136,8 @@ int C74_EXPORT main(void)
 	/* bind method "nw_pulsesamp_reverse" to the direction message */
 	class_addmethod(c, (method)nw_pulsesamp_reverse, "reverse", A_LONG, 0);
 	
-	/* bind method "nw_pulsesamp_sndInterp" to the sndInterp message */
-	class_addmethod(c, (method)nw_pulsesamp_sndInterp, "sndInterp", A_LONG, 0);
+	/* bind method "nw_pulsesamp_sndInterp" to the interpolation message */
+	class_addmethod(c, (method)nw_pulsesamp_sndInterp, "interpolation", A_LONG, 0);
 	
 	/* bind method "nw_pulsesamp_assist" to the assistance message */
 	class_addmethod(c, (method)nw_pulsesamp_assist, "assist", A_CANT, 0);
@@ -1022,7 +1022,7 @@ void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l)
 
 inputs:			x		-- pointer to our object
 				l		-- flag value
-description:	method called when "sndInterp" message is received; allows user 
+description:	method called when "interpolation" message is received; allows user
 		to define whether interpolation is used in pulling values from the sound
 		buffer; default is on
 returns:		nothing
@@ -1032,15 +1032,15 @@ void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l)
 	if (l == INTERP_OFF) {
 		x->snd_interp = INTERP_OFF;
 		#ifdef DEBUG
-			post("%s: sndInterp is set to off", OBJECT_NAME);
+			post("%s: interpolation is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->snd_interp = INTERP_ON;
 		#ifdef DEBUG
-			post("%s: sndInterp is set to on", OBJECT_NAME);
+			post("%s: interpolation is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: sndInterp message was not understood", OBJECT_NAME);
+		error("%s: interpolation message was not understood", OBJECT_NAME);
 	}
 }
 
