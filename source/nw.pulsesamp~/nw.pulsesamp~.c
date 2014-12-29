@@ -848,6 +848,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
     
 	// compute sound buffer step size per vector sample
 	x->snd_step_size = x->grain_samp_inc * buffer_getsamplerate(snd_object) * x->output_1oversr;
+    if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
 	
     // update grain direction
     x->grain_direction = x->next_grain_direction;
