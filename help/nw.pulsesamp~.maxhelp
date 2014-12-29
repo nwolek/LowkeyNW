@@ -4,12 +4,12 @@
 		"appversion" : 		{
 			"major" : 7,
 			"minor" : 0,
-			"revision" : 0,
-			"architecture" : "x86",
+			"revision" : 1,
+			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 361.0, 356.0, 618.0, 411.0 ],
+		"rect" : [ 100.0, 100.0, 618.0, 411.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -249,8 +249,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 322.0, 255.0, 126.680931, 39.0 ],
-					"presentation_rect" : [ 265.0, 257.0, 126.680931, 39.0 ]
+					"patching_rect" : [ 322.0, 255.0, 153.52832, 39.0 ],
+					"presentation_rect" : [ 322.0, 255.0, 153.52832, 39.0 ]
 				}
 
 			}
@@ -266,7 +266,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 10.0, 10.0, 605.0, 145.0 ]
+					"patching_rect" : [ 10.0, 10.0, 605.0, 169.0 ]
 				}
 
 			}

@@ -4,11 +4,13 @@
 <c74object name="nw.pulsesamp~" module="msp" category="LowkeyNW, MSP Sampling">
 
 	<digest>
-		Trigger samples with a pulse signal
+		Trigger sample playback with a pulse signal
 	</digest>
 	
 	<description>
-		MORE HERE
+		A playback interface for the <o>buffer~</o> object that is triggered using pulse control signals like those generated from the <o>train~</o> object.
+		This allows for sample-accurate triggering of a recorded audio segment whenever a 0 to 1 transition is received.
+		Once segment playback is initiated, any changes to the parameters (such as sampling increment, start time, or end time) are deferred internally by this object until the next segment.
 	</description>
 	
 	<!--METADATA-->
@@ -17,40 +19,41 @@
 		<metadata name="tag">LowkeyNW</metadata>
 		<metadata name="tag">Audio</metadata>
 		<metadata name="tag">Sampling</metadata>
+		<metadata name="tag">64-bit</metadata>
 	</metadatalist>
 	
 	<!--INLETS-->
 	<inletlist>
-		<inlet id="0" type="signal/float">
-			<digest>MORE HERE</digest>
+		<inlet id="0" type="signal">
+			<digest>Pulse signal. Playback is triggered on 0 to 1 transition.</digest>
 		</inlet>
 		<inlet id="1" type="signal/float">
-			<digest>MORE HERE</digest>
+			<digest>Sample increment. Effects perceived pitch, 1.0 = normal.</digest>
 		</inlet>
 		<inlet id="2" type="signal/float">
-			<digest>MORE HERE</digest>
+			<digest>Gain multiplier, 1.0 = normal.</digest>
 		</inlet>
 		<inlet id="3" type="signal/float">
-			<digest>MORE HERE</digest>
+			<digest>Start time in milliseconds.</digest>
 		</inlet>
 		<inlet id="4" type="signal/float">
-			<digest>MORE HERE</digest>
+			<digest>End time in milliseconds.</digest>
 		</inlet>
 	</inletlist>
 
 	<!--OUTLETS-->
 	<outletlist>
 		<outlet id="0" type="signal">
-			<digest>Audio signal: MORE HERE</digest>
+			<digest>Audio signal: audio channel 1</digest>
 		</outlet>
 		<outlet id="1" type="signal">
-			<digest>Audio signal: MORE HERE</digest>
+			<digest>Audio signal: audio channel 2 COMING SOON</digest>
 		</outlet>
-		<outlet id="2" type="signal/float">
-			<digest>Audio signal: MORE HERE, bang output on playback start</digest>
+		<outlet id="2" type="signal">
+			<digest>Audio signal: sample count since playback started. -1 = no playback.</digest>
 		</outlet>
 		<outlet id="3" type="signal">
-			<digest>Audio signal: MORE HERE</digest>
+			<digest>Audio signal: overflow outlet.</digest>
 		</outlet>
 	</outletlist>
 	
@@ -96,21 +99,64 @@
 				Function depends on inlet
 			</digest>
 			<description>
-				In inlet 1: MORE HERE
+				In inlet 1: 0 to 1 transition from a pulse signal will trigger playback of the defined <o>buffer~</o> segment.
+				During segment playback, the object passes any additional pulses that are received to the overflow outlet, which allows several <b>nw.pulsesamp~</b> objects to be chained together and form a multi-voice sampler.
 				<br />
 				<br />
-				In inlet 2: MORE HERE
+				After playback begins, changes received by the following inlets will be deferred to the start of the next segment:
 				<br />
 				<br />
-				In inlet 3: MORE HERE
+				In inlet 2: Defines the sample increment used while reading <o>buffer~</o> contents.
+				This changes the perceived pitch and the playback speed, with 1.0 resulting in normal playback.
+				The absolute value of any negative numbers are used to prevent buffer overrun errors.
+				If backward playback is desired, use the <b>reverse 1</b> message.
 				<br />
 				<br />
-				In inlet 4: MORE HERE
+				In inlet 3: Defines the gain multiplier.
+				All values read from the <o>buffer~</o> contents will be scaled by this number, with 1.0 resulting in no change.
 				<br />
 				<br />
-				In inlet 5: MORE HERE
+				In inlet 4: Defines the start time in milliseconds of the <o>buffer~</o> segment for playback. 
 				<br />
 				<br />
+				In inlet 5: Defines the end time in milliseconds of the <o>buffer~</o> segment for playback.
+				<br />
+				<br />
+			</description>
+		</method>
+		<method name="set">
+			<arglist>
+				<arg name="buffer-name" optional="0" type="symbol" />
+			</arglist>
+			<digest>
+				Set the name of the <o>buffer~</o> used for playback
+			</digest>
+			<description>
+				The word <m>set</m>, followed by the name of a <o>buffer~</o> object, uses that <o>buffer~</o> for playback.
+			</description>
+		</method>
+		<method name="reverse">
+			<arglist>
+				<arg name="reverse" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Read the defined <o>buffer~</o> segment backwards. Default is off.
+			</digest>
+			<description>
+				A <m>reverse 1</m> message will play the defined <o>buffer~</o> segment backwards.
+				A <m>reverse 0</m> message will play the defined <o>buffer~</o> segment forward.
+			</description>
+		</method>
+		<method name="interpolation">
+			<arglist>
+				<arg name="interpolation" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Use interpolation while reading samples from the <o>buffer~</o>. Default is on.
+			</digest>
+			<description>
+				An <m>interpolation 1</m> message will use linear interpolation while reading from the <o>buffer~</o>.
+				An <m>interpolation 0</m> message will use no interpolation while reading from the <o>buffer~</o>.
 			</description>
 		</method>
 		<method name="getinfo">

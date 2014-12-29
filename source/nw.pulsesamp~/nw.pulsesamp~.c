@@ -1069,7 +1069,7 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 	if (msg==ASSIST_INLET) {
 		switch (arg) {
 			case 0:
-				strcpy(s, "(signal) pulse outputs buffer segment");
+				strcpy(s, "(signal) pulse starts buffer segment");
 				break;
 			case 1:
 				strcpy(s, "(signal/float) sample increment, 1.0 = normal");
