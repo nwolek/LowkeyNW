@@ -113,54 +113,61 @@ double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_
 t_symbol *ps_buffer;
 
 /********************************************************************************
-void main(void)
+int main(void)
 
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup((t_messlist **)&this_class, (method)grainpulse_new, (method)dsp_free, 
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)grainpulse_new, (method)dsp_free,
 			(short)sizeof(t_grainpulse), 0L, A_SYM, A_SYM, 0);
-	addmess((method)grainpulse_dsp, "dsp", A_CANT, 0);
+    class_dspinit(c); // add standard functions to class
+    
+	class_addmethod(c, (method)grainpulse_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "grainpulse_setsnd" to the 'setSound' message */
-	addmess((method)grainpulse_setsnd, "setSound", A_SYM, 0);
+	class_addmethod(c, (method)grainpulse_setsnd, "setSound", A_SYM, 0);
 	
 	/* bind method "grainpulse_setwin" to the 'setWin' message */
-	addmess((method)grainpulse_setwin, "setWin", A_SYM, 0);
+	class_addmethod(c, (method)grainpulse_setwin, "setWin", A_SYM, 0);
 	
 	/* bind method "grainpulse_float" to incoming floats */
-	addfloat((method)grainpulse_float);
+	class_addmethod(c, (method)grainpulse_float, "float", A_FLOAT, 0);
 	
 	/* bind method "grainpulse_int" to incoming ints */
-	addint((method)grainpulse_int);
+	class_addmethod(c, (method)grainpulse_int, "int", A_LONG, 0);
 	
 	/* bind method "grainpulse_reverse" to the direction message */
-	addmess((method)grainpulse_reverse, "reverse", A_LONG, 0);
+	class_addmethod(c, (method)grainpulse_reverse, "reverse", A_LONG, 0);
 	
 	/* bind method "grainpulse_sndInterp" to the sndInterp message */
-	addmess((method)grainpulse_sndInterp, "sndInterp", A_LONG, 0);
+	class_addmethod(c, (method)grainpulse_sndInterp, "sndInterp", A_LONG, 0);
 	
 	/* bind method "grainpulse_winInterp" to the winInterp message */
-	addmess((method)grainpulse_winInterp, "winInterp", A_LONG, 0);
+	class_addmethod(c, (method)grainpulse_winInterp, "winInterp", A_LONG, 0);
 	
 	/* bind method "grainpulse_assist" to the assistance message */
-	addmess((method)grainpulse_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)grainpulse_assist, "assist", A_CANT, 0);
 	
 	/* bind method "grainpulse_getinfo" to the getinfo message */
-	addmess((method)grainpulse_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)grainpulse_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
-	
-	/* needed for 'buffer~' work, checks for validity of buffer specified */
-	ps_buffer = gensym("buffer~");
-	
-	#ifndef DEBUG
-		
-	#endif /* DEBUG */
+    class_register(CLASS_BOX, c); // register the class w max
+    grainpulse_class = c;
+    
+    /* needed for 'buffer~' work, checks for validity of buffer specified */
+    ps_buffer = gensym("buffer~");
+    
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
 }
 
 /********************************************************************************
