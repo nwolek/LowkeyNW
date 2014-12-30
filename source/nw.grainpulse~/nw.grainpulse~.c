@@ -1,35 +1,24 @@
 /*
-** grain.pulse~.c
+** nw.grainpulse~.c
 **
 ** MSP object
-** sends out a single grains when it receives a bang 
-** 
+** sends out a single grains when it receives a pulse
 ** 2001/08/29 started by Nathan Wolek
-** 2002/02/08 found, corrected mislabeled inlet
-** 2002/07/11 buffer length no longer stored locally
-** 2002/07/15 fixed mono buffer check problem
-** 2002/07/24 added deferred buffer changes
-** 2002/09/24 added getinfo message
-** 2002/10/23 added outlet for overflow pulses, suggested by Gilbert Nouno
-** 2002/10/28 added pulse tracking to eliminate output confusion
-** 2003/07/10 update to CW 8, fixed buffer initiation crash
-** 2004/01/27 length must now be greater than zero
-** 2004/03/22 added outlet to report the values used in producing grain
-** 2005/01/25 replace allpass interp with linear interp; added "b_inuse" check
-** 2005/02/03 finish move to linear interp; INTERP_ON now default for windowing
-** 2006/11/22 moved to Xcode; fixed "b_inuse" bug
-** 2008/04/22 added gain inlet/functionality
-** 
+**
+** Copyright © 2002,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"grain.pulse~"		// name of the object
+#define OBJECT_NAME		"nw.grainpulse~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -47,7 +36,7 @@
 #define OVERFLOW_OFF		0
 #define OVERFLOW_ON			1
 
-void *this_class;		// required global pointing to this class
+static t_class *grainpulse_class;		// required global pointing to this class
 
 typedef struct _grainpulse
 {
