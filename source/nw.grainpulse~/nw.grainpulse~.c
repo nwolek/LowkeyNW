@@ -644,9 +644,9 @@ void grainpulse_reportoninit(t_grainpulse *x, t_symbol *s, short argc, t_atom ar
 {
 	t_atom ta_msgvals[3];
 	
-	SETFLOAT(ta_msgvals, (float) x->grain_pos_start);
-	SETFLOAT((ta_msgvals + 1), (float) x->grain_length);
-	SETFLOAT((ta_msgvals + 2), (float) x->grain_pitch);
+	atom_setfloat(ta_msgvals, (float) x->grain_pos_start);
+	atom_setfloat((ta_msgvals + 1), (float) x->grain_length);
+	atom_setfloat((ta_msgvals + 2), (float) x->grain_pitch);
 	
 	if (sys_getdspstate()) {
 		//report settings used in grain production
