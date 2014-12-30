@@ -181,7 +181,7 @@ returns:		nothing
 ********************************************************************************/
 void *grainpulse_new(t_symbol *snd, t_symbol *win)
 {
-	t_grainpulse *x = (t_grainpulse *)newobject(this_class);
+	t_grainpulse *x = (t_grainpulse *) object_alloc((t_class*) grainpulse_class);
 	dsp_setup((t_pxobject *)x, 5);					// five inlets; change 2008.04.22
 	x->out_reportoninit = outlet_new((t_pxobject *)x, 0L);	// report settings outlet
 			// added 2004.03.22
@@ -234,7 +234,11 @@ returns:		nothing
 ********************************************************************************/
 void grainpulse_dsp(t_grainpulse *x, t_signal **sp, short *count)
 {
-	/* set buffers */
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
 	grainpulse_setsnd(x, x->snd_sym);
 	grainpulse_setwin(x, x->win_sym);
 	
