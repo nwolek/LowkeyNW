@@ -34,10 +34,10 @@
 			<digest>Grain duration in ms. How long grain should last.</digest>
 		</inlet>
 		<inlet id="3" type="signal/float">
-			<digest>Sample increment. Effects perceived pitch, 1.0 = normal.</digest>
+			<digest>Sample increment. Effects perceived pitch, 1.0 = unchanged.</digest>
 		</inlet>
 		<inlet id="4" type="signal/float">
-			<digest>Gain multiplier, 1.0 = normal.</digest>
+			<digest>Gain multiplier, 1.0 = unchanged.</digest>
 		</inlet>
 	</inletlist>
 

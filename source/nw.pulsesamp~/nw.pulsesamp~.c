@@ -1072,10 +1072,10 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 				strcpy(s, "(signal) pulse starts buffer segment");
 				break;
 			case 1:
-				strcpy(s, "(signal/float) sample increment, 1.0 = normal");
+				strcpy(s, "(signal/float) sample increment, 1.0 = unchanged");
 				break;
 			case 2:
-				strcpy(s, "(signal/float) gain, 1.0 = normal");
+				strcpy(s, "(signal/float) gain multiplier, 1.0 = unchanged");
 				break;
 			case 3:
 				strcpy(s, "(signal/float) start in ms");
