@@ -106,57 +106,67 @@ double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_
 t_symbol *ps_buffer;
 
 /********************************************************************************
-void main(void)
-
-inputs:			nothing
-description:	called the first time the object is used in MAX environment; 
-		defines inlets, outlets and accepted messages
-returns:		nothing
-********************************************************************************/
-void main(void)
+ int main(void)
+ 
+ inputs:			nothing
+ description:	called the first time the object is used in MAX environment;
+ defines inlets, outlets and accepted messages
+ returns:		int
+ ********************************************************************************/
+int C74_EXPORT main(void)
 {
-	setup((t_messlist **)&this_class, (method)grainbang_new, (method)dsp_free, 
-			(short)sizeof(t_grainbang), 0L, A_SYM, A_SYM, 0);
-	addmess((method)grainbang_dsp, "dsp", A_CANT, 0);
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)grainbang_new, (method)dsp_free,
+                  (short)sizeof(t_grainbang), 0L, A_SYM, A_SYM, 0);
+    class_dspinit(c); // add standard functions to class
+
+	class_addmethod(c, (method)grainbang_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "grainbang_setsnd" to the 'setSound' message */
-	addmess((method)grainbang_setsnd, "setSound", A_SYM, 0);
+	class_addmethod(c, (method)grainbang_setsnd, "setSound", A_SYM, 0);
 	
 	/* bind method "grainbang_setwin" to the 'setWin' message */
-	addmess((method)grainbang_setwin, "setWin", A_SYM, 0);
+	class_addmethod(c, (method)grainbang_setwin, "setWin", A_SYM, 0);
 	
 	/* bind method "grainbang_float" to incoming floats */
-	addfloat((method)grainbang_float);
+	class_addmethod(c, (method)grainbang_float, "float", A_FLOAT, 0);
 	
 	/* bind method "grainbang_int" to incoming ints */
-	addint((method)grainbang_int);
+	class_addmethod(c, (method)grainbang_int, "int", A_LONG, 0);
 	
 	/* bind method "grainbang_bang" to incoming bangs */
-	addbang((method)grainbang_bang);
+	class_addmethod(c, (method)grainbang_bang, "bang", 0);
 	
 	/* bind method "grainbang_reverse" to the direction message */
-	addmess((method)grainbang_reverse, "reverse", A_LONG, 0);
+	class_addmethod(c, (method)grainbang_reverse, "reverse", A_LONG, 0);
 	
 	/* bind method "grainbang_sndInterp" to the sndInterp message */
-	addmess((method)grainbang_sndInterp, "sndInterp", A_LONG, 0);
+	class_addmethod(c, (method)grainbang_sndInterp, "sndInterp", A_LONG, 0);
 	
 	/* bind method "grainbang_winInterp" to the winInterp message */
-	addmess((method)grainbang_winInterp, "winInterp", A_LONG, 0);
+	class_addmethod(c, (method)grainbang_winInterp, "winInterp", A_LONG, 0);
 	
 	/* bind method "grainbang_assist" to the assistance message */
-	addmess((method)grainbang_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)grainbang_assist, "assist", A_CANT, 0);
 	
 	/* bind method "grainbang_getinfo" to the getinfo message */
-	addmess((method)grainbang_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)grainbang_getinfo, "getinfo", A_NOTHING, 0);
 	
-	dsp_initclass();
-	
-	/* needed for 'buffer~' work, checks for validity of buffer specified */
-	ps_buffer = gensym("buffer~");
-	
-	#ifndef DEBUG
-		
-	#endif /* DEBUG */
+    /* bind method "grainbang_dsp64" to the dsp64 message */
+    //class_addmethod(c, (method)grainbang_dsp64, "dsp64", A_CANT, 0);
+    
+    class_register(CLASS_BOX, c); // register the class w max
+    grainbang_class = c;
+    
+    /* needed for 'buffer~' work, checks for validity of buffer specified */
+    ps_buffer = gensym("buffer~");
+    
+    #ifdef DEBUG
+        post("%s: main function was called", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    return 0;
 }
 
 /********************************************************************************
