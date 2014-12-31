@@ -16,7 +16,7 @@
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.grainpulse~"		// name of the object
 
@@ -189,10 +189,10 @@ void *grainpulse_new(t_symbol *snd, t_symbol *win)
 {
 	t_grainpulse *x = (t_grainpulse *) object_alloc((t_class*) grainpulse_class);
 	dsp_setup((t_pxobject *)x, 5);					// five inlets; change 2008.04.22
-	x->out_reportoninit = outlet_new((t_pxobject *)x, 0L);	// report settings outlet
-			// added 2004.03.22
-	outlet_new((t_pxobject *)x, "signal");			// one outlet
-	outlet_new((t_pxobject *)x, "signal");			// second outlet, added 2002.10.23
+    outlet_new((t_pxobject *)x, "signal");			// overflow outlet
+    outlet_new((t_pxobject *)x, "signal");          // sample count outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch2 outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch1 outlet
 	
 	/* set buffer names */
 	x->snd_sym = snd;
@@ -319,7 +319,7 @@ void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double sam
         #ifdef DEBUG
             post("%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
-        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainpulse_perform64zero, 0, NULL);
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainpulse_perform64, 0, NULL);
     } else {					// if not...
         #ifdef DEBUG
             post("%s: no output computed", OBJECT_NAME);
@@ -715,6 +715,11 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     n = vectorsize;
     while(n--)
     {
+        // advance window index
+        index_w += w_step_size;
+        // and if we exceed the window size, stop producing grain
+        if (index_w > size_w) count_samp = -1;
+        
         // should we start a grain ?
         if (count_samp == -1) { // if sample count is -1...
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
@@ -779,6 +784,71 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
             }
         }
 
+        // pulse tracking for overflow
+        if (!of_status) {
+            if (last_pulse == 1.0 && *in_pulse == 0.0) { // if grain on & pulse ends...
+                of_status = OVERFLOW_ON;	//start overflowing
+            }
+        }
+        
+        // if we made it here, then we will actually start counting
+        count_samp++;
+        
+        // advance sound index
+        if (g_direction == FORWARD_GRAINS) {
+            index_s += s_step_size;     // addition
+        } else {	// if REVERSE_GRAINS
+            index_s -= s_step_size;		// subtract
+        }
+        
+        // wrap sound index if not within bounds
+        while (index_s < 0.0)
+            index_s += size_s;
+        while (index_s >= size_s)
+            index_s -= size_s;
+        
+        // WINDOW OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_w); // integer portion of index
+        temp_index_frac = index_w - (double)temp_index_int; // fractional portion of index
+        
+        // get value from the win buffer samples
+        if (interp_w == INTERP_ON) {
+            win_out = mcLinearInterp(tab_w, temp_index_int, temp_index_frac, size_w, 1);
+        } else {	// if INTERP_OFF
+            win_out = tab_w[temp_index_int];
+        }
+        
+        // SOUND OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_s); // integer portion of index
+        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        
+        // get value from the snd buffer samples
+        if (interp_s == INTERP_ON) {
+            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+        } else {	// if INTERP_OFF
+            snd_out = tab_s[temp_index_int];
+        }
+        
+        // OUTLETS
+        
+        // multiply snd_out by win_out by gain value
+        *out_signal = snd_out * win_out * g_gain;
+        *out_signal2 = 0.;
+        
+        if (of_status) {
+            *out_overflow = *in_pulse;
+        } else {
+            *out_overflow = 0.0;
+        }
+        
+        *out_sample_count = (double)count_samp;
+        
+        // update vars for last output
+        last_pulse = *in_pulse;
     
 advance_pointers:
         // advance all pointers
@@ -787,7 +857,11 @@ advance_pointers:
     }
 
     // update object history for next vector
-
+    x->curr_snd_pos = index_s;
+    x->curr_win_pos = index_w;
+    x->last_pulse_in = last_pulse;
+    x->overflow_status = of_status;
+    x->curr_count_samp = count_samp;
 
     buffer_unlocksamples(snd_object);
     buffer_unlocksamples(win_object);
@@ -885,7 +959,7 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
         x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
     }
 	
-	x->curr_win_pos = 0.0 - x->win_step_size;
+    x->curr_win_pos = 0.0;
 	
     // reset history
     x->curr_count_samp = -1;

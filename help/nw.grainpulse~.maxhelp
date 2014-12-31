@@ -88,7 +88,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 342.52832, 419.0, 79.0, 25.0 ],
+					"patching_rect" : [ 379.194977, 425.0, 79.0, 25.0 ],
 					"style" : "",
 					"text" : "Overflow"
 				}
@@ -106,7 +106,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "float" ],
-					"patching_rect" : [ 300.0, 419.0, 42.0, 22.0 ],
+					"patching_rect" : [ 336.666656, 425.0, 42.0, 22.0 ],
 					"sig" : 0.0,
 					"style" : ""
 				}
@@ -224,7 +224,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 342.52832, 452.0, 107.0, 25.0 ],
+					"patching_rect" : [ 367.194977, 459.0, 107.0, 25.0 ],
 					"style" : "",
 					"text" : "Sample count"
 				}
@@ -242,7 +242,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "float" ],
-					"patching_rect" : [ 261.0, 452.0, 81.0, 22.0 ],
+					"patching_rect" : [ 285.666656, 459.0, 81.0, 22.0 ],
 					"sig" : 0.0,
 					"style" : ""
 				}
@@ -416,6 +416,10 @@
 							"number" : 2,
 							"data" : [ 5, "obj-16", "number", "int", 3170, 5, "obj-5", "number", "int", 60, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.0, 5, "obj-22", "flonum", "float", 1.5, 5, "obj-29", "number~", "list", 0.0, 5, "obj-30", "flonum", "float", 100.0 ]
 						}
+, 						{
+							"number" : 3,
+							"data" : [ 5, "obj-16", "number", "int", 1050, 5, "obj-5", "number", "int", 200, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.0, 5, "obj-22", "flonum", "float", 1.0, 5, "obj-29", "number~", "list", 0.0, 5, "obj-30", "flonum", "float", 250.0 ]
+						}
  ],
 					"style" : ""
 				}
@@ -508,8 +512,8 @@
 					"id" : "obj-1",
 					"maxclass" : "newobj",
 					"numinlets" : 5,
-					"numoutlets" : 3,
-					"outlettype" : [ "signal", "signal", "" ],
+					"numoutlets" : 4,
+					"outlettype" : [ "signal", "signal", "signal", "signal" ],
 					"patching_rect" : [ 183.0, 363.0, 173.0, 22.0 ],
 					"style" : "",
 					"text" : "nw.grainpulse~ gp-help gp-win"
@@ -518,6 +522,15 @@
 			}
  ],
 		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-29", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-1", 3 ]
+				}
+
+			}
+, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-7", 1 ],
 					"disabled" : 0,
@@ -532,6 +545,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-1", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-9", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-1", 2 ]
 				}
 
 			}
