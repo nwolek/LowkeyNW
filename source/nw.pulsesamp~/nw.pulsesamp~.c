@@ -642,9 +642,8 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     n = vectorsize;
     while(n--)
     {
-        
-        /* check bounds of window index */
-        if (count_samp == -1) {
+        // should we start reading sample segment ?
+        if (count_samp == -1) { // if sample count is -1...
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
                 buffer_unlocksamples(snd_object);
                 

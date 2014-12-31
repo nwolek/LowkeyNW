@@ -715,8 +715,8 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     n = vectorsize;
     while(n--)
     {
-        /* check bounds of window index */
-        if (count_samp == -1) {
+        // should we start a grain ?
+        if (count_samp == -1) { // if sample count is -1...
             if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
                 buffer_unlocksamples(snd_object);
                 buffer_unlocksamples(win_object);
