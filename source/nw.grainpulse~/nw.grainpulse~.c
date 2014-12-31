@@ -81,8 +81,8 @@ typedef struct _grainpulse
 	short grain_gain_connected;			// add 2008.04.22
 	// grain tracking info
 	short grain_stage;
-	long curr_grain_samp;				// removed 2003.08.03
-	float last_pulse_in;				// <--
+	long curr_count_samp;
+    float last_pulse_in;				// <--
 	double output_sr;					// <--
 	double output_1oversr;				// <--
 	//bang on init outlet, added 2004.03.10
@@ -211,6 +211,7 @@ void *grainpulse_new(t_symbol *snd, t_symbol *win)
 	x->curr_snd_pos = 0.0;
 	x->curr_win_pos = 0.0;
 	x->last_pulse_in = 0.0;
+    x->curr_count_samp = -1;
 	
 	/* setup t_symbols for output messages (saves overhead)*/
 	x->ts_offset = gensym("offset");
@@ -663,19 +664,53 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     
     // local vars for snd and win buffer
     t_buffer_obj *snd_object, *win_object;
+    t_float *tab_s, *tab_w;
+    double snd_out, win_out;
+    long size_s, size_w;
     
     // local vars for object vars and while loop
-    long n;
+    double index_s, index_w, temp_index_frac;
+    long n, count_samp, temp_index_int;
+    double s_step_size, w_step_size, g_gain;
+    short interp_s, interp_w, g_direction, of_status;
+    float last_pulse;
     
     // check to make sure buffers are loaded with proper file types
+    if (x->x_obj.z_disabled)		// and object is enabled
+        goto out;
+    if (x->snd_buf_ptr == NULL || (x->win_buf_ptr == NULL))
+        goto zero;
     
-    // get snd and win buffer info
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get window buffer info
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    tab_w = buffer_locksamples(win_object);
+    if (!tab_w)		// buffer samples were not accessible
+        goto zero;
+    size_w = buffer_getframecount(win_object);
     
     // get snd and win index info
+    index_s = x->curr_snd_pos;
+    index_w = x->curr_win_pos;
+    s_step_size = x->snd_step_size;
+    w_step_size = x->win_step_size;
     
     // get grain options
+    interp_s = x->snd_interp;
+    interp_w = x->win_interp;
+    g_gain = x->grain_gain;
+    g_direction = x->grain_direction;
+    of_status = x->overflow_status;
     
     // get history from last vector
+    last_pulse = x->last_pulse_in;
+    count_samp = x->curr_count_samp;
     
     n = vectorsize;
     while(n--)
