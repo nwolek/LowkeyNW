@@ -651,10 +651,68 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars outlets and inlets
+    t_double *in_pulse = ins[0];
+    t_double *in_sound_start = ins[1];
+    t_double *in_dur = ins[2];
+    t_double *in_sample_increment = ins[3];
+    t_double *in_gain = ins[4];
+    t_double *out_signal = outs[0];
+    t_double *out_signal2 = outs[1];
+    t_double *out_sample_count = outs[2];
+    t_double *out_overflow = outs[3];
+    
+    // local vars for snd and win buffer
+    t_buffer_obj *snd_object, *win_object;
+    
+    // local vars for object vars and while loop
+    long n;
+    
+    // check to make sure buffers are loaded with proper file types
+    
+    // get snd and win buffer info
+    
+    // get snd and win index info
+    
+    // get grain options
+    
+    // get history from last vector
+    
+    n = vectorsize;
+    while(n--)
+    {
+
+    
+advance_pointers:
+        // advance all pointers
+        ++in_pulse, ++in_sound_start, ++in_dur, ++in_sample_increment, ++in_gain;
+        ++out_signal, ++out_signal2, ++out_overflow, ++out_sample_count;
+    }
+
+    // update object history for next vector
+
+
+    buffer_unlocksamples(snd_object);
+    buffer_unlocksamples(win_object);
+    return;
+
+    // alternate blank output
+zero:
+    n = vectorsize;
+    while(n--)
+    {
+        *out_signal++ = 0.;
+        *out_signal2++ = 0.;
+        *out_sample_count++ = -1.;
+        *out_overflow++ = -1.;
+    }
+
+out:
+    return;
+
 }
 
 /********************************************************************************
-void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
+void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		float in_pitch_mult, float in_gain_mult)
 
 inputs:			x					-- pointer to this object
