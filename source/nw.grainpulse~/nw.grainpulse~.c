@@ -95,10 +95,13 @@ typedef struct _grainpulse
 void *grainpulse_new(t_symbol *snd, t_symbol *win);
 t_int *grainpulse_perform(t_int *w);
 t_int *grainpulse_perform0(t_int *w);
+void grainpulse_perform64zero(t_grainpulse *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
 		float in_pitch_mult, float in_gain_mult);
 void grainpulse_reportoninit(t_grainpulse *x, t_symbol *s, short argc, t_atom argv);
 void grainpulse_dsp(t_grainpulse *x, t_signal **sp, short *count);
+void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void grainpulse_setsnd(t_grainpulse *x, t_symbol *s);
 void grainpulse_setwin(t_grainpulse *x, t_symbol *s);
 void grainpulse_float(t_grainpulse *x, double f);
@@ -156,6 +159,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "grainpulse_getinfo" to the getinfo message */
 	class_addmethod(c, (method)grainpulse_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "grainpulse_dsp64" to the dsp64 message */
+    class_addmethod(c, (method)grainpulse_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     grainpulse_class = c;
@@ -269,6 +275,56 @@ void grainpulse_dsp(t_grainpulse *x, t_signal **sp, short *count)
 		#endif /* DEBUG */
 	}
 	
+}
+
+/********************************************************************************
+ void grainpulse_dsp64()
+ 
+ inputs:     x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double samplerate,
+                        long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
+    grainpulse_setsnd(x, x->snd_sym);
+    grainpulse_setwin(x, x->win_sym);
+    
+    /* test inlets for signal data */
+    x->grain_pos_start_connected = count[1];
+    x->grain_length_connected = count[2];
+    x->grain_pitch_connected = count[3];
+    x->grain_gain_connected = count[4];
+    
+    // grab sample rate
+    x->output_sr = samplerate;
+    x->output_1oversr = 1.0 / x->output_sr;
+    
+    // set overflow status
+    x->overflow_status = OVERFLOW_OFF;
+    
+    if (count[5] && count[0]) {	// if input and output connected..
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainpulse_perform64zero, 0, NULL);
+    } else {					// if not...
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
+    
 }
 
 /********************************************************************************
@@ -531,6 +587,70 @@ t_int *grainpulse_perform0(t_int *w)
 	}
 
 	return (w + 3);
+}
+
+/********************************************************************************
+ void *grainpulse_perform64zero()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit,
+ writes zeros to every outlet
+ returns:		nothing
+ ********************************************************************************/
+void grainpulse_perform64zero(t_grainpulse *x, t_object *dsp64, double **ins, long numins, double **outs,
+                                long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *curr_out[numouts];
+    long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
+    
+    n = vectorsize;
+    while(n--)
+    {
+        m = numouts;
+        while(m--)
+        {
+            *(curr_out[m]) = 0.0;		// save to output
+            (curr_out[m])++;			// advance the outlet pointer
+        }
+    }
+    
+}
+
+/********************************************************************************
+ void *grainpulse_perform64()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long numins, double **outs,
+                            long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars outlets and inlets
 }
 
 /********************************************************************************
