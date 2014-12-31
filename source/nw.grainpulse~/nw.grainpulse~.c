@@ -832,19 +832,17 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
     t_buffer_obj	*snd_object;
     t_buffer_obj	*win_object;
 	
-	if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
+	if (x->next_snd_buf_ptr != NULL) {
 		x->snd_buf_ptr = x->next_snd_buf_ptr;
 		x->next_snd_buf_ptr = NULL;
-		//x->snd_last_out = 0.0; removed 2005.01.25
 		
 		#ifdef DEBUG
 			post("%s: sound buffer pointer updated", OBJECT_NAME);
 		#endif /* DEBUG */
 	}
-	if (x->next_win_buf_ptr != NULL) {	//added 2002.07.24
+	if (x->next_win_buf_ptr != NULL) {
 		x->win_buf_ptr = x->next_win_buf_ptr;
 		x->next_win_buf_ptr = NULL;
-		//x->win_last_out = 0.0; removed 2005.01.25
 		
 		#ifdef DEBUG
 			post("%s: window buffer pointer updated", OBJECT_NAME);
@@ -854,60 +852,46 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 	snd_object = buffer_ref_getobject(x->snd_buf_ptr);
 	win_object = buffer_ref_getobject(x->win_buf_ptr);
 	
-	x->grain_direction = x->next_grain_direction;
-		
-	/* test if variables should be at audio or control rate */
-	if (x->grain_length_connected) { // if length is at audio rate			
-		x->grain_length = in_length;
-	} else { // if length is at control rate
-		x->grain_length = x->next_grain_length;
-	}
-	
-	if (x->grain_pitch_connected) { // if pitch multiplier is at audio rate
-		x->grain_pitch = in_pitch_mult;
-	} else { // if pitch multiplier at control rate
-		x->grain_pitch = x->next_grain_pitch;
-	}
-	
-	// add 2008.04.22
-	if (x->grain_gain_connected) { // if gain multiplier is at audio rate
-		x->grain_gain = in_gain_mult;
-	} else { // if gain multiplier at control rate
-		x->grain_gain = x->next_grain_gain;
-	}
-	
+    /* should input variables be at audio or control rate ? */
+    
+    // temporarily stash here as milliseconds
+    x->grain_pos_start = x->grain_pos_start_connected ? in_pos_start : x->next_grain_pos_start;
+    
+    x->grain_length = x->grain_length_connected ? in_length : x->next_grain_length;
+    
+    x->grain_pitch = x->grain_pitch_connected ? in_pitch_mult : x->next_grain_pitch;
+    
+    x->grain_gain = x->grain_gain_connected ? in_gain_mult : x->next_grain_gain;
+    
+    /* compute dependent variables */
+    
 	// compute amount of sound file for grain
 	x->grain_sound_length = x->grain_length * x->grain_pitch;
+    if (x->grain_sound_length < 0.) x->grain_sound_length *= -1.; // needs to be positive to prevent buffer overruns
 	
 	// compute window buffer step size per vector sample 
 	x->win_step_size = (double)(buffer_getframecount(win_object)) / (x->grain_length * x->output_sr * 0.001);
+    if (x->win_step_size < 0.) x->win_step_size *= -1.; // needs to be positive to prevent buffer overruns
+    
 	// compute sound buffer step size per vector sample
 	x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
+    if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
 	
-	if (x->grain_pos_start_connected) { // if position is at audio rate
-		if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-			x->grain_pos_start = in_pos_start * buffer_getmillisamplerate(snd_object);
-			x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
-		} else {	// if reverse...
-			x->grain_pos_start = (in_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
-			x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
-		}
-	} else { // if position is at control rate
-		if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-			x->grain_pos_start = x->next_grain_pos_start * buffer_getmillisamplerate(snd_object);
-			x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
-		} else {	// if reverse...
-			x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
-			x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
-		}
-	}
+	if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
+        x->grain_pos_start = x->grain_pos_start * buffer_getmillisamplerate(snd_object);
+        x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
+    } else {	// if reverse...
+        x->grain_pos_start = (x->grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
+        x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
+    }
 	
 	x->curr_win_pos = 0.0 - x->win_step_size;
-	// reset history
-	//x->snd_last_out = x->win_last_out = 0.0; removed 2005.01.25
+	
+    // reset history
+    x->curr_count_samp = -1;
 	
 	// send report out at beginning of grain
-	defer(x, (void *)grainpulse_reportoninit,0L,0,0L); //added 2004.03.10
+	//defer(x, (void *)grainpulse_reportoninit,0L,0,0L);
 	
 	#ifdef DEBUG
 		post("%s: beginning of grain", OBJECT_NAME);
