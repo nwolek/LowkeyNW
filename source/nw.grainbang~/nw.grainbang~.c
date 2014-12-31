@@ -245,7 +245,7 @@ void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count)
 	x->output_sr = sp[4]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
-	if (!count[4]) {	// if output is not connected...
+	if (!count[5]) {	// if output is not connected...
 		// nothing is computed
 		//dsp_add(grainbang_perform0, 2, sp[4]->s_vec, sp[4]->s_n);
 		#ifdef DEBUG
@@ -254,7 +254,7 @@ void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count)
 	} else {		// if it is...
 		// output is computed
 		dsp_add(grainbang_perform, 6, x, sp[1]->s_vec, sp[2]->s_vec, sp[3]->s_vec,
-			sp[4]->s_vec, sp[4]->s_n);
+			sp[5]->s_vec, sp[5]->s_n);
 		#ifdef DEBUG
 			post("%s: output is being computed", OBJECT_NAME);
 		#endif /* DEBUG */
