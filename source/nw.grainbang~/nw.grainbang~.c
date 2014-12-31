@@ -1,31 +1,24 @@
 /*
-** grain_bang~.c
+** nw.grainbang~.c
 **
 ** MSP object
 ** sends out a single grains when it receives a bang 
-** 
 ** 2001/07/18 started by Nathan Wolek
-** 2002/07/11 buffer length no longer stored locally
-** 2002/07/15 fixed mono buffer check problem
-** 2002/07/24 added deferred buffer changes
-** 2002/09/24 added getinfo message
-** 2002/10/23 added overflow outlet, suggested by Glibert Nouno
-** 2003/07/10 update to CW 8, fixed buffer initiation crash
-** 2004/01/27 length must now be greater than zero
-** 2005/02/02 change to linear interp
-** 2005/02/03 INTERP_ON is now default for windowing; added "b_inuse" check
-** 2006/11/22 update to Xcode; fix buffer in use bug
-** 
+**
+** Copyright © 2002,2014 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"grain.bang~"		// name of the object
+#define OBJECT_NAME		"nw.grainbang~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -44,7 +37,7 @@
 #define INTERP_OFF			0
 #define INTERP_ON			1
 
-void *this_class;		// required global pointing to this class
+static t_class *grainbang_class;		// required global pointing to this class
 
 typedef struct _grainbang
 {
