@@ -180,10 +180,12 @@ returns:		nothing
 ********************************************************************************/
 void *grainbang_new(t_symbol *snd, t_symbol *win)
 {
-	t_grainbang *x = (t_grainbang *)newobject(this_class);
-	dsp_setup((t_pxobject *)x, 4);					// four inlets
-	x->out_overflow = bangout((t_pxobject *)x);		// overflow outlet, added 2002.10.23
-	outlet_new((t_pxobject *)x, "signal");			// one outlet
+	t_grainbang *x = (t_grainbang *) object_alloc((t_class*) grainbang_class);
+	dsp_setup((t_pxobject *)x, 5);					// five inlets
+	x->out_overflow = bangout((t_pxobject *)x);		// overflow outlet
+    outlet_new((t_pxobject *)x, "signal");          // sample count outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch2 outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch1 outlet
 	
 	/* set buffer names */
 	x->snd_sym = snd;
@@ -224,7 +226,11 @@ returns:		nothing
 ********************************************************************************/
 void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count)
 {
-	/* set buffers */
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
 	grainbang_setsnd(x, x->snd_sym);
 	grainbang_setwin(x, x->win_sym);
 	
