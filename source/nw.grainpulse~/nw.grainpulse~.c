@@ -715,6 +715,69 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     n = vectorsize;
     while(n--)
     {
+        /* check bounds of window index */
+        if (count_samp == -1) {
+            if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
+                buffer_unlocksamples(snd_object);
+                buffer_unlocksamples(win_object);
+                
+                grainpulse_initGrain(x, *in_sound_start, *in_dur, *in_sample_increment, *in_gain);
+                
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_overflow = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    last_pulse = *in_pulse;
+                    goto advance_pointers;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get win buffer info
+                win_object = buffer_ref_getobject(x->win_buf_ptr);
+                tab_w = buffer_locksamples(win_object);
+                if (!tab_w)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_overflow = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    last_pulse = *in_pulse;
+                    goto advance_pointers;
+                }
+                size_w = buffer_getframecount(win_object);
+                
+                // get snd and win index info
+                index_s = x->curr_snd_pos;
+                index_w = x->curr_win_pos;
+                s_step_size = x->snd_step_size;
+                w_step_size = x->win_step_size;
+                
+                // get grain options
+                interp_s = x->snd_interp;
+                interp_w = x->win_interp;
+                g_gain = x->grain_gain;
+                g_direction = x->grain_direction;
+                /*** of_status = x->overflow_status; ***/
+                
+                // get history from last vector
+                last_pulse = x->last_pulse_in;
+                count_samp = x->curr_count_samp;
+                
+                // BUT this stays off until duty cycle ends
+                of_status = OVERFLOW_OFF;
+                
+            } else { // if not...
+                *out_signal = 0.0;
+                *out_signal2 = 0.0;
+                *out_overflow = 0.0;
+                *out_sample_count = (double)count_samp;
+                last_pulse = *in_pulse;
+                goto advance_pointers;
+            }
+        }
 
     
 advance_pointers:
