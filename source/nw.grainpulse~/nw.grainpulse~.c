@@ -43,15 +43,15 @@ typedef struct _grainpulse
 	t_pxobject x_obj;					// <--
 	// sound buffer info
 	t_symbol *snd_sym;
-	t_buffer *snd_buf_ptr;
-	t_buffer *next_snd_buf_ptr;		//added 2002.07.25
+	t_buffer_ref *snd_buf_ptr;
+	t_buffer_ref *next_snd_buf_ptr;
 	//double snd_last_out; removed 2005.01.25
 	//long snd_buf_length;	//removed 2002.07.11
 	short snd_interp;
 	// window buffer info
 	t_symbol *win_sym;
-	t_buffer *win_buf_ptr;
-	t_buffer *next_win_buf_ptr;		//added 2002.07.25
+	t_buffer_ref *win_buf_ptr;
+	t_buffer_ref *next_win_buf_ptr;
 	//double win_last_out; removed 2005.01.25
 	//long win_buf_length;	//removed 2002.07.11
 	short win_interp;
@@ -291,13 +291,12 @@ t_int *grainpulse_perform(t_int *w)
 	t_float *out = (t_float *)(w[7]);
 	t_float *out2 = (t_float *)(w[8]); 	//overflow, added 2002.10.23
 	int vec_size = (int)(w[9]);
-	t_buffer *s_ptr = x->snd_buf_ptr;
-	t_buffer *w_ptr = x->win_buf_ptr;
-	float *tab_s, *tab_w;
+	t_buffer_obj *snd_object, *win_object;
+	t_float *tab_s, *tab_w;
 	double s_step_size, w_step_size;
 	double  snd_out, win_out, gain_scale; //, last_s, last_w; removed 2005.01.25; add gain_scale 2008.04.22
 	double index_s, index_w, temp_index_frac;
-	long size_s, size_w, saveinuse_s, saveinuse_w, temp_index_int;
+	long size_s, size_w, temp_index_int;
 	short interp_s, interp_w, g_direction, of_status;	//of_status added 2002.10.28
 	float last_pulse;
 	
@@ -308,16 +307,22 @@ t_int *grainpulse_perform(t_int *w)
 	/* check to make sure buffers are loaded with proper file types*/
 	if (x->x_obj.z_disabled)						// object is enabled
 		goto out;
-	if ((s_ptr == NULL) || (w_ptr == NULL))		// buffer pointers are defined
-		goto zero;
-	if (!s_ptr->b_valid || !w_ptr->b_valid)		// files are loaded
+	if ((x->snd_buf_ptr == NULL) || (x->win_buf_ptr == NULL))		// buffer pointers are defined
 		goto zero;
 		
-	// set "in use" to true; added 2005.01.25
-	saveinuse_s = s_ptr->b_inuse;
-	s_ptr->b_inuse = true;
-	saveinuse_w = w_ptr->b_inuse;
-	w_ptr->b_inuse = true;
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get window buffer info
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    tab_w = buffer_locksamples(win_object);
+    if (!tab_w)		// buffer samples were not accessible
+        goto zero;
+    size_w = buffer_getframecount(win_object);
 		
 	// get interpolation options
 	interp_s = x->snd_interp;
@@ -331,13 +336,7 @@ t_int *grainpulse_perform(t_int *w)
 	w_step_size = x->win_step_size;
 	index_s = x->curr_snd_pos;
 	index_w = x->curr_win_pos;
-	// get buffer info
-	tab_s = s_ptr->b_samples;
-	tab_w = w_ptr->b_samples;
-	size_s = s_ptr->b_frames;
-	size_w = w_ptr->b_frames;
-	//last_s = x->snd_last_out;	 removed 2005.01.25
-	//last_w = x->win_last_out;  removed 2005.01.25
+
 	last_pulse = x->last_pulse_in;
 	gain_scale = x->grain_gain;		//add 2008.04.22
 	
@@ -346,36 +345,46 @@ t_int *grainpulse_perform(t_int *w)
 		/* check bounds of window index */
 		if (index_w > (size_w - w_step_size)) {
 			if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
-				//reset in use; 2006.11.22
-				s_ptr->b_inuse = saveinuse_s;
-				w_ptr->b_inuse = saveinuse_w;
+				
+                // release the buffer samples
+                buffer_unlocksamples(snd_object);
+                buffer_unlocksamples(win_object);
 				
 				grainpulse_initGrain(x, *in_pos_start, *in_length, *in_pitch_mult, *in_gain_mult);
 				
-				// get grain option settings
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *++out = 0.0;
+                    *++out2 = 0.0;
+                    last_pulse = *in_pulse;
+                    ++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult, ++in_gain_mult;
+                    continue;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get win buffer info
+                win_object = buffer_ref_getobject(x->win_buf_ptr);
+                tab_w = buffer_locksamples(win_object);
+                if (!tab_w)	{	// buffer samples were not accessible
+                    *++out = 0.0;
+                    *++out2 = 0.0;
+                    last_pulse = *in_pulse;
+                    ++in_pulse, ++in_pos_start, ++in_length, ++in_pitch_mult, ++in_gain_mult;
+                    continue;
+                }
+                size_w = buffer_getframecount(win_object);
+                
+                // get grain option settings
 				g_direction = x->grain_direction;
 				// get pointer info
 				s_step_size = x->snd_step_size;
 				w_step_size = x->win_step_size;
 				index_s = x->curr_snd_pos;
 				index_w = x->curr_win_pos;
-				// get buffer info
-				s_ptr = x->snd_buf_ptr;
-				w_ptr = x->win_buf_ptr;
-				tab_s = s_ptr->b_samples;
-				tab_w = w_ptr->b_samples;
-				size_s = s_ptr->b_frames;
-				size_w = w_ptr->b_frames;
-				//last_s = x->snd_last_out;  removed 2005.01.25
-				//last_w = x->win_last_out;	 removed 2005.01.25
-				//last_pulse = *in_pulse; //redundant, line 371, 2002.10.23
-				gain_scale = x->grain_gain;		//add 2008.04.22
 				
-				// set "in use" back to true; 2006.11.22
-				saveinuse_s = s_ptr->b_inuse;
-				s_ptr->b_inuse = true;
-				saveinuse_w = w_ptr->b_inuse;
-				w_ptr->b_inuse = true;
+                gain_scale = x->grain_gain;
 				
 				//pulse tracking for overflow, added 2002.10.28
 				of_status = OVERFLOW_OFF;
@@ -487,9 +496,8 @@ t_int *grainpulse_perform(t_int *w)
 	x->last_pulse_in = last_pulse;
 	x->overflow_status = of_status;
 
-	// reset "in use"; added 2005.01.25
-	s_ptr->b_inuse = saveinuse_s;
-	w_ptr->b_inuse = saveinuse_w;
+	buffer_unlocksamples(snd_object);
+    buffer_unlocksamples(win_object);
 
 	return (w + 10);
 
@@ -541,12 +549,12 @@ returns:		nothing
 void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length, 
 		float in_pitch_mult, float in_gain_mult)
 {
-	t_buffer *s_ptr;
-	t_buffer *w_ptr;
-	
 	#ifdef DEBUG
 		post("%s: initializing grain", OBJECT_NAME);
 	#endif /* DEBUG */
+    
+    t_buffer_obj	*snd_object;
+    t_buffer_obj	*win_object;
 	
 	if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
 		x->snd_buf_ptr = x->next_snd_buf_ptr;
@@ -567,8 +575,8 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		#endif /* DEBUG */
 	}
 	
-	s_ptr = x->snd_buf_ptr;
-	w_ptr = x->win_buf_ptr;
+	snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+	win_object = buffer_ref_getobject(x->win_buf_ptr);
 	
 	x->grain_direction = x->next_grain_direction;
 		
@@ -596,24 +604,24 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 	x->grain_sound_length = x->grain_length * x->grain_pitch;
 	
 	// compute window buffer step size per vector sample 
-	x->win_step_size = w_ptr->b_frames / (x->grain_length * x->output_sr * 0.001);
+	x->win_step_size = (double)(buffer_getframecount(win_object)) / (x->grain_length * x->output_sr * 0.001);
 	// compute sound buffer step size per vector sample
-	x->snd_step_size = x->grain_pitch * s_ptr->b_sr * x->output_1oversr;
+	x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
 	
 	if (x->grain_pos_start_connected) { // if position is at audio rate
 		if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-			x->grain_pos_start = in_pos_start * s_ptr->b_msr;
+			x->grain_pos_start = in_pos_start * buffer_getmillisamplerate(snd_object);
 			x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
 		} else {	// if reverse...
-			x->grain_pos_start = (in_pos_start + x->grain_sound_length) * s_ptr->b_msr;
+			x->grain_pos_start = (in_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
 			x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
 		}
 	} else { // if position is at control rate
 		if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-			x->grain_pos_start = x->next_grain_pos_start * s_ptr->b_msr;
+			x->grain_pos_start = x->next_grain_pos_start * buffer_getmillisamplerate(snd_object);
 			x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
 		} else {	// if reverse...
-			x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * s_ptr->b_msr;
+			x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
 			x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
 		}
 	}
@@ -666,10 +674,12 @@ returns:		nothing
 ********************************************************************************/
 void grainpulse_setsnd(t_grainpulse *x, t_symbol *s)
 {
-	t_buffer *b;
+	t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
 	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+		if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -708,10 +718,12 @@ returns:		nothing
 ********************************************************************************/
 void grainpulse_setwin(t_grainpulse *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -721,7 +733,7 @@ void grainpulse_setwin(t_grainpulse *x, t_symbol *s)
 				//x->win_last_out = 0.0; removed 2005.01.25
 				
 				/* set current win position to 1 more than length */
-				x->curr_win_pos = (float)((x->win_buf_ptr)->b_frames) + 1.0;
+				x->curr_win_pos = (double)(buffer_getframecount(b_object)) + 1.0;
 				
 				#ifdef DEBUG
 					post("%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
