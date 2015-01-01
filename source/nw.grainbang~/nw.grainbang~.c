@@ -160,7 +160,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)grainbang_getinfo, "getinfo", A_NOTHING, 0);
 	
     /* bind method "grainbang_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)grainbang_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)grainbang_dsp64, "dsp64", A_CANT, 0);
     
     class_register(CLASS_BOX, c); // register the class w max
     grainbang_class = c;
@@ -208,6 +208,7 @@ void *grainbang_new(t_symbol *snd, t_symbol *win)
 	x->grain_stage = NO_GRAIN;
 	x->win_step_size = x->snd_step_size = 0.0;
 	x->curr_win_pos = x->curr_snd_pos = 0.0;
+    x->curr_count_samp = -1;
 	
 	/* set flags to defaults */
 	x->snd_interp = INTERP_ON;
@@ -305,11 +306,11 @@ void grainbang_dsp64(t_grainbang *x, t_object *dsp64, short *count, double sampl
     // set stage to no grain
     x->grain_stage = NO_GRAIN;
     
-    if (count[5] && count[0]) {	// if input and output connected..
+    if (count[5]) {	// if output connected..
         #ifdef DEBUG
             post("%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
-        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainbang_perform64zero, 0, NULL);
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainbang_perform64, 0, NULL);
     } else {					// if not...
         #ifdef DEBUG
             post("%s: no output computed", OBJECT_NAME);
@@ -611,6 +612,206 @@ void grainbang_perform64zero(t_grainbang *x, t_object *dsp64, double **ins, long
 void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,
                           long numouts, long vectorsize, long flags, void *userparam)
 {
+    // local vars outlets and inlets
+    t_double *in_sound_start = ins[1];
+    t_double *in_dur = ins[2];
+    t_double *in_sample_increment = ins[3];
+    t_double *in_gain = ins[4];
+    t_double *out_signal = outs[0];
+    t_double *out_signal2 = outs[1];
+    t_double *out_sample_count = outs[2];
+    
+    // local vars for snd and win buffer
+    t_buffer_obj *snd_object, *win_object;
+    t_float *tab_s, *tab_w;
+    double snd_out, win_out;
+    long size_s, size_w;
+    
+    // local vars for object vars and while loop
+    double index_s, index_w, temp_index_frac;
+    long n, count_samp, temp_index_int;
+    double s_step_size, w_step_size, g_gain;
+    short interp_s, interp_w, g_direction;
+    
+    // check to make sure buffers are loaded with proper file types
+    if (x->x_obj.z_disabled)		// and object is enabled
+        goto out;
+    if (x->snd_buf_ptr == NULL || (x->win_buf_ptr == NULL))
+        goto zero;
+    
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get window buffer info
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    tab_w = buffer_locksamples(win_object);
+    if (!tab_w)		// buffer samples were not accessible
+        goto zero;
+    size_w = buffer_getframecount(win_object);
+    
+    // get snd and win index info
+    index_s = x->curr_snd_pos;
+    index_w = x->curr_win_pos;
+    s_step_size = x->snd_step_size;
+    w_step_size = x->win_step_size;
+    
+    // get grain options
+    interp_s = x->snd_interp;
+    interp_w = x->win_interp;
+    g_gain = x->grain_gain;
+    g_direction = x->grain_direction;
+    
+    // get history from last vector
+    count_samp = x->curr_count_samp;
+    
+    n = vectorsize;
+    while(n--)
+    {
+        // advance window index
+        index_w += w_step_size;
+        // and if we exceed the window size, stop producing grain
+        if (index_w > size_w) {
+            x->grain_stage = NO_GRAIN;
+            count_samp = -1;
+        }
+        
+        // should we start a grain ?
+        if (count_samp == -1) { // if sample count is -1...
+            if (x->grain_stage == NEW_GRAIN) { // if bang...
+                buffer_unlocksamples(snd_object);
+                buffer_unlocksamples(win_object);
+                
+                grainbang_initGrain(x, *in_sound_start, *in_dur, *in_sample_increment, *in_gain);
+                
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    goto advance_pointers;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get win buffer info
+                win_object = buffer_ref_getobject(x->win_buf_ptr);
+                tab_w = buffer_locksamples(win_object);
+                if (!tab_w)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    goto advance_pointers;
+                }
+                size_w = buffer_getframecount(win_object);
+                
+                // get snd and win index info
+                index_s = x->curr_snd_pos;
+                index_w = x->curr_win_pos;
+                s_step_size = x->snd_step_size;
+                w_step_size = x->win_step_size;
+                
+                // get grain options
+                interp_s = x->snd_interp;
+                interp_w = x->win_interp;
+                g_gain = x->grain_gain;
+                g_direction = x->grain_direction;
+                
+                // get history from last vector
+                count_samp = x->curr_count_samp;
+                
+                // move to next stage
+                x->grain_stage = FINISH_GRAIN;
+                
+            } else { // if not...
+                *out_signal = 0.0;
+                *out_signal2 = 0.0;
+                *out_sample_count = (double)count_samp;
+                goto advance_pointers;
+            }
+        }
+        
+        // if we made it here, then we will actually start counting
+        count_samp++;
+        
+        // advance sound index
+        if (g_direction == FORWARD_GRAINS) {
+            index_s += s_step_size;     // addition
+        } else {	// if REVERSE_GRAINS
+            index_s -= s_step_size;		// subtract
+        }
+        
+        // wrap sound index if not within bounds
+        while (index_s < 0.0)
+            index_s += size_s;
+        while (index_s >= size_s)
+            index_s -= size_s;
+        
+        // WINDOW OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_w); // integer portion of index
+        temp_index_frac = index_w - (double)temp_index_int; // fractional portion of index
+        
+        // get value from the win buffer samples
+        if (interp_w == INTERP_ON) {
+            win_out = mcLinearInterp(tab_w, temp_index_int, temp_index_frac, size_w, 1);
+        } else {	// if INTERP_OFF
+            win_out = tab_w[temp_index_int];
+        }
+        
+        // SOUND OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_s); // integer portion of index
+        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        
+        // get value from the snd buffer samples
+        if (interp_s == INTERP_ON) {
+            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+        } else {	// if INTERP_OFF
+            snd_out = tab_s[temp_index_int];
+        }
+        
+        // OUTLETS
+        
+        // multiply snd_out by win_out by gain value
+        *out_signal = snd_out * win_out * g_gain;
+        *out_signal2 = 0.;
+        
+        *out_sample_count = (double)count_samp;
+        
+    advance_pointers:
+        // advance all pointers
+        ++in_sound_start, ++in_dur, ++in_sample_increment, ++in_gain;
+        ++out_signal, ++out_signal2, ++out_sample_count;
+    }
+    
+    // update object history for next vector
+    x->curr_snd_pos = index_s;
+    x->curr_win_pos = index_w;
+    x->curr_count_samp = count_samp;
+    
+    buffer_unlocksamples(snd_object);
+    buffer_unlocksamples(win_object);
+    return;
+    
+    // alternate blank output
+zero:
+    n = vectorsize;
+    while(n--)
+    {
+        *out_signal++ = 0.;
+        *out_signal2++ = 0.;
+        *out_sample_count++ = -1.;
+    }
+    
+out:
+    return;
     
 }
 
