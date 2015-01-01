@@ -75,6 +75,7 @@ typedef struct _grainbang
 	short grain_pos_start_connected;	// <--
 	short grain_length_connected;		// <--
 	short grain_pitch_connected;		// <--
+    short grain_gain_connected;
 	// grain tracking info
 	short grain_stage;
 	//long curr_grain_samp;				//removed 2003.08.04
@@ -87,7 +88,10 @@ typedef struct _grainbang
 void *grainbang_new(t_symbol *snd, t_symbol *win);
 t_int *grainbang_perform(t_int *w);
 t_int *grainbang_perform0(t_int *w);
+void grainbang_perform64zero(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count);
+void grainbang_dsp64(t_grainbang *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void grainbang_setsnd(t_grainbang *x, t_symbol *s);
 void grainbang_setwin(t_grainbang *x, t_symbol *s);
 void grainbang_float(t_grainbang *x, double f);
@@ -242,7 +246,7 @@ void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count)
 	x->grain_length_connected = count[2];
 	x->grain_pitch_connected = count[3];
 	
-	x->output_sr = sp[4]->s_sr;
+	x->output_sr = sp[5]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
 	if (!count[5]) {	// if output is not connected...
@@ -260,6 +264,56 @@ void grainbang_dsp(t_grainbang *x, t_signal **sp, short *count)
 		#endif /* DEBUG */
 	}
 	
+}
+
+/********************************************************************************
+ void grainbang_dsp64()
+ 
+ inputs:     x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void grainbang_dsp64(t_grainbang *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
+    grainbang_setsnd(x, x->snd_sym);
+    grainbang_setwin(x, x->win_sym);
+    
+    /* test inlets for signal data */
+    x->grain_pos_start_connected = count[1];
+    x->grain_length_connected = count[2];
+    x->grain_pitch_connected = count[3];
+    x->grain_gain_connected = count[4];
+    
+    // grab sample rate
+    x->output_sr = samplerate;
+    x->output_1oversr = 1.0 / x->output_sr;
+    
+    // set stage to no grain
+    x->grain_stage = NO_GRAIN;
+    
+    if (count[5] && count[0]) {	// if input and output connected..
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainbang_perform64zero, 0, NULL);
+    } else {					// if not...
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
+    
 }
 
 /********************************************************************************
@@ -492,6 +546,70 @@ t_int *grainbang_perform0(t_int *w)
 	}
 
 	return (w + 3);
+}
+
+/********************************************************************************
+ void *grainbang_perform64zero()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit,
+ writes zeros to every outlet
+ returns:		nothing
+ ********************************************************************************/
+void grainbang_perform64zero(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,
+                              long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *curr_out[numouts];
+    long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
+    
+    n = vectorsize;
+    while(n--)
+    {
+        m = numouts;
+        while(m--)
+        {
+            *(curr_out[m]) = 0.0;		// save to output
+            (curr_out[m])++;			// advance the outlet pointer
+        }
+    }
+    
+}
+
+/********************************************************************************
+ void *grainbang_perform64()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,
+                          long numouts, long vectorsize, long flags, void *userparam)
+{
+    
 }
 
 /********************************************************************************
