@@ -673,10 +673,11 @@ void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long num
     {
         // advance window index
         index_w += w_step_size;
-        // and if we exceed the window size, stop producing grain
-        if (index_w > size_w) {
-            x->grain_stage = NO_GRAIN;
-            count_samp = -1;
+        if (index_w > size_w) { // if we exceed the window size
+            if (x->grain_stage == FINISH_GRAIN) { // and if the grain is sounding
+                x->grain_stage = NO_GRAIN;
+                count_samp = -1;
+            }
         }
         
         // should we start a grain ?
@@ -974,7 +975,7 @@ void grainbang_setwin(t_grainbang *x, t_symbol *s)
 				//x->win_last_out = 0.0;	//removed 2005.02.02
 				
 				/* set current win position to 1 more than length */
-				x->curr_win_pos = (double)(buffer_getframecount(b_object)) + 1.0;
+				x->curr_win_pos = 0.0;
 				
 				#ifdef DEBUG
 					post("%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
