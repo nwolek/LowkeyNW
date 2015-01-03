@@ -54,14 +54,16 @@ typedef struct _grainphase
 	short win_interp;
 	// grain info
 	double grain_pos_start;	// in samples
-	double grain_pitch;	// as multiplier, 0 to 1
+    double grain_pitch;	// as multiplier, 0 to 1
+    double grain_gain;		// linear gain mult
 	short grain_direction;	// forward or reverse
 	double grain_sound_length; // in samples
 	double curr_snd_pos; // in samples
 	double snd_step_size; // in samples
 	// defered grain info at control rate
 	double next_grain_pos_start;	// in milliseconds
-	double next_grain_pitch;		// as multiplier, 0 to 1
+    double next_grain_pitch;		// as multiplier, 0 to 1
+    double next_grain_gain;			// linear gain mult
 	short next_grain_direction;		// forward or reverse
 	// signal or control grain info
 	short grain_pos_start_connected;	// <--
@@ -160,7 +162,7 @@ returns:		nothing
 ********************************************************************************/
 void *grainphase_new(t_symbol *snd, t_symbol *win)
 {
-	t_grainphase *x = (t_grainphase *)newobject(this_class);
+	t_grainphase *x = (t_grainphase *) object_alloc((t_class*) grainphase_class);
 	dsp_setup((t_pxobject *)x, 3);					// three inlets
 	outlet_new((t_pxobject *)x, "signal");			// one outlet
 	
@@ -175,6 +177,7 @@ void *grainphase_new(t_symbol *snd, t_symbol *win)
 	/* setup variables */
 	x->grain_pos_start = x->next_grain_pos_start = 0.0;
 	x->grain_pitch = x->next_grain_pitch = 1.0;
+    x->grain_gain = x->next_grain_gain = 1.0;
 	x->curr_snd_pos = x->snd_step_size = 0.0; 
 	
 	/* set flags to defaults */
