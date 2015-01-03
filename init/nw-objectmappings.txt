@@ -3,3 +3,5 @@ max objectfile train.shift~ nw.trainshift~;
 max objectfile cpPan~ nw.cppan~;
 max objectfile gverb~ nw.gverb~;
 max objectfile pulsesamp~ nw.pulsesamp~;
+max objectfile grain.pulse~ nw.grainpulse~;
+max objectfile grain.bang~ nw.grainbang~;
