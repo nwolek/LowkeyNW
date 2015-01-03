@@ -16,7 +16,7 @@
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.grainbang~"		// name of the object
 
@@ -1203,26 +1203,35 @@ void grainbang_assist(t_grainbang *x, t_object *b, long msg, long arg, char *s)
 	if (msg==ASSIST_INLET) {
 		switch (arg) {
 			case 0:
-				strcpy(s, "(bang) output a grain");
+				strcpy(s, "(bang) starts grain production");
 				break;
-			case 1:
-				strcpy(s, "(signal/float) sound begin, in milliseconds");
-				break;
-			case 2:
-				strcpy(s, "(signal/float) grain length, in milliseconds");
-				break;
-			case 3:
-				strcpy(s, "(signal/float) grain pitch multiplier, 1.0 = unchanged");
-				break;
-		}
-	} else if (msg==ASSIST_OUTLET) {
-		switch (arg) {
-			case 0:
-				strcpy(s, "(signal) grain output");
-				break;
-			case 1:
-				strcpy(s, "(bang) bang overflow");
-				break;
+            case 1:
+                strcpy(s, "(signal/float) sound buffer offset in ms");
+                break;
+            case 2:
+                strcpy(s, "(signal/float) grain duration in ms");
+                break;
+            case 3:
+                strcpy(s, "(signal/float) sample increment, 1.0 = unchanged");
+                break;
+            case 4:
+                strcpy(s, "(signal/float) gain multiplier, 1.0 = unchanged");
+                break;
+        }
+    } else if (msg==ASSIST_OUTLET) {
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal) audio channel 1");
+                break;
+            case 1:
+                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                break;
+            case 2:
+                strcpy(s, "(signal) sample count");
+                break;
+            case 3:
+                strcpy(s, "(bang) overflow");
+                break;
 		}
 	}
 	
