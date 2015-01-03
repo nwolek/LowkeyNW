@@ -56,7 +56,8 @@ typedef struct _grainstream
 	// current grain info
 	double grain_freq;		// in hertz
 	double grain_pos_start;	// in samples
-	double grain_pitch;		// as multiplier
+    double grain_pitch;		// as multiplier
+    double grain_gain;		// linear gain mult
 	double grain_length;	// in milliseconds
 	double grain_sound_length;	// in milliseconds
 	double win_step_size;	// in samples
@@ -67,7 +68,8 @@ typedef struct _grainstream
 	// defered grain info at control rate
 	double next_grain_freq;			// in hertz
 	double next_grain_pos_start;	// in milliseconds
-	double next_grain_pitch;		// as multiplier
+    double next_grain_pitch;		// as multiplier
+    double next_grain_gain;         // linear gain mult
 	short next_grain_direction;		// forward or reverse
 	// signal or control grain info
 	short grain_freq_connected;				// <--
@@ -166,7 +168,7 @@ returns:		nothing
 ********************************************************************************/
 void *grainstream_new(t_symbol *snd, t_symbol *win)
 {
-	t_grainstream *x = (t_grainstream *)newobject(this_class);
+	t_grainstream *x = (t_grainstream *) object_alloc((t_class*) grainstream_class);
 	dsp_setup((t_pxobject *)x, 3);					// three inlets
 	outlet_new((t_pxobject *)x, "signal");			// one outlet
 	
@@ -181,7 +183,8 @@ void *grainstream_new(t_symbol *snd, t_symbol *win)
 	/* setup variables */
 	x->grain_freq = x->next_grain_freq = 20.0;
 	x->grain_pos_start = x->next_grain_pos_start = 0.0;
-	x->grain_pitch = x->next_grain_pitch = 1.0;
+    x->grain_pitch = x->next_grain_pitch = 1.0;
+    x->grain_gain = x->next_grain_gain = 1.0;
 	x->win_step_size = x->snd_step_size = 0.0;
 	x->curr_win_pos = x->curr_snd_pos = 0.0;
 	
