@@ -543,8 +543,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 358.0, 363.0, 100.0, 24.0 ],
-					"presentation_rect" : [ 358.0, 363.0, 100.0, 24.0 ]
+					"patching_rect" : [ 358.0, 363.0, 203.712784, 54.0 ],
+					"presentation_rect" : [ 358.0, 363.0, 203.712784, 54.0 ]
 				}
 
 			}
