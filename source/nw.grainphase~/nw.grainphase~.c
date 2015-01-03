@@ -1,29 +1,24 @@
 /*
-** grain.phase~.c
+** nw.grainphase~.c
 **
 ** MSP object
 ** sends out a continuous stream of grains 
-** 
 ** 2001/03/29 started by Nathan Wolek
-** 2002/07/11 buffer length no longer stored locally
-** 2002/07/15 fixed mono buffer check problem
-** 2002/07/25 added deferred buffer changes
-** 2002/09/24 added getinfo message
-** 2003/07/10 update to CW 8
-** 2005/02/02 change to linear interp
-** 2005/02/03 INTERP_ON is now default for windowing; added "b_inuse" check
-** 2006/11/22 moved to Xcode; fixed buffer in use bug
-** 
+**
+** Copyright © 2002,2015 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"grain.phase~"		// name of the object
+#define OBJECT_NAME		"nw.grainphase~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -37,7 +32,7 @@
 #define INTERP_OFF			0
 #define INTERP_ON			1
 
-void *this_class;		// required global pointing to this class
+static t_class *grainphase_class;		// required global pointing to this class
 
 typedef struct _grainphase
 {
