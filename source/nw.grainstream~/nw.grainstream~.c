@@ -5,7 +5,7 @@
 ** sends out a continuous stream of grains 
 ** 2001/03/29 started by Nathan Wolek
 **
-** Copyright © 2002,2014 by Nathan Wolek
+** Copyright © 2002,2015 by Nathan Wolek
 ** License: http://opensource.org/licenses/BSD-3-Clause
 **
 */
