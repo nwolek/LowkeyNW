@@ -205,6 +205,7 @@ void *grainbang_new(t_symbol *snd, t_symbol *win)
 	x->grain_pos_start = x->next_grain_pos_start = 0.0;
 	x->grain_length = x->next_grain_length = 50.0;
 	x->grain_pitch = x->next_grain_pitch = 1.0;
+    x->grain_gain = x->next_grain_gain = 1.0;
 	x->grain_stage = NO_GRAIN;
 	x->win_step_size = x->snd_step_size = 0.0;
 	x->curr_win_pos = x->curr_snd_pos = 0.0;
@@ -1010,26 +1011,24 @@ returns:		nothing
 ********************************************************************************/
 void grainbang_float(t_grainbang *x, double f)
 {
-	if (x->x_obj.z_in == 1) // if inlet 2
-	{
-		x->next_grain_pos_start = f;
-	}
-	else if (x->x_obj.z_in == 2) // if inlet 3
-	{
-		if (f > 0.0) {
-			x->next_grain_length = f;
-		} else {
-			post("%s: grain length must be greater than zero", OBJECT_NAME);
-		}
-	}
-	else if (x->x_obj.z_in == 3) // if inlet 4
-	{
-		x->next_grain_pitch = f;
-	}
-	else if (x->x_obj.z_in == 0)
-	{
-		post("%s: left inlet does not accept floats", OBJECT_NAME);
-	}
+    switch (x->x_obj.z_in) {
+        case 1:
+            x->next_grain_pos_start = f;
+            break;
+        case 2:
+            x->next_grain_length = f;
+            break;
+        case 3:
+            x->next_grain_pitch = f;
+            break;
+        case 4:
+            x->next_grain_gain = f;
+            break;
+        default:
+            post("%s: inlet does not accept floats", OBJECT_NAME);
+            break;
+    }
+
 }
 
 /********************************************************************************
@@ -1045,26 +1044,23 @@ returns:		nothing
 ********************************************************************************/
 void grainbang_int(t_grainbang *x, long l)
 {
-	if (x->x_obj.z_in == 1) // if inlet 2
-	{
-		x->next_grain_pos_start = (double) l;
-	}
-	else if (x->x_obj.z_in == 2) // if inlet 3
-	{
-		if (l > 0) {
-			x->next_grain_length = (double) l;
-		} else {
-			post("%s: grain length must be greater than zero", OBJECT_NAME);
-		}
-	}
-	else if (x->x_obj.z_in == 3) // if inlet 4
-	{
-		x->next_grain_pitch = (double) l;
-	}
-	else if (x->x_obj.z_in == 0)
-	{
-		post("%s: left inlet does not accept floats", OBJECT_NAME);
-	}
+    switch (x->x_obj.z_in) {
+        case 1:
+            x->next_grain_pos_start = (double)l;
+            break;
+        case 2:
+            x->next_grain_length = (double)l;
+            break;
+        case 3:
+            x->next_grain_pitch = (double)l;
+            break;
+        case 4:
+            x->next_grain_gain = (double)l;
+            break;
+        default:
+            post("%s: inlet does not accept ints", OBJECT_NAME);
+            break;
+    }
 }
 
 /********************************************************************************
