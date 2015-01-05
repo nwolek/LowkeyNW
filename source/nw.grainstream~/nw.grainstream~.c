@@ -39,16 +39,16 @@ typedef struct _grainstream
 {
 	t_pxobject x_obj;				// <--
 	// sound buffer info
-	t_symbol *snd_sym;
-	t_buffer *snd_buf_ptr;
-	t_buffer *next_snd_buf_ptr;		//added 2002.07.25
+    t_symbol *snd_sym;
+    t_buffer_ref *snd_buf_ptr;
+    t_buffer_ref *next_snd_buf_ptr;
 	//double snd_last_out;
 	//long snd_buf_length;	//removed 2002.07.11
 	short snd_interp;
 	// window buffer info
-	t_symbol *win_sym;
-	t_buffer *win_buf_ptr;
-	t_buffer *next_win_buf_ptr;		//added 2002.07.25
+    t_symbol *win_sym;
+    t_buffer_ref *win_buf_ptr;
+    t_buffer_ref *next_win_buf_ptr;
 	//double win_last_out;
 	double win_last_index;
 	//long win_buf_length;	//removed 2002.07.11
@@ -257,13 +257,12 @@ t_int *grainstream_perform(t_int *w)
 	int vec_size = (int)(w[6]);
 	float out_1oversr = (float)x->output_1oversr;
 	
-	t_buffer *s_ptr = x->snd_buf_ptr;
-	t_buffer *w_ptr = x->win_buf_ptr;
+	t_buffer_obj *snd_object, *win_object;
 	float *tab_s, *tab_w;
 	double s_step_size, w_step_size;
 	double  snd_out, win_out;//, last_s, last_w;	//removed 2005.02.03
 	double index_s, index_w, last_index_w, temp_index_frac;
-	long size_s, size_w, saveinuse_s, saveinuse_w, temp_index_int;
+	long size_s, size_w, temp_index_int;
 	short interp_s, interp_w, g_direction;
 	
 	vec_size += 1;		//increase by one for pre-decrement
@@ -271,16 +270,22 @@ t_int *grainstream_perform(t_int *w)
 	
 	if (x->x_obj.z_disabled)					// object is enabled
 		goto out;
-	if ((s_ptr == NULL) || (w_ptr == NULL))		// buffer pointers are defined
-		goto zero;
-	if (!s_ptr->b_valid || !w_ptr->b_valid)		// files are loaded
-		goto zero;
+    if ((x->snd_buf_ptr == NULL) || (x->win_buf_ptr == NULL))		// buffer pointers are defined
+        goto zero;
 	
-	// set "in use" to true; added 2005.02.03
-	saveinuse_s = s_ptr->b_inuse;
-	s_ptr->b_inuse = true;
-	saveinuse_w = w_ptr->b_inuse;
-	w_ptr->b_inuse = true;
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get window buffer info
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    tab_w = buffer_locksamples(win_object);
+    if (!tab_w)		// buffer samples were not accessible
+        goto zero;
+    size_w = buffer_getframecount(win_object);
 	
 	// get option settings
 	interp_s = x->snd_interp;
@@ -291,13 +296,7 @@ t_int *grainstream_perform(t_int *w)
 	w_step_size = x->win_step_size;
 	index_s = x->curr_snd_pos;
 	index_w = x->curr_win_pos;
-	// get buffer info
-	tab_s = s_ptr->b_samples;
-	tab_w = w_ptr->b_samples;
-	size_s = s_ptr->b_frames;
-	size_w = w_ptr->b_frames;
-	//last_s = x->snd_last_out;	//removed 2005.02.03
-	//last_w = x->win_last_out;	//removed 2005.02.03
+	// history
 	last_index_w = x->win_last_index;
 	
 	while (--vec_size) {
@@ -314,26 +313,31 @@ t_int *grainstream_perform(t_int *w)
 				// ...then begin a new grain
 				
 				if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
-					s_ptr->b_inuse = saveinuse_s;	// restore b_inuse; 2006.11.22
-					x->snd_buf_ptr = x->next_snd_buf_ptr;
-					x->next_snd_buf_ptr = NULL;
-					//x->snd_last_out = 0.0;	//removed 2005.02.03
-					s_ptr = x->snd_buf_ptr;
-					saveinuse_s = s_ptr->b_inuse;	// 2006.11.22
-					s_ptr->b_inuse = true;			// 2006.11.22
+                    buffer_unlocksamples(snd_object);
+                    x->snd_buf_ptr = x->next_snd_buf_ptr;
+                    x->next_snd_buf_ptr = NULL;
+                    
+                    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                    tab_s = buffer_locksamples(snd_object);
+                    if (!tab_s)		// buffer samples were not accessible
+                        goto zero;
+                    size_s = buffer_getframecount(snd_object);
 					
 					#ifdef DEBUG
 						post("%s: sound buffer pointer updated", OBJECT_NAME);
 					#endif /* DEBUG */
 				}
 				if (x->next_win_buf_ptr != NULL) {	//added 2002.07.24
-					w_ptr->b_inuse = saveinuse_w;	// restore b_inuse; 2006.11.22
-					x->win_buf_ptr = x->next_win_buf_ptr;
-					x->next_win_buf_ptr = NULL;
-					//x->win_last_out = 0.0;	//removed 2005.02.03
-					w_ptr = x->win_buf_ptr;
-					saveinuse_w = w_ptr->b_inuse;	// 2006.11.22
-					w_ptr->b_inuse = true;			// 2006.11.22
+                    buffer_unlocksamples(win_object);
+                    x->win_buf_ptr = x->next_win_buf_ptr;
+                    x->next_win_buf_ptr = NULL;
+                    
+                    win_object = buffer_ref_getobject(x->win_buf_ptr);
+                    tab_w = buffer_locksamples(win_object);
+                    if (!tab_w)	{	// buffer samples were not accessible
+                        goto zero;
+                    }
+                    size_w = buffer_getframecount(win_object);
 					
 					#ifdef DEBUG
 						post("%s: window buffer pointer updated", OBJECT_NAME);
@@ -365,21 +369,21 @@ t_int *grainstream_perform(t_int *w)
 				// test if pos_start should be at audio or control rate
 				if (x->grain_pos_start_connected) { // if position is at audio rate
 					if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = *in_pos_start * s_ptr->b_msr;
+						x->grain_pos_start = *in_pos_start * buffer_getmillisamplerate(snd_object);
 					} else {	// if reverse...
-						x->grain_pos_start = (*in_pos_start + x->grain_sound_length) * s_ptr->b_msr;
+						x->grain_pos_start = (*in_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
 					}
 				} else { // if position is at control rate
 					if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = x->next_grain_pos_start * s_ptr->b_msr;
+						x->grain_pos_start = x->next_grain_pos_start * buffer_getmillisamplerate(snd_object);
 					} else {	// if reverse...
-						x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * s_ptr->b_msr;
+						x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
 					}
 				}
 				// compute window buffer step size per vector sample 
-				x->win_step_size = w_ptr->b_frames * x->grain_freq * out_1oversr;
+				x->win_step_size = size_w * x->grain_freq * out_1oversr;
 				// compute sound buffer step size per vector sample
-				x->snd_step_size = x->grain_pitch * s_ptr->b_sr * out_1oversr;
+				x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * out_1oversr;
 				// reset position tracking variables
 				if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
 					x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
@@ -395,9 +399,6 @@ t_int *grainstream_perform(t_int *w)
 				w_step_size = x->win_step_size;
 				index_s = x->curr_snd_pos;
 				index_w = x->curr_win_pos;
-				// update local info on buffers
-				size_s = s_ptr->b_frames;
-				size_w = w_ptr->b_frames;
 				
 				#ifdef DEBUG
 					post("%s: beginning of grain", OBJECT_NAME);
@@ -492,9 +493,8 @@ t_int *grainstream_perform(t_int *w)
 	//x->win_last_out = last_w;	//removed 2005.02.03
 	x->win_last_index = index_w;
 	
-	// reset "in use"; added 2005.02.03
-	s_ptr->b_inuse = saveinuse_s;
-	w_ptr->b_inuse = saveinuse_w;
+    buffer_unlocksamples(snd_object);
+    buffer_unlocksamples(win_object);
 	
 	return (w + 7);
 	
@@ -537,10 +537,12 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_setsnd(t_grainstream *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -579,10 +581,12 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_setwin(t_grainstream *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -590,7 +594,7 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
 				x->win_sym = s;
 				x->win_buf_ptr = b;
 				//x->win_last_out = 0.0;	//removed 2005.02.03
-				x->win_last_index = b->b_frames;
+				x->win_last_index = buffer_getframecount(b_object);
 				
 				#ifdef DEBUG
 					post("%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
