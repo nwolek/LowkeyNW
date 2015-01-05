@@ -39,15 +39,15 @@ typedef struct _grainphase
 	t_pxobject x_obj;					// <--
 	// sound buffer info
 	t_symbol *snd_sym;
-	t_buffer *snd_buf_ptr;
-	t_buffer *next_snd_buf_ptr;
+	t_buffer_ref *snd_buf_ptr;
+	t_buffer_ref *next_snd_buf_ptr;
 	//double snd_last_out;	//removed 2005.02.02
 	//long snd_buf_length;	//removed 2002.07.11
 	short snd_interp;
 	// window buffer info
 	t_symbol *win_sym;
-	t_buffer *win_buf_ptr;
-	t_buffer *next_win_buf_ptr;
+	t_buffer_ref *win_buf_ptr;
+	t_buffer_ref *next_win_buf_ptr;
 	//double win_last_out;	//removed 2005.02.02
 	double win_last_index;
 	//long win_buf_length;	//removed 2002.07.11
@@ -248,34 +248,33 @@ t_int *grainphase_perform(t_int *w)
 	t_float *out = (t_float *)(w[5]);
 	int vec_size = (int)(w[6]) + 1;
 	
-	t_buffer *s_ptr = x->snd_buf_ptr;
-	t_buffer *w_ptr = x->win_buf_ptr;
+	t_buffer_obj *snd_object, *win_object;
 	float *tab_s, *tab_w;
 	//double g_pos_start, g_pitch, g_sound_length; //removed 2002.07.25
 	double  snd_out, win_out;// last_s, last_w;	//removed 2005.02.02
 	double temp, index_s, index_w, last_index_w, s_step_size, temp_index_frac;
-	long size_s, size_w, saveinuse_s, saveinuse_w, temp_index_int;
+	long size_s, size_w, temp_index_int;
 	short interp_s, interp_w, g_direction;
 	
 	if (x->x_obj.z_disabled)						// object is enabled
 		goto out;
-	if ((s_ptr == NULL) || (w_ptr == NULL))			// buffer names are defined
-		goto zero;
-	if (!s_ptr->b_valid || !w_ptr->b_valid)			// files are loaded
+	if ((x->snd_buf_ptr == NULL) || (x->win_buf_ptr == NULL))			// buffer names are defined
 		goto zero;
 		
-	// set "in use" to true; added 2005.02.03
-	saveinuse_s = s_ptr->b_inuse;
-	s_ptr->b_inuse = true;
-	saveinuse_w = w_ptr->b_inuse;
-	w_ptr->b_inuse = true;
-	
-	tab_s = s_ptr->b_samples;
-	tab_w = w_ptr->b_samples;
-	size_s = s_ptr->b_frames;
-	size_w = w_ptr->b_frames;
-	//last_s = x->snd_last_out;	//removed 2005.02.02
-	//last_w = x->win_last_out;	//removed 2005.02.02
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    tab_s = buffer_locksamples(snd_object);
+    if (!tab_s)		// buffer samples were not accessible
+        goto zero;
+    size_s = buffer_getframecount(snd_object);
+    
+    // get window buffer info
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    tab_w = buffer_locksamples(win_object);
+    if (!tab_w)		// buffer samples were not accessible
+        goto zero;
+    size_w = buffer_getframecount(win_object);
+    
 	last_index_w = x->win_last_index;
 	index_s = x->curr_snd_pos;
 	s_step_size = x->snd_step_size;
@@ -299,26 +298,31 @@ t_int *grainphase_perform(t_int *w)
 			if (index_w < 10.0) {			// and is at beginning...
 					
 				if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
-					s_ptr->b_inuse = saveinuse_s;	// restore b_inuse; 2006.11.22
+					buffer_unlocksamples(snd_object);
 					x->snd_buf_ptr = x->next_snd_buf_ptr;
 					x->next_snd_buf_ptr = NULL;
-					//x->snd_last_out = 0.0;	//removed 2005.02.02
-					s_ptr = x->snd_buf_ptr;
-					saveinuse_s = s_ptr->b_inuse;	// 2006.11.22
-					s_ptr->b_inuse = true;			// 2006.11.22
+                    
+					snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                    tab_s = buffer_locksamples(snd_object);
+                    if (!tab_s)		// buffer samples were not accessible
+                        goto zero;
+                    size_s = buffer_getframecount(snd_object);
 					
 					#ifdef DEBUG
 						post("%s: sound buffer pointer updated", OBJECT_NAME);
 					#endif /* DEBUG */
 				}
 				if (x->next_win_buf_ptr != NULL) {	//added 2002.07.24
-					w_ptr->b_inuse = saveinuse_w;	// restore b_inuse; 2006.11.22
+					buffer_unlocksamples(win_object);
 					x->win_buf_ptr = x->next_win_buf_ptr;
 					x->next_win_buf_ptr = NULL;
-					//x->win_last_out = 0.0;	//removed 2005.02.02
-					w_ptr = x->win_buf_ptr;
-					saveinuse_w = w_ptr->b_inuse;	// 2006.11.22
-					w_ptr->b_inuse = true;			// 2006.11.22
+                    
+                    win_object = buffer_ref_getobject(x->win_buf_ptr);
+                    tab_w = buffer_locksamples(win_object);
+                    if (!tab_w)	{	// buffer samples were not accessible
+                        goto zero;
+                    }
+                    size_w = buffer_getframecount(win_object);
 					
 					#ifdef DEBUG
 						post("%s: window buffer pointer updated", OBJECT_NAME);
@@ -339,30 +343,30 @@ t_int *grainphase_perform(t_int *w)
 				}
 				
 				// compute sound buffer step size per output sample
-				x->snd_step_size = x->grain_pitch * s_ptr->b_sr * x->output_1oversr;
+				x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
 				s_step_size = x->snd_step_size;
 				
 				// test if position should be at audio or control rate
 				if (x->grain_pos_start_connected) { // if position is at audio rate
 					if (g_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = *in_pos_start * s_ptr->b_msr;
+						x->grain_pos_start = *in_pos_start * buffer_getmillisamplerate(snd_object);
 						index_s = x->grain_pos_start - s_step_size;
 					} else {	// if reverse...
 						// estimate length of window for reversed grains
 						temp = index_w - (last_index_w - size_w);
 						temp *= size_w;
-						x->grain_pos_start = (*in_pos_start * s_ptr->b_msr) + temp;
+						x->grain_pos_start = (*in_pos_start * buffer_getmillisamplerate(snd_object)) + temp;
 						index_s = x->grain_pos_start + s_step_size;
 					}
 				} else { // if position is at control rate
 					if (g_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = x->next_grain_pos_start * s_ptr->b_msr;
+						x->grain_pos_start = x->next_grain_pos_start * buffer_getmillisamplerate(snd_object);
 						index_s = x->grain_pos_start - s_step_size;
 					} else {	// if reverse...
 						// estimate length of window for reversed grains
 						temp = index_w - (last_index_w - size_w);
 						temp *= size_w;
-						x->grain_pos_start = (x->next_grain_pos_start * s_ptr->b_msr) + temp;
+						x->grain_pos_start = (x->next_grain_pos_start * buffer_getmillisamplerate(snd_object)) + temp;
 						index_s = x->grain_pos_start + s_step_size;
 					}
 				}
@@ -448,9 +452,8 @@ t_int *grainphase_perform(t_int *w)
 	x->curr_snd_pos = index_s;
 	x->snd_step_size = s_step_size;
 	
-	// reset "in use"; added 2005.02.03
-	s_ptr->b_inuse = saveinuse_s;
-	w_ptr->b_inuse = saveinuse_w;
+    buffer_unlocksamples(snd_object);
+    buffer_unlocksamples(win_object);
 	
 	return (w + 7);
 	
@@ -492,10 +495,12 @@ returns:		nothing
 ********************************************************************************/
 void grainphase_setsnd(t_grainphase *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -534,10 +539,12 @@ returns:		nothing
 ********************************************************************************/
 void grainphase_setwin(t_grainphase *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
@@ -545,7 +552,7 @@ void grainphase_setwin(t_grainphase *x, t_symbol *s)
 				x->win_sym = s;
 				x->win_buf_ptr = b;
 				//x->win_last_out = 0.0;	//removed 2005.02.02
-				x->win_last_index = b->b_frames;
+				x->win_last_index = buffer_getframecount(b_object);
 				
 				#ifdef DEBUG
 					post("%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
