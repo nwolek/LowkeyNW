@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.grainphase~" module="msp" category="LowkeyNW, MSP Sampling">
+
+	<digest>
+		Control grains with a phase signal
+	</digest>
+	
+	<description>
+		MORE TEXT HERE
+		The sound source and window shape used by this object for grain production must each loaded into the <o>buffer~</o> objects specified by two required arguments.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Sampling</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>Phase signal. Grain window position follows 0 to 1 ramp.</digest>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>Sound offset in ms. Where to start reading the sound buffer.</digest>
+		</inlet>
+		<inlet id="2" type="signal/float">
+			<digest>Sample increment. Effects perceived pitch, 1.0 = unchanged.</digest>
+		</inlet>
+		<inlet id="3" type="signal/float">
+			<digest>Gain multiplier, 1.0 = unchanged.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: audio channel 1</digest>
+		</outlet>
+		<outlet id="1" type="signal">
+			<digest>Audio signal: audio channel 2 COMING SOON</digest>
+		</outlet>
+		<outlet id="2" type="signal">
+			<digest>Audio signal: sample count since playback started. -1 = no playback.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="sound-buffer-name" optional="0" type="symbol">
+			<digest>
+				Sound buffer object name
+			</digest>
+			<description>
+				The first argument names the <o>buffer~</o> object whose sample memory contains a source source used by this object for grain production.
+			</description>
+		</objarg>
+		<objarg name="window-buffer-name" optional="0" type="symbol">
+			<digest>
+				Window buffer object name
+			</digest>
+			<description>
+				The second argument names the <o>buffer~</o> object whose sample memory contains a window function used by this object for grain production.
+			</description>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="int">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control sound offset, grain duration, sample increment and gain multiplier. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="float">
+			<arglist>
+				<arg name="parameter-settings" optional="0" type="float" />
+			</arglist>
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				Numbers can be used instead of signal objects to control sound offset, grain duration, sample increment and gain multiplier. If a <m>signal</m> is also connected to the inlet, <m>float</m> and <m>int</m> messages will be ignored.
+			</description>
+		</method>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In inlet 1: MORE TEXT HERE
+				<br />
+				<br />
+				After a grain begins sounding, changes received by the following inlets will be deferred to the start of the next grain:
+				<br />
+				<br />
+				In inlet 2: Defines the offset in milliseconds from the beginning of the sound <o>buffer~</o> where processing should start reading for grain production. 
+				<br />
+				<br />
+				In inlet 3: Defines the sample increment used while reading sound <o>buffer~</o> contents.
+				This changes the perceived pitch, with 1.0 resulting in normal playback.
+				The absolute value of any negative numbers are used to prevent buffer overrun errors.
+				If backward playback is desired, use the <b>reverse 1</b> message.
+				<br />
+				<br />
+				In inlet 4: Defines the gain multiplier.
+				All values within a grain will be scaled by this number, with 1.0 resulting in no change.
+				<br />
+				<br />
+			</description>
+		</method>
+		<method name="setSound">
+			<arglist>
+				<arg name="sound-buffer-name" optional="0" type="symbol" />
+			</arglist>
+			<digest>
+				Set the name of the sound <o>buffer~</o> used for grain production.
+			</digest>
+			<description>
+				The word <m>setSound</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as source sound for grain production.
+				Changes sent by the <m>setSound</m> message are deferred to the start of the next grain. 
+			</description>
+		</method>
+		<method name="setWin">
+			<arglist>
+				<arg name="window-buffer-name" optional="0" type="symbol" />
+			</arglist>
+			<digest>
+				Set the name of the window <o>buffer~</o> used for grain production.
+			</digest>
+			<description>
+				The word <m>setWin</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as a window function for grain production.
+				Changes sent by the <m>setWin</m> message are deferred to the start of the next grain. 
+			</description>
+		</method>
+		<method name="reverse">
+			<arglist>
+				<arg name="reverse" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Read the defined <o>buffer~</o> segment backwards. Default is off.
+			</digest>
+			<description>
+				A <m>reverse 1</m> message will play the defined <o>buffer~</o> segment backwards.
+				A <m>reverse 0</m> message will play the defined <o>buffer~</o> segment forward.
+				Changes sent by the <m>reverse</m> message are deferred to the start of the next segment. 
+			</description>
+		</method>
+		<method name="sndInterp">
+			<arglist>
+				<arg name="sound-interpolation" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Use interpolation while reading samples from the sound <o>buffer~</o>. Default is on.
+			</digest>
+			<description>
+				An <m>sndInterp 1</m> message will use linear interpolation while reading from the sound <o>buffer~</o>.
+				An <m>sndInterp 0</m> message will use no interpolation while reading from the sound <o>buffer~</o>.
+			</description>
+		</method>
+		<method name="winInterp">
+			<arglist>
+				<arg name="window-interpolation" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Use interpolation while reading samples from the window <o>buffer~</o>. Default is on.
+			</digest>
+			<description>
+				An <m>winInterp 1</m> message will use linear interpolation while reading from the window <o>buffer~</o>.
+				An <m>winInterp 0</m> message will use no interpolation while reading from the window <o>buffer~</o>.
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="buffer~"/>
+		<seealso name="stutter~"/>
+		<seealso name="wave~" />
+		<seealso name="index~" />
+	</seealsolist>
+	
+</c74object>
