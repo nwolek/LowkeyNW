@@ -802,17 +802,26 @@ void grainphase_assist(t_grainphase *x, t_object *b, long msg, long arg, char *s
 				strcpy(s, "(signal) phase, 0 to 1");
 				break;
 			case 1:
-				strcpy(s, "(signal/float) sound begin, in milliseconds");
+				strcpy(s, "(signal/float) sound buffer offset in ms");
 				break;
 			case 2:
-				strcpy(s, "(signal/float) grain pitch multiplier, 1.0 = unchanged");
+				strcpy(s, "(signal/float) sample increment, 1.0 = unchanged");
 				break;
+            case 3:
+                strcpy(s, "(signal/float) gain multiplier, 1.0 = unchanged");
+                break;
 		}
 	} else if (msg==ASSIST_OUTLET) {
-		switch (arg) {
-			case 0:
-				strcpy(s, "(signal) grain output");
-				break;
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal) audio channel 1");
+                break;
+            case 1:
+                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                break;
+            case 2:
+                strcpy(s, "(signal) sample count");
+                break;
 		}
 	}
 	

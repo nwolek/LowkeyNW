@@ -923,25 +923,34 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_assist(t_grainstream *x, t_object *b, long msg, long arg, char *s)
 {
-	if (msg==ASSIST_INLET) {
-		switch (arg) {
-			case 0:
-				strcpy(s, "(signal/float) frequency, in hertz");
-				break;
-			case 1:
-				strcpy(s, "(signal/float) sound begin, in milliseconds");
-				break;
-			case 2:
-				strcpy(s, "(signal/float) grain pitch multiplier, 1.0 = unchanged");
-				break;
-		}
-	} else if (msg==ASSIST_OUTLET) {
-		switch (arg) {
-			case 0:
-				strcpy(s, "(signal) grain output");
-				break;
-		}
-	}
+    if (msg==ASSIST_INLET) {
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal/float) frequency in Hz");
+                break;
+            case 1:
+                strcpy(s, "(signal/float) sound buffer offset in ms");
+                break;
+            case 2:
+                strcpy(s, "(signal/float) sample increment, 1.0 = unchanged");
+                break;
+            case 3:
+                strcpy(s, "(signal/float) gain multiplier, 1.0 = unchanged");
+                break;
+        }
+    } else if (msg==ASSIST_OUTLET) {
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal) audio channel 1");
+                break;
+            case 1:
+                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                break;
+            case 2:
+                strcpy(s, "(signal) sample count");
+                break;
+        }
+    }
 	
 	#ifdef DEBUG
 		post("%s: assist message displayed", OBJECT_NAME);
