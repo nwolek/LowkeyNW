@@ -17,7 +17,7 @@
 #include <string.h>
 
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.grainstream~"		// name of the object
 
@@ -147,7 +147,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)grainstream_getinfo, "getinfo", A_NOTHING, 0);
 	
     /* bind method "grainstream_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)grainstream_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)grainstream_dsp64, "dsp64", A_CANT, 0);
     
     class_register(CLASS_BOX, c); // register the class w max
     grainstream_class = c;
@@ -269,6 +269,31 @@ void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double s
     #ifdef DEBUG
         post("%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
+    
+    // set buffers
+    grainstream_setsnd(x, x->snd_sym);
+    grainstream_setwin(x, x->win_sym);
+    
+    // test inlets for signal connections
+    x->grain_freq_connected = count[0];
+    x->grain_pos_start_connected = count[1];
+    x->grain_pitch_connected = count[2];
+    x->grain_gain_connected = count[3];
+    
+    x->output_sr = samplerate;
+    x->output_1oversr = 1.0 / x->output_sr;
+    
+    if (count[4] || count[5]) // if either output is connected
+    {
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainstream_perform64zero, 0, NULL); // TEMP ZERO
+    } else {
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
     
 }
 

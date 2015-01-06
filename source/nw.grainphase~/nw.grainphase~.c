@@ -140,7 +140,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)grainphase_winInterp, "winInterp", A_LONG, 0);
 	
     /* bind method "grainphase_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)grainphase_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)grainphase_dsp64, "dsp64", A_CANT, 0);
     
     class_register(CLASS_BOX, c); // register the class w max
     grainphase_class = c;
@@ -260,6 +260,31 @@ void grainphase_dsp64(t_grainphase *x, t_object *dsp64, short *count, double sam
     #ifdef DEBUG
         post("%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
+    
+    // set buffers
+    grainphase_setsnd(x, x->snd_sym);
+    grainphase_setwin(x, x->win_sym);
+    
+    // test inlets for signals
+    x->grain_pos_start_connected = count[1];
+    x->grain_pitch_connected = count[2];
+    x->grain_gain_connected = count[3];
+    
+    // store samplerate
+    x->output_sr = samplerate;
+    x->output_1oversr = 1.0 / x->output_sr;
+    
+    if (count[4] || count[5]) // if either output is connected
+    {
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainphase_perform64zero, 0, NULL); // TEMP ZERO
+    } else {
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
     
 }
 
