@@ -82,7 +82,10 @@ typedef struct _grainstream
 void *grainstream_new(t_symbol *snd, t_symbol *win);
 t_int *grainstream_perform(t_int *w);
 t_int *grainstream_perform0(t_int *w);
+void grainstream_perform64zero(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainstream_dsp(t_grainstream *x, t_signal **sp, short *count);
+void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void grainstream_setsnd(t_grainstream *x, t_symbol *s);
 void grainstream_setwin(t_grainstream *x, t_symbol *s);
 void grainstream_float(t_grainstream *x, double f);
@@ -211,7 +214,11 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_dsp(t_grainstream *x, t_signal **sp, short *count)
 {
-	/* set buffers */
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
 	grainstream_setsnd(x, x->snd_sym);
 	grainstream_setwin(x, x->win_sym);
 	
@@ -236,6 +243,28 @@ void grainstream_dsp(t_grainstream *x, t_signal **sp, short *count)
 		#endif /* DEBUG */
 	}
 	
+}
+
+/********************************************************************************
+ void grainstream_dsp64()
+ 
+ inputs:     x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double samplerate,
+                      long maxvectorsize, long flags)
+{
+    
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
 }
 
 /********************************************************************************
@@ -525,6 +554,104 @@ t_int *grainstream_perform0(t_int *w)
 	}
 
 	return (w + 3);
+}
+
+/********************************************************************************
+ void *grainstream_perform64zero()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit,
+ writes zeros to every outlet
+ returns:		nothing
+ ********************************************************************************/
+void grainstream_perform64zero(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,
+                              long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    t_double *curr_out[numouts];
+    long n, m;
+    
+    // fill local pointer array for outlets
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
+    
+    n = vectorsize;
+    while(n--)
+    {
+        m = numouts;
+        while(m--)
+        {
+            *(curr_out[m]) = 0.0;		// save to output
+            (curr_out[m])++;			// advance the outlet pointer
+        }
+    }
+    
+}
+
+/********************************************************************************
+ void *grainstream_perform64()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit
+ returns:		nothing
+ ********************************************************************************/
+void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,
+                          long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars outlets and inlets
+    
+    // local vars for snd and win buffer
+    
+    // local vars for object vars and while loop
+    long n;
+    
+    // check to make sure buffers are loaded with proper file types
+    
+    // get sound buffer info
+    
+    // get window buffer info
+    
+    // get snd and win index info
+    
+    // get grain options
+    
+    // get history from last vector
+    
+    //while loop
+    
+    return;
+    
+    // alternate blank output
+zero:
+    n = vectorsize;
+    while(n--)
+    {
+        
+    }
+    
+out:
+    return;
+    
+    
 }
 
 /********************************************************************************
