@@ -75,6 +75,8 @@ typedef struct _grainstream
 	short grain_freq_connected;				// <--
 	short grain_pos_start_connected;		// <--
 	short grain_pitch_connected;			// <--
+    short grain_gain_connected;
+    long curr_count_samp;
 	double output_sr;						// <--
 	double output_1oversr;					// <--
 } t_grainstream;

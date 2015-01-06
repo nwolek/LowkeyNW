@@ -68,7 +68,8 @@ typedef struct _grainphase
 	// signal or control grain info
 	short grain_pos_start_connected;	// <--
 	short grain_pitch_connected;		// <--
-	double input_sr;					// <--
+    short grain_gain_connected;
+    long curr_count_samp;
 	double output_sr;					// <--
 	double output_1oversr;				// <--
 } t_grainphase;
@@ -219,7 +220,6 @@ void grainphase_dsp(t_grainphase *x, t_signal **sp, short *count)
 	x->grain_pos_start_connected = count[1];
 	x->grain_pitch_connected = count[2];
 	
-	x->input_sr = sp[0]->s_sr;
 	x->output_sr = sp[3]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
