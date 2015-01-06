@@ -167,8 +167,10 @@ returns:		nothing
 void *grainphase_new(t_symbol *snd, t_symbol *win)
 {
 	t_grainphase *x = (t_grainphase *) object_alloc((t_class*) grainphase_class);
-	dsp_setup((t_pxobject *)x, 3);					// three inlets
-	outlet_new((t_pxobject *)x, "signal");			// one outlet
+	dsp_setup((t_pxobject *)x, 4);					// four inlets
+    outlet_new((t_pxobject *)x, "signal");          // sample count outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch2 outlet
+    outlet_new((t_pxobject *)x, "signal");			// signal ch1 outlet
 	
 	/* set buffer names */
 	x->snd_sym = snd;
@@ -219,11 +221,12 @@ void grainphase_dsp(t_grainphase *x, t_signal **sp, short *count)
 	/* test inlet 2 and 3 for signal data */
 	x->grain_pos_start_connected = count[1];
 	x->grain_pitch_connected = count[2];
+    x->grain_gain_connected = count[3];
 	
-	x->output_sr = sp[3]->s_sr;
+	x->output_sr = sp[4]->s_sr;
 	x->output_1oversr = 1.0 / x->output_sr;
 	
-	if (!count[3]) {	// nothing computed
+	if (!count[4]) {	// nothing computed
 		//dsp_add(grainphase_perform0, 2, sp[3]->s_vec, sp[3]->s_n+1);
 		#ifdef DEBUG
 			post("%s: no output computed", OBJECT_NAME);
