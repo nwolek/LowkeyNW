@@ -666,7 +666,7 @@ void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long
     // local vars for object vars and while loop
     double index_s, index_w, temp_index_frac;
     long n, count_samp, temp_index_int;
-    double s_step_size, w_last_index, approx_grain_length, g_gain;
+    double s_step_size, w_step_size, w_last_index, approx_grain_length, g_gain;
     short interp_s, interp_w, g_direction;
     
     // check to make sure buffers are loaded with proper file types
@@ -692,6 +692,8 @@ void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long
     // get snd and win index info
     index_s = x->curr_snd_pos;
     s_step_size = x->snd_step_size;
+    index_w = x->curr_win_pos;
+    w_step_size = x->win_step_size;
     
     // get grain options
     interp_s = x->snd_interp;
@@ -705,6 +707,65 @@ void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long
     
     n = vectorsize;
     while(n--) {
+        
+        // advance window index
+        index_w += w_step_size;
+        
+        // wrap to make index in bounds
+        while (index_w < 0.)
+            index_w += size_w;
+        while (index_w >= size_w)
+            index_w -= size_w;
+        
+        if (index_w < w_last_index) {   // if window has wrapped...
+            if (index_w < 10.0) {       // and it is beginning...
+                buffer_unlocksamples(snd_object);
+                buffer_unlocksamples(win_object);
+                
+                grainstream_initGrain(x, *in_freq, *in_sound_start, *in_sample_increment, *in_gain);
+                
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    w_last_index = index_w;
+                    goto advance_pointers;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get win buffer info
+                win_object = buffer_ref_getobject(x->win_buf_ptr);
+                tab_w = buffer_locksamples(win_object);
+                if (!tab_w)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    w_last_index = index_w;
+                    goto advance_pointers;
+                }
+                size_w = buffer_getframecount(win_object);
+                
+                // get snd and win index info
+                index_s = x->curr_snd_pos;
+                s_step_size = x->snd_step_size;
+                index_w = x->curr_win_pos;
+                w_step_size = x->win_step_size;
+                
+                // get grain options
+                interp_s = x->snd_interp;
+                interp_w = x->win_interp;
+                g_gain = x->grain_gain;
+                g_direction = x->grain_direction;
+                
+                // get history
+                count_samp = x->curr_count_samp;
+            }
+        }
+        
+        
     
 advance_pointers:
         // advance all pointers
