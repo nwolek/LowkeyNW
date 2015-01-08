@@ -8,7 +8,8 @@
 	</digest>
 	
 	<description>
-		MORE TEXT HERE
+		Outputs a stream of grains at a given frequency in Hertz, and without any silence between the consecutive grain onsets. 
+		This method can produce audio output similar to <o>wave~</o>, but with granular-specific controls and features such as windowing.  
 		The sound source and window shape used by this object for grain production must each loaded into the <o>buffer~</o> objects specified by two required arguments.
 	</description>
 	
@@ -100,10 +101,14 @@
 				Function depends on inlet
 			</digest>
 			<description>
-				In inlet 1: MORE TEXT HERE
-				<br />
-				<br />
 				After a grain begins sounding, changes received by the following inlets will be deferred to the start of the next grain:
+				<br />
+				<br />
+				In inlet 1: Defines the frequency of grain production in Hertz.
+				This value can be thought of as the inverse of duration, with no silence between grains.
+				The absolute value of any negative numbers are used to prevent buffer overrun errors.
+				If backward playback is desired, use the <b>reverse 1</b> message.
+				In addition, values less than 0.05 Hz will be ignored because of the potential for excessively long grain durations. 
 				<br />
 				<br />
 				In inlet 2: Defines the offset in milliseconds from the beginning of the sound <o>buffer~</o> where processing should start reading for grain production. 
