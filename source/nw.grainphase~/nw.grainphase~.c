@@ -16,7 +16,7 @@
 #include "buffer.h"		// required to deal with buffer object
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.grainphase~"		// name of the object
 

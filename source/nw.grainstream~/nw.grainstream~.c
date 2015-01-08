@@ -17,7 +17,7 @@
 #include <string.h>
 
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.grainstream~"		// name of the object
 
