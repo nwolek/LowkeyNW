@@ -5,7 +5,7 @@
 			"major" : 7,
 			"minor" : 0,
 			"revision" : 1,
-			"architecture" : "x86",
+			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
@@ -336,6 +336,14 @@
 					"preset_data" : [ 						{
 							"number" : 1,
 							"data" : [ 5, "obj-16", "number", "int", 250, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.0, 5, "obj-22", "flonum", "float", 1.0, 5, "obj-30", "flonum", "float", 10.0 ]
+						}
+, 						{
+							"number" : 2,
+							"data" : [ 5, "obj-16", "number", "int", 500, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.0, 5, "obj-22", "flonum", "float", 0.8, 5, "obj-30", "flonum", "float", 50.0 ]
+						}
+, 						{
+							"number" : 3,
+							"data" : [ 5, "obj-16", "number", "int", 550, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.4, 5, "obj-22", "flonum", "float", 1.25, 5, "obj-30", "flonum", "float", 2.0 ]
 						}
  ],
 					"style" : ""

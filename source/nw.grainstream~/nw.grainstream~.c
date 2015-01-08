@@ -902,6 +902,11 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     
     /* compute dependent variables */
     
+    // grain_freq must be positive and above 0.01 Hz or 1.66 min duration
+    if (x->grain_freq < 0.) x->grain_freq *= -1;
+    if (x->grain_freq < 0.01) x->grain_freq = 0.01;
+    x->grain_length = 1000. / x->grain_freq;
+    
     // compute window buffer step size per vector sample
     x->win_step_size = (double)(buffer_getframecount(win_object)) * x->grain_freq * x->output_1oversr;
     if (x->win_step_size < 0.) x->win_step_size *= -1.; // needs to be positive to prevent buffer overruns
@@ -1220,7 +1225,7 @@ void grainstream_assist(t_grainstream *x, t_object *b, long msg, long arg, char 
     }
 	
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		//post("%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
