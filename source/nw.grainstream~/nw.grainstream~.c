@@ -836,18 +836,23 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_float(t_grainstream *x, double f)
 {
-	if (x->x_obj.z_in == 0) // if inlet 1
-	{
-		x->next_grain_freq = f;
-	}
-	else if (x->x_obj.z_in == 1) // if inlet 2
-	{
-		x->next_grain_pos_start = f;
-	}
-	else if (x->x_obj.z_in == 2) // if inlet 3
-	{
-		x->next_grain_pitch = f;
-	}
+    switch (x->x_obj.z_in) {
+        case 0:
+            x->next_grain_freq = f;
+            break;
+        case 1:
+            x->next_grain_pos_start = f;
+            break;
+        case 2:
+            x->next_grain_pitch = f;
+            break;
+        case 3:
+            x->next_grain_gain = f;
+            break;
+        default:
+            post("%s: inlet does not accept floats", OBJECT_NAME);
+            break;
+    }
 }
 
 /********************************************************************************
@@ -863,18 +868,23 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_int(t_grainstream *x, long l)
 {
-	if (x->x_obj.z_in == 0) // if inlet 1
-	{
-		x->next_grain_freq = (double) l;
-	}
-	else if (x->x_obj.z_in == 1) // if inlet 2
-	{
-		x->next_grain_pos_start = (double) l;
-	}
-	else if (x->x_obj.z_in == 2) // if inlet 3
-	{
-		x->next_grain_pitch = (double) l;
-	}
+    switch (x->x_obj.z_in) {
+        case 0:
+            x->next_grain_freq = (double)l;
+            break;
+        case 1:
+            x->next_grain_pos_start = (double)l;
+            break;
+        case 2:
+            x->next_grain_pitch = (double)l;
+            break;
+        case 3:
+            x->next_grain_gain = (double)l;
+            break;
+        default:
+            post("%s: inlet does not accept ints", OBJECT_NAME);
+            break;
+    }
 }
 
 /********************************************************************************
