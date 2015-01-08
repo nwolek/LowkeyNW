@@ -621,7 +621,7 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
     long size_s, size_w;
     
     // local vars for object vars and while loop
-    double index_s, temp_index_frac;
+    double index_s, index_w, temp_index_frac;
     long n, count_samp, temp_index_int;
     double s_step_size, w_last_index, g_gain;
     short interp_s, interp_w, g_direction;
@@ -662,6 +662,72 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
     
     n = vectorsize;
     while(n--) {
+        
+        // compute window index from inlet
+        index_w = *in_phase * size_w;
+        
+        // wrap to make index in bounds
+        while (index_w < 0.)
+            index_w += size_w;
+        while (index_w >= size_w)
+            index_w -= size_w;
+        
+        if (index_w < w_last_index) {   // if window has wrapped...
+            if (index_w < 10.0) {       // and it is beginning...
+                // init grain
+            }
+        }
+        
+        // if we made it here, then we actually start counting
+        ++count_samp;
+        
+        // advance sound index
+        if (g_direction == FORWARD_GRAINS) {
+            index_s += s_step_size;     // addition
+        } else {
+            index_s += s_step_size;     // subtract
+        }
+        
+        // wrap to make index in bounds
+        while (index_s < 0.)
+            index_s += size_s;
+        while (index_s >= size_s)
+            index_s -= size_s;
+        
+        // WINDOW OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_w); // integer portion of index
+        temp_index_frac = index_w - (double)temp_index_int; // fractional portion of index
+        
+        // get value from win buffer samples
+        if (interp_w == INTERP_ON) {
+            win_out = mcLinearInterp(tab_w, temp_index_int, temp_index_frac, size_w, 1);
+        } else {
+            win_out = tab_w[temp_index_int];
+        }
+        
+        // SOUND OUT
+        
+        // compute temporary vars for interpolation
+        temp_index_int = (long)(index_s); // integer portion of index
+        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        
+        // get value from snd buffer samples
+        if (interp_s == INTERP_ON) {
+            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+        } else {
+            snd_out = tab_s[temp_index_int];
+        }
+        
+        // OUTLETS
+        
+        *out_signal = snd_out * win_out * g_gain;
+        *out_signal2 = 0.;
+        *out_sample_count = (double)count_samp;
+        
+        // update vars for last output
+        w_last_index = index_w;
     
 advance_pointers:
         // advance all pointers
