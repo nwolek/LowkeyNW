@@ -803,6 +803,9 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     x->grain_sound_length = x->snd_step_size * ( 1000. / x->grain_freq );
     if (x->grain_sound_length < 0.) x->grain_sound_length *= -1.; // needs to be positive to prevent buffer overruns
     
+    // update direction option
+    x->grain_direction = x->next_grain_direction;
+    
     if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
         x->grain_pos_start = x->grain_pos_start * buffer_getmillisamplerate(snd_object);
         x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;

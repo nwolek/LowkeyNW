@@ -885,6 +885,9 @@ void grainbang_initGrain(t_grainbang *x, float in_pos_start, float in_length, fl
     x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
     if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
     
+    // update direction option
+    x->grain_direction = x->next_grain_direction;
+    
     if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
         x->grain_pos_start = x->grain_pos_start * buffer_getmillisamplerate(snd_object);
         x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
