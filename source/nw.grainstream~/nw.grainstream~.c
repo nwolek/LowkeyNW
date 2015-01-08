@@ -824,6 +824,7 @@ advance_pointers:
 
     // update object history for next vector
     x->curr_snd_pos = index_s;
+    x->curr_win_pos = index_w;
     x->curr_count_samp = count_samp;
     x->win_last_index = w_last_index;
 
@@ -906,11 +907,11 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     if (x->win_step_size < 0.) x->win_step_size *= -1.; // needs to be positive to prevent buffer overruns
     
     // compute sound buffer step size per vector sample
-    x->snd_step_size = (double)(buffer_getsamplerate(snd_object)) * x->grain_pitch * x->output_1oversr;
+    x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
     if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
     
     // compute amount of sound file for grain
-    x->grain_sound_length = x->snd_step_size * ( 1000. / x->grain_freq );
+    x->grain_sound_length = x->grain_length * x->grain_pitch;
     if (x->grain_sound_length < 0.) x->grain_sound_length *= -1.; // needs to be positive to prevent buffer overruns
     
     // update direction option
@@ -931,6 +932,8 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     
     #ifdef DEBUG
         post("%s: beginning of grain", OBJECT_NAME);
+        post("%s: win step size = %f samps", OBJECT_NAME, x->win_step_size);
+        post("%s: snd step size = %f samps", OBJECT_NAME, x->snd_step_size);
     #endif /* DEBUG */
     
     return;
