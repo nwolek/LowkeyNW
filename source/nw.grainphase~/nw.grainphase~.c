@@ -734,7 +734,7 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
         if (g_direction == FORWARD_GRAINS) {
             index_s += s_step_size;     // addition
         } else {
-            index_s += s_step_size;     // subtract
+            index_s -= s_step_size;     // subtract
         }
         
         // wrap to make index in bounds
