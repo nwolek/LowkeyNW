@@ -5,3 +5,5 @@ max objectfile gverb~ nw.gverb~;
 max objectfile pulsesamp~ nw.pulsesamp~;
 max objectfile grain.pulse~ nw.grainpulse~;
 max objectfile grain.bang~ nw.grainbang~;
+max objectfile grain.phase~ nw.grainphase~;
+max objectfile grain.stream~ nw.grainstream~;
