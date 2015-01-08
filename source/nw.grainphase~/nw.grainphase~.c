@@ -49,7 +49,7 @@ typedef struct _grainphase
 	t_buffer_ref *win_buf_ptr;
 	t_buffer_ref *next_win_buf_ptr;
 	//double win_last_out;	//removed 2005.02.02
-	double win_last_index;
+	double win_last_index;  // in frames
 	//long win_buf_length;	//removed 2002.07.11
 	short win_interp;
 	// grain info
@@ -255,8 +255,7 @@ void grainphase_dsp(t_grainphase *x, t_signal **sp, short *count)
  description:	called when 64 bit DSP call chain is built; adds object to signal flow
  returns:		nothing
  ********************************************************************************/
-void grainphase_dsp64(t_grainphase *x, t_object *dsp64, short *count, double samplerate,
-                      long maxvectorsize, long flags)
+void grainphase_dsp64(t_grainphase *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
 {
     
     #ifdef DEBUG
@@ -281,7 +280,7 @@ void grainphase_dsp64(t_grainphase *x, t_object *dsp64, short *count, double sam
         #ifdef DEBUG
             post("%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
-        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainphase_perform64zero, 0, NULL); // TEMP ZERO
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainphase_perform64, 0, NULL); // TEMP ZERO
     } else {
         #ifdef DEBUG
             post("%s: no output computed", OBJECT_NAME);
@@ -676,10 +675,54 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
         if (index_w < w_last_index) {   // if window has wrapped...
             if (index_w < 10.0) {       // and it is beginning...
                 
+                buffer_unlocksamples(snd_object);
+                buffer_unlocksamples(win_object);
+                
+                // needed in case REVERSE_GRAINS
                 approx_grain_length = count_samp * x->output_1oversr * 0.001;
                 
                 // initialize grain
                 grainphase_initGrain(x, *in_sound_start, approx_grain_length, *in_sample_increment, *in_gain);
+                
+                // get snd buffer info
+                snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+                tab_s = buffer_locksamples(snd_object);
+                if (!tab_s)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    w_last_index = index_w;
+                    goto advance_pointers;
+                }
+                size_s = buffer_getframecount(snd_object);
+                
+                // get win buffer info
+                win_object = buffer_ref_getobject(x->win_buf_ptr);
+                tab_w = buffer_locksamples(win_object);
+                if (!tab_w)	{	// buffer samples were not accessible
+                    *out_signal = 0.0;
+                    *out_signal2 = 0.0;
+                    *out_sample_count = (double)count_samp;
+                    w_last_index = index_w;
+                    goto advance_pointers;
+                }
+                size_w = buffer_getframecount(win_object);
+                
+                // get snd index info
+                index_s = x->curr_snd_pos;
+                s_step_size = x->snd_step_size;
+                
+                // re-compute win step size
+                index_w = *in_phase * size_w;
+                
+                // get grain options
+                interp_s = x->snd_interp;
+                interp_w = x->win_interp;
+                g_gain = x->grain_gain;
+                g_direction = x->grain_direction;
+                
+                // get history
+                count_samp = x->curr_count_samp;
                 
             }
         }
@@ -839,11 +882,11 @@ void grainphase_initGrain(t_grainphase *x, float in_pos_start, float in_length, 
     // reset history
     x->curr_count_samp = -1;
     
-    return;
-    
     #ifdef DEBUG
         post("%s: beginning of grain", OBJECT_NAME);
     #endif /* DEBUG */
+    
+    return;
     
 }
 
