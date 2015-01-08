@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 383.0, 198.0, 618.0, 536.0 ],
+		"rect" : [ 151.0, 240.0, 618.0, 536.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -349,6 +349,10 @@
 					"preset_data" : [ 						{
 							"number" : 1,
 							"data" : [ 5, "obj-16", "number", "int", 250, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 1.0, 5, "obj-22", "flonum", "float", 1.0, 5, "obj-30", "flonum", "float", 20.0 ]
+						}
+, 						{
+							"number" : 2,
+							"data" : [ 5, "obj-16", "number", "int", 1440, 5, "obj-9", "number~", "list", 0.0, 5, "obj-21", "flonum", "float", 0.8, 5, "obj-22", "flonum", "float", 1.4, 5, "obj-30", "flonum", "float", 5.0 ]
 						}
  ],
 					"style" : ""
