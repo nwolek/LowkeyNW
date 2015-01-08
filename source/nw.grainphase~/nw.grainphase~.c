@@ -79,6 +79,7 @@ t_int *grainphase_perform(t_int *w);
 t_int *grainphase_perform0(t_int *w);
 void grainphase_perform64zero(t_grainphase *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void grainphase_initGrain(t_grainphase *x, float in_pos_start, float in_pitch_mult, float in_length, float in_gain_mult);
 void grainphase_dsp(t_grainphase *x, t_signal **sp, short *count);
 void grainphase_dsp64(t_grainphase *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void grainphase_setsnd(t_grainphase *x, t_symbol *s);
@@ -623,7 +624,7 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
     // local vars for object vars and while loop
     double index_s, index_w, temp_index_frac;
     long n, count_samp, temp_index_int;
-    double s_step_size, w_last_index, g_gain;
+    double s_step_size, w_last_index, approx_grain_length, g_gain;
     short interp_s, interp_w, g_direction;
     
     // check to make sure buffers are loaded with proper file types
@@ -674,7 +675,12 @@ void grainphase_perform64(t_grainphase *x, t_object *dsp64, double **ins, long n
         
         if (index_w < w_last_index) {   // if window has wrapped...
             if (index_w < 10.0) {       // and it is beginning...
-                // init grain
+                
+                approx_grain_length = count_samp * x->output_1oversr * 0.001;
+                
+                // initialize grain
+                grainphase_initGrain(x, *in_sound_start, approx_grain_length, *in_sample_increment, *in_gain);
+                
             }
         }
         
@@ -757,6 +763,87 @@ zero:
 out:
     return;
 
+    
+}
+
+/********************************************************************************
+ void grainphase_initGrain()
+ 
+ inputs:			x					-- pointer to this object
+ in_pos_start		-- offset within sampled buffer
+ in_length			-- length of grain
+ in_pitch_mult		-- sample playback speed, 1 = normal
+ in_gain_mult		-- scales gain output, 1 = no change
+ description:	initializes grain vars; called from perform method when pulse is
+ received
+ returns:		nothing
+ ********************************************************************************/
+void grainphase_initGrain(t_grainphase *x, float in_pos_start, float in_length, float in_pitch_mult, float in_gain_mult)
+{
+    #ifdef DEBUG
+        post("%s: initializing grain", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* should the buffers be updated ? */
+    
+    t_buffer_obj	*snd_object;
+    t_buffer_obj	*win_object;
+    
+    if (x->next_snd_buf_ptr != NULL) {
+        x->snd_buf_ptr = x->next_snd_buf_ptr;
+        x->next_snd_buf_ptr = NULL;
+        
+        #ifdef DEBUG
+            post("%s: sound buffer pointer updated", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
+    if (x->next_win_buf_ptr != NULL) {
+        x->win_buf_ptr = x->next_win_buf_ptr;
+        x->next_win_buf_ptr = NULL;
+        
+        #ifdef DEBUG
+            post("%s: window buffer pointer updated", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
+    
+    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
+    win_object = buffer_ref_getobject(x->win_buf_ptr);
+    
+    /* should input variables be at audio or control rate ? */
+    
+    // temporarily stash here as milliseconds
+    x->grain_pos_start = x->grain_pos_start_connected ? in_pos_start : x->next_grain_pos_start;
+    
+    x->grain_pitch = x->grain_pitch_connected ? in_pitch_mult : x->next_grain_pitch;
+    
+    x->grain_gain = x->grain_gain_connected ? in_gain_mult : x->next_grain_gain;
+    
+    /* compute dependent variables */
+    
+    // compute (estimated) amount of sound file for grain
+    x->grain_sound_length = in_length * x->grain_pitch;
+    if (x->grain_sound_length < 0.) x->grain_sound_length *= -1.; // needs to be positive to prevent buffer overruns
+    
+    // compute sound buffer step size per vector sample
+    x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
+    if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
+    
+    if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
+        x->grain_pos_start = x->grain_pos_start * buffer_getmillisamplerate(snd_object);
+        x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
+    } else {	// if reverse...
+        x->grain_pos_start = (x->grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
+        x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
+    }
+    
+    // reset history
+    x->curr_count_samp = -1;
+    
+    return;
+    
+    #ifdef DEBUG
+        post("%s: beginning of grain", OBJECT_NAME);
+    #endif /* DEBUG */
     
 }
 
