@@ -36,7 +36,7 @@
 #define REC_ON			2
 #define MONITOR_OFF		3
 
-void t_class *recordplus_class;		// required global pointing to this class
+static t_class *recordplus_class;		// required global pointing to this class
 
 typedef struct _recordplus
 {
@@ -79,30 +79,38 @@ void recordplus_getinfo(t_recordplus *x);
 t_symbol *ps_buffer;
 
 /********************************************************************************
-void main(void)
+int main(void)
 
 inputs:			nothing
 description:	called the first time the object is used in MAX environment; 
 		defines inlets, outlets and accepted messages
-returns:		nothing
+returns:		int
 ********************************************************************************/
-void main(void)
+int C74_EXPORT main(void)
 {
-	setup((t_messlist **)&this_class, (method)recordplus_new, (method)dsp_free, 
-			(short)sizeof(t_recordplus), 0L, A_SYM, 0);
-	addmess((method)recordplus_dsp, "dsp", A_CANT, 0);
+    t_class *c;
+    
+    c = class_new(OBJECT_NAME, (method)recordplus_new, (method)dsp_free,
+                  (short)sizeof(t_recordplus), 0L, A_SYM, 0);
+    class_dspinit(c); // add standard functions to class
+    
+	class_addmethod(c, (method)recordplus_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "recordplus_setbuff" to the 'set' message */
-	addmess((method)recordplus_setbuff, "set", A_SYM, 0);
+	class_addmethod(c, (method)recordplus_setbuff, "set", A_SYM, 0);
 	
 	/* bind method "recordplus_assist" to the assistance message */
-	addmess((method)recordplus_assist, "assist", A_CANT, 0);
+	class_addmethod(c, (method)recordplus_assist, "assist", A_CANT, 0);
 	
 	/* bind method "recordplus_getinfo" to the getinfo message */
-	addmess((method)recordplus_getinfo, "getinfo", A_NOTHING, 0);
+	class_addmethod(c, (method)recordplus_getinfo, "getinfo", A_NOTHING, 0);
+    
+    /* bind method "recordplus_dsp64" to the dsp64 message */
+    //class_addmethod(c, (method)recordplus_dsp64, "dsp64", A_CANT, 0);
 	
-	dsp_initclass();
-	
+    class_register(CLASS_BOX, c); // register the class w max
+    recordplus_class = c;
+    
 	/* needed for 'buffer~' work, checks for validity of buffer specified */
 	ps_buffer = gensym("buffer~");
 	
@@ -121,7 +129,7 @@ returns:		nothing
 ********************************************************************************/
 void *recordplus_new(t_symbol *snd)
 {
-	t_recordplus *x = (t_recordplus *)newobject(this_class);
+	t_recordplus *x = (t_recordplus *) object_alloc((t_class*) recordplus_class);
 	dsp_setup((t_pxobject *)x, 2);					// two inlets
 	outlet_new((t_pxobject *)x, "signal");			// sync outlet
 	
