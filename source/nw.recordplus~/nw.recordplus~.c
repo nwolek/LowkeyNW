@@ -218,6 +218,21 @@ void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double sam
     // set buffer
     recordplus_setbuff(x, x->snd_sym);
     
+    // store sampling rate
+    x->input_sr = samplerate;
+    x->input_1oversr = 1.0 / x->input_1oversr;
+    x->input_msr = x->input_sr * 0.001;
+    
+    if (count[1] && count[0]) { // if both inputs connected
+        #ifdef DEBUG
+            post("%s: output is being computed", OBJECT_NAME);
+        #endif /* DEBUG */
+        dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)recordplus_perform64, 0, NULL);
+    } else {
+        #ifdef DEBUG
+            post("%s: no output computed", OBJECT_NAME);
+        #endif /* DEBUG */
+    }
     
 }
 
