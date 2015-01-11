@@ -44,9 +44,9 @@ typedef struct _recordplus
 	
 	// sound buffer info
 	t_symbol *snd_sym;
-	t_buffer *snd_buf_ptr;
+	t_buffer_ref *snd_buf_ref;
 	t_symbol *next_snd_sym;
-	t_buffer *next_snd_buf_ptr;
+	t_buffer_ref *next_snd_buf_ref;
 	
 	// current recording info
 	long rec_position;	// in samples
@@ -137,7 +137,7 @@ void *recordplus_new(t_symbol *snd)
 	x->snd_sym = snd;
 	
 	/* zero pointers */
-	x->snd_buf_ptr = x->next_snd_buf_ptr = NULL;
+	x->snd_buf_ref = x->next_snd_buf_ref = NULL;
 	
 	/* setup variables */
 	x->rec_position = 0;
@@ -207,12 +207,12 @@ t_int *recordplus_perform(t_int *w)
 	float *in_signal = (float *)(w[3]);
 	t_float *out = (t_float *)(w[4]);
 	int vec_size = (int)(w[5]);
-	t_buffer *s_ptr = x->snd_buf_ptr;
+    t_buffer_obj *snd_object;
 	short r_stage;
 	double lc_in, ls_in, sync_v, sync_s;
 	long r_pos, s_size;
 	float *s_tab;
-	long saveinuse, saverpos;
+	long saverpos;
 	
 	vec_size += 1;		//increase by one for pre-decrement
 	--out;				//decrease by one for pre-increment
@@ -220,14 +220,15 @@ t_int *recordplus_perform(t_int *w)
 	/* check to make sure buffers are loaded with proper file types*/
 	if (x->x_obj.z_disabled)						// object is enabled
 		goto out;
-	if (s_ptr == NULL)		// buffer pointers are defined
-		goto zero;
-	if (!s_ptr->b_valid)		// files are loaded
+	if (x->snd_buf_ref == NULL)		// buffer pointers are defined
 		goto zero;
 	
-	// set "in use" to true
-	saveinuse = s_ptr->b_inuse;
-	s_ptr->b_inuse = true;
+    // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ref);
+    s_tab = buffer_locksamples(snd_object);
+    if (!s_tab)		// buffer samples were not accessible
+        goto zero;
+    s_size = buffer_getframecount(snd_object);
 	
 	// assign values to local vars
 	r_stage = x->rec_stage;
@@ -236,8 +237,6 @@ t_int *recordplus_perform(t_int *w)
 	sync_v = x->sync_val;
 	sync_s = x->sync_step;
 	r_pos = x->rec_position;
-	s_size = s_ptr->b_frames;
-	s_tab = s_ptr->b_samples;
 	
 	// track r_pos to see if we wrote anything
 	saverpos = r_pos;
@@ -253,19 +252,20 @@ t_int *recordplus_perform(t_int *w)
 					++r_stage; // MONITOR_ON
 					if (recordplus_updatebuff(x)) 
 					{
-						// restore "b_inse"; 2006.11.24
-						s_ptr->b_inuse = saveinuse;
+						// old the current samples
+                        buffer_unlocksamples(snd_object);
 						
-						s_ptr = x->snd_buf_ptr;
-						s_tab = s_ptr->b_samples;
-						s_size = s_ptr->b_frames;
+                        // get new sound buffer info
+                        snd_object = buffer_ref_getobject(x->snd_buf_ref);
+                        s_tab = buffer_locksamples(snd_object);
+                        if (!s_tab)		// buffer samples were not accessible
+                            goto zero;
+                        s_size = buffer_getframecount(snd_object);
+                        
+                        // update tracking vars
 						sync_v = x->sync_val;
 						sync_s = x->sync_step;
 						r_pos = x->rec_position;
-						
-						// set "b_inuse" to true; 2006.11.24
-						saveinuse = s_ptr->b_inuse;
-						s_ptr->b_inuse = true;
 						
 					}
 					break;
@@ -331,7 +331,7 @@ t_int *recordplus_perform(t_int *w)
 	
 	// update modtime
 	if (r_pos > saverpos)
-		object_method( (t_buffer *)x->snd_buf_ptr, gensym(ÓdirtyÓ) );
+		buffer_setdirty(snd_object);
 	
 	// update global vars
 	x->rec_stage = r_stage;
@@ -340,8 +340,8 @@ t_int *recordplus_perform(t_int *w)
 	x->sync_val = sync_v;
 	x->rec_position = r_pos;
 	
-	// reset "in use"
-	s_ptr->b_inuse = saveinuse;
+	// unlock samples
+    buffer_unlocksamples(snd_object);
 	
 	return (w + 6);
 
@@ -386,29 +386,31 @@ returns:		nothing
 ********************************************************************************/
 void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 {
-	t_buffer *b;
-	
-	if ((b = (t_buffer *)(s->s_thing)) && ob_sym(b) == ps_buffer) {
-		if (b->b_nchans != 1) {
+    t_buffer_ref *b = buffer_ref_new((t_object*)x, s);
+    
+    if (buffer_ref_exists(b)) {
+        t_buffer_obj	*b_object = buffer_ref_getobject(b);
+        
+        if (buffer_getchannelcount(b_object) != 1) {
 			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
-			x->next_snd_buf_ptr = NULL;
+			x->next_snd_buf_ref = NULL;
 		} else {
-			if (x->snd_buf_ptr == NULL) { // if first buffer make current buffer
+			if (x->snd_buf_ref == NULL) { // if first buffer make current buffer
 				x->snd_sym = s;
 				x->sync_val = 0.0;
-				x->sync_step = 1.0 / (float)b->b_frames;
+				x->sync_step = 1.0 / buffer_getframecount(b_object);
 				x->rec_position = 0;
-				x->snd_buf_ptr = b;			// last so that all is ready
+				x->snd_buf_ref = b;			// last so that all is ready
 				
 				#ifdef DEBUG
 					post("%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
-				if (b != x->snd_buf_ptr) // if it is not the same as current
+				if (b != x->snd_buf_ref) // if it is not the same as current
 				{
 					x->next_snd_sym = s;
-					x->next_sync_step = 1.0 / (float)b->b_frames;
-					x->next_snd_buf_ptr = b;	// last so that all is ready
+					x->next_sync_step = 1.0 / buffer_getframecount(b_object);
+					x->next_snd_buf_ref = b;	// last so that all is ready
 					
 					#ifdef DEBUG
 						post("%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
@@ -418,7 +420,7 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 		}
 	} else {
 		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
-		x->next_snd_buf_ptr = NULL;
+		x->next_snd_buf_ref = NULL;
 	}
 }
 
@@ -431,14 +433,14 @@ returns:		0 or 1 (false or true)
 ********************************************************************************/
 short recordplus_updatebuff(t_recordplus *x)
 {
-	if (x->next_snd_buf_ptr != NULL)
+	if (x->next_snd_buf_ref != NULL)
 	{
 		x->snd_sym = x->next_snd_sym;
 		x->sync_val = 0.0;
 		x->sync_step = x->next_sync_step;
 		x->rec_position = 0;
-		x->snd_buf_ptr = x->next_snd_buf_ptr;
-		x->next_snd_buf_ptr = NULL;
+		x->snd_buf_ref = x->next_snd_buf_ref;
+		x->next_snd_buf_ref = NULL;
 		
 		#ifdef DEBUG
 			post("%s: new buffer~ > %s < is being used", OBJECT_NAME, x->snd_sym);
