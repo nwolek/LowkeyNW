@@ -1,18 +1,18 @@
 /*
-** record_plus~.c
+** nw.recordplus~.c
 **
 ** MSP object
 ** signal and delta checking for record control
 ** starts & stops only after zero crossing occurs
-** 
 ** 2004/08/05 started
-** 2004/08/07 working
-** 2006/11/24 moved to Xcode; fixed "b_inuse" bug
-** 2009/09/12 attempt to fix dirty problems
-** 
+**
+** Copyright © 2004,2015 by Nathan Wolek
+** License: http://opensource.org/licenses/BSD-3-Clause
+**
 */
 
 #include "ext.h"		// required for all MAX external objects
+#include "ext_obex.h"   // required for new style MAX objects
 #include "z_dsp.h"		// required for all MSP external objects
 #include "buffer.h"		// required to deal with buffer object
 #include "ext_systime.h"// required to get ticks
@@ -20,7 +20,7 @@
 
 //#define DEBUG			//enable debugging messages
 
-#define OBJECT_NAME		"record_plus~"		// name of the object
+#define OBJECT_NAME		"nw.recordplus~"		// name of the object
 
 /* for the assist method */
 #define ASSIST_INLET	1
@@ -36,7 +36,7 @@
 #define REC_ON			2
 #define MONITOR_OFF		3
 
-void *this_class;		// required global pointing to this class
+void t_class *recordplus_class;		// required global pointing to this class
 
 typedef struct _recordplus
 {
