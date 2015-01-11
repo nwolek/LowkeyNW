@@ -6,7 +6,7 @@
 ** starts & stops only after zero crossing occurs
 ** 2004/08/05 started
 **
-** Copyright © 2004,2015 by Nathan Wolek
+** Copyright Â© 2004,2015 by Nathan Wolek
 ** License: http://opensource.org/licenses/BSD-3-Clause
 **
 */
@@ -18,7 +18,7 @@
 #include "ext_systime.h"// required to get ticks
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.recordplus~"		// name of the object
 
@@ -70,7 +70,9 @@ typedef struct _recordplus
 void *recordplus_new(t_symbol *snd);
 t_int *recordplus_perform(t_int *w);
 t_int *recordplus_perform0(t_int *w);
+void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count);
+void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void recordplus_setbuff(t_recordplus *x, t_symbol *s);
 short recordplus_updatebuff(t_recordplus *x);
 void recordplus_assist(t_recordplus *x, t_object *b, long msg, long arg, char *s);
@@ -167,7 +169,11 @@ returns:		nothing
 ********************************************************************************/
 void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count)
 {
-	/* set buffers */
+    #ifdef DEBUG
+        post("%s: adding 32 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    /* set buffers */
 	recordplus_setbuff(x, x->snd_sym);
 	
 	x->input_sr = sp[1]->s_sr;
@@ -189,6 +195,30 @@ void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count)
 		#endif /* DEBUG */
 	}
 	
+}
+
+/********************************************************************************
+ void recordplus_dsp64()
+ 
+ inputs:     x		-- pointer to this object
+ dsp64		-- signal chain to which object belongs
+ count	-- array detailing number of signals attached to each inlet
+ samplerate -- number of samples per second
+ maxvectorsize -- sample frames per vector of audio
+ flags --
+ description:	called when 64 bit DSP call chain is built; adds object to signal flow
+ returns:		nothing
+ ********************************************************************************/
+void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
+{
+    #ifdef DEBUG
+        post("%s: adding 64 bit perform method", OBJECT_NAME);
+    #endif /* DEBUG */
+    
+    // set buffer
+    recordplus_setbuff(x, x->snd_sym);
+    
+    
 }
 
 /********************************************************************************
@@ -374,6 +404,29 @@ t_int *recordplus_perform0(t_int *w)
 	}
 
 	return (w + 3);
+}
+
+/********************************************************************************
+ void *recordplus_perform64()
+ 
+ inputs:	x		--
+ dsp64   --
+ ins     --
+ numins  --
+ outs    --
+ numouts --
+ vectorsize --
+ flags   --
+ userparam  --
+ description:	called at interrupt level to compute object's output at 64-bit,
+ writes zeros to every outlet
+ returns:		nothing
+ ********************************************************************************/
+void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs,
+                              long numouts, long vectorsize, long flags, void *userparam)
+{
+    // local vars
+    
 }
 
 /********************************************************************************
