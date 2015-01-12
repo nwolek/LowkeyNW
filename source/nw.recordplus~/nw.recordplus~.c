@@ -440,7 +440,27 @@ t_int *recordplus_perform0(t_int *w)
 void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs,
                               long numouts, long vectorsize, long flags, void *userparam)
 {
-    // local vars
+    // local vars outlets and inlets
+    
+    // local vars for snd buffer
+    
+    // local vars for object vars and while loop
+    
+    // check to make sure buffers are loaded with proper file types
+    
+    // get sound buffer info
+    
+    // assign values to local vars
+    
+    // track r_pos to see if we wrote anything
+    
+    // while loop
+    
+    // update modtime
+    
+    // update global vars
+    
+    // unlock samples
     
 }
 
