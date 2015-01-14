@@ -24,7 +24,7 @@
 	<!--INLETS-->
 	<inletlist>
 		<inlet id="0" type="signal">
-			<digest>Audio signal: MORE HERE</digest>
+			<digest>Audio signal: recording control.</digest>
 			<description>Only values of 0. or 1. will be used.</description>
 		</inlet>
 		<inlet id="1" type="signal/float">
@@ -59,10 +59,24 @@
 				Function depends on inlet
 			</digest>
 			<description>
-				In left inlet: MORE HERE
+				In left inlet: 1 starts recording, while 0 stops recording.
+				Changes for both are delayed until the next zero crossing is detected in the signal.
+				In the event that a zero-crossing is not detected between changes, no recording will occur.
 				<br />
 				<br />
-				In right inlet: MORE HERE
+				In right inlet: mono audio signal to be recorded.
+			</description>
+		</method>
+		<method name="set">
+			<arglist>
+				<arg name="buffer-name" optional="0" type="symbol" />
+			</arglist>
+			<digest>
+				Set the name of the <o>buffer~</o> used for recording.
+			</digest>
+			<description>
+				The word <m>set</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as target for audio recording.
+				Changes sent by the <m>set</m> message are deferred to the next time recording is turned on. 
 			</description>
 		</method>
 		<method name="getinfo">
