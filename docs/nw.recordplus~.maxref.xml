@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.recordplus~" module="msp" category="LowkeyNW, MSP Sampling">
+
+	<digest>
+		Record sound with zero-crossing awareness
+	</digest>
+	
+	<description>
+		Offers functionality similar to <o>record~</o>, but on/off changes are controlled by a signal and not executed until the next zero crossing in the audio signal.
+		In addition, this object functions as though the <b>loop</b> and <b>append</b> options are always on.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Sampling</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>Audio signal: MORE HERE</digest>
+			<description>Only values of 0. or 1. will be used.</description>
+		</inlet>
+		<inlet id="1" type="signal/float">
+			<digest>Audio signal: mono signal to be recorded.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: Sync output.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="sound-buffer-name" optional="0" type="symbol">
+			<digest>
+				Sound buffer object name
+			</digest>
+			<description>
+				The first argument names the <o>buffer~</o> object whose sample memory will be used to record audio.
+			</description>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In left inlet: MORE HERE
+				<br />
+				<br />
+				In right inlet: MORE HERE
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="buffer~"/>
+		<seealso name="record~"/>
+		<seealso name="groove~" />
+		<seealso name="play~" />
+	</seealsolist>
+	
+</c74object>
