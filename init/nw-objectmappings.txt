@@ -7,3 +7,4 @@ max objectfile grain.pulse~ nw.grainpulse~;
 max objectfile grain.bang~ nw.grainbang~;
 max objectfile grain.phase~ nw.grainphase~;
 max objectfile grain.stream~ nw.grainstream~;
+max objectfile record_plus~ nw.recordplus~;
