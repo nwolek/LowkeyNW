@@ -41,9 +41,9 @@
 	
 	<!--ARGUMENTS-->
 	<objarglist>
-		<objarg name="sound-buffer-name" optional="0" type="symbol">
+		<objarg name="buffer-name" optional="0" type="symbol">
 			<digest>
-				Sound buffer object name
+				Buffer object name
 			</digest>
 			<description>
 				The first argument names the <o>buffer~</o> object whose sample memory will be used to record audio.
