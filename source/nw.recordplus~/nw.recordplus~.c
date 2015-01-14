@@ -478,17 +478,69 @@ void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long n
     // track r_pos to see if we wrote anything
     saverpos = r_pos;
     
-    // while loop
     n = vectorsize;
     while (n--) {
-        // do something
+        
+        // test ctrl input
+        if ((lc_in == 0.) != (*in_ctrl == 0.)) {
+            
+            // what we do depends on the recording stage
+            switch (r_stage)
+            {
+                case REC_OFF:
+                    break;
+                case MONITOR_ON:
+                    break;
+                case REC_ON:
+                    break;
+                case MONITOR_OFF:
+                    break;
+            }
+            
+        }
+        
+        // test for positive zero-crossing
+        
+        // record under right conditions
+        
+        // output sync
+        *out_sync = sync_v;
+        
+        // update history
+        lc_in = *in_ctrl;
+        ls_in = *in_signal;
+        
+        // advance pointers
+        ++in_ctrl, ++in_signal, ++out_sync;
+        
     }
     
     // update modtime
+    if (r_pos > saverpos)
+        buffer_setdirty(snd_object);
     
     // update global vars
+    x->rec_stage = r_stage;
+    x->last_ctrl_in = lc_in;
+    x->last_sig_in = ls_in;
+    x->sync_val = sync_v;
+    x->rec_position = r_pos;
     
     // unlock samples
+    buffer_unlocksamples(snd_object);
+    
+    return;
+    
+    // alternate blank output
+zero:
+    n = vectorsize;
+    while(n--)
+    {
+        *out_sync++ = 0.;
+    }
+    
+out:
+    return;
     
 }
 
