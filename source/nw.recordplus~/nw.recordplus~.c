@@ -108,7 +108,7 @@ int C74_EXPORT main(void)
 	class_addmethod(c, (method)recordplus_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "recordplus_dsp64" to the dsp64 message */
-    //class_addmethod(c, (method)recordplus_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(c, (method)recordplus_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
     recordplus_class = c;
@@ -488,20 +488,72 @@ void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long n
             switch (r_stage)
             {
                 case REC_OFF:
+                    ++r_stage; // MONITOR_ON
+                    if (recordplus_updatebuff(x))
+                    {
+                        // unlock the current samples
+                        buffer_unlocksamples(snd_object);
+                        
+                        // get new sound buffer info
+                        snd_object = buffer_ref_getobject(x->snd_buf_ref);
+                        s_tab = buffer_locksamples(snd_object);
+                        if (!s_tab)		// buffer samples were not accessible
+                            goto zero;
+                        s_size = buffer_getframecount(snd_object);
+                        
+                        // update local vars
+                        sync_v = x->sync_val;
+                        sync_s = x->sync_step;
+                        r_pos = x->rec_position;
+                    }
                     break;
                 case MONITOR_ON:
+                    --r_stage; // REC_OFF
                     break;
                 case REC_ON:
+                    ++r_stage; // MONITOR_OFF
                     break;
                 case MONITOR_OFF:
+                    --r_stage; // REC_ON
                     break;
             }
             
         }
         
         // test for positive zero-crossing
+        if (r_stage % 2) // if MONITOR_ON or MONITOR_OFF
+        {
+            if (ls_in < 0. && *in_signal >= 0.)
+            {
+                switch (r_stage)
+                {
+                    case MONITOR_ON:
+                        ++r_stage; // REC_ON
+                        break;
+                    case MONITOR_OFF:
+                        r_stage = REC_OFF;
+                        break;
+                }
+            }
+        }
         
         // record under right conditions
+        if (r_stage > MONITOR_ON) // if REC_ON or MONITOR_OFF
+        {
+            s_tab[r_pos] = (float)*in_signal;
+            
+            ++r_pos;
+            if (r_pos > s_size)
+            {
+                r_pos = 0;
+            }
+            
+            sync_v += sync_s;
+            if (sync_v > 1.0)
+            {
+                sync_v = 0.;
+            }
+        }
         
         // output sync
         *out_sync = sync_v;
