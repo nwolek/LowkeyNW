@@ -437,24 +437,52 @@ t_int *recordplus_perform0(t_int *w)
  writes zeros to every outlet
  returns:		nothing
  ********************************************************************************/
-void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs,
-                              long numouts, long vectorsize, long flags, void *userparam)
+void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars outlets and inlets
+    t_double *in_ctrl = ins[0];
+    t_double *in_signal = ins[1];
+    t_double *out_sync = outs[0];
     
     // local vars for snd buffer
+    t_buffer_obj *snd_object;
+    t_float *s_tab;
+    long s_size, r_pos;
     
     // local vars for object vars and while loop
+    long n, saverpos;
+    short r_stage;
+    double lc_in, ls_in, sync_v, sync_s;
     
     // check to make sure buffers are loaded with proper file types
+    if (x->x_obj.z_disabled)		// and object is enabled
+        goto out;
+    if (x->snd_buf_ref == NULL)
+        goto zero;
     
     // get sound buffer info
+    snd_object = buffer_ref_getobject(x->snd_buf_ref);
+    s_tab = buffer_locksamples(snd_object);
+    if (!s_tab)		// buffer samples were not accessible
+        goto zero;
+    s_size = buffer_getframecount(snd_object);
     
     // assign values to local vars
+    r_stage = x->rec_stage;
+    lc_in = x->last_ctrl_in;
+    ls_in = x->last_sig_in;
+    sync_v = x->sync_val;
+    sync_s = x->sync_step;
+    r_pos = x->rec_position;
     
     // track r_pos to see if we wrote anything
+    saverpos = r_pos;
     
     // while loop
+    n = vectorsize;
+    while (n--) {
+        // do something
+    }
     
     // update modtime
     
