@@ -18,7 +18,7 @@
 #include "ext_systime.h"// required to get ticks
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.recordplus~"		// name of the object
 
@@ -75,6 +75,7 @@ void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count);
 void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void recordplus_setbuff(t_recordplus *x, t_symbol *s);
 short recordplus_updatebuff(t_recordplus *x);
+void recordplus_resetcurrentbuff(t_recordplus *x);
 void recordplus_assist(t_recordplus *x, t_object *b, long msg, long arg, char *s);
 void recordplus_getinfo(t_recordplus *x);
 
@@ -100,6 +101,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "recordplus_setbuff" to the 'set' message */
 	class_addmethod(c, (method)recordplus_setbuff, "set", A_SYM, 0);
+    
+    /* bind method "recordplus_resetcurrentbuff" to the 'clear' message */
+    class_addmethod(c, (method)recordplus_resetcurrentbuff, "clear", A_NOTHING, 0);
 	
 	/* bind method "recordplus_assist" to the assistance message */
 	class_addmethod(c, (method)recordplus_assist, "assist", A_CANT, 0);
@@ -672,6 +676,30 @@ short recordplus_updatebuff(t_recordplus *x)
 	{
 		return false;
 	}
+}
+
+/********************************************************************************
+ short recordplus_resetcurrentbuff(t_recordplus *x)
+ 
+ inputs:			x		-- pointer to this object
+ description:	resets recording in the current buffer
+ returns:		nothing
+ ********************************************************************************/
+void recordplus_resetcurrentbuff(t_recordplus *x)
+{
+    
+    if (x->rec_stage == REC_OFF)
+    {
+        // clear out the buffer
+        t_buffer_obj	*b_object = buffer_ref_getobject(x->snd_buf_ref);
+        object_method(b_object, gensym("clear"));
+        
+        // then feeding the current buffer symbol to this object will reset vars
+        recordplus_setbuff(x,x->snd_sym);
+    } else {
+        post("%s: recording must be off to clear", OBJECT_NAME);
+    }
+    
 }
 
 /********************************************************************************
