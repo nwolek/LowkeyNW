@@ -27,7 +27,7 @@
 			<digest>Audio signal: recording control.</digest>
 			<description>Only values of 0. or 1. will be used.</description>
 		</inlet>
-		<inlet id="1" type="signal/float">
+		<inlet id="1" type="signal">
 			<digest>Audio signal: mono signal to be recorded.</digest>
 		</inlet>
 	</inletlist>
@@ -77,6 +77,16 @@
 			<description>
 				The word <m>set</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as target for audio recording.
 				Changes sent by the <m>set</m> message are deferred to the next time recording is turned on. 
+			</description>
+		</method>
+		<method name="clear">
+			<arglist />
+			<digest>
+				Resets recording into the current <o>buffer~</o> object.
+			</digest>
+			<description>
+				Clears the current <o>buffer~</o> and begins recording from the first sample.
+				This message will only execute when recording is not in progress.
 			</description>
 		</method>
 		<method name="getinfo">
