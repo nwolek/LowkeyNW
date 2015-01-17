@@ -45,7 +45,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 25.0, 281.5, 37.0, 22.0 ],
 					"style" : "",
-					"text" : "reset"
+					"text" : "clear"
 				}
 
 			}

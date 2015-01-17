@@ -18,7 +18,7 @@
 #include "ext_systime.h"// required to get ticks
 #include <string.h>
 
-#define DEBUG			//enable debugging messages
+//#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.recordplus~"		// name of the object
 
@@ -102,8 +102,8 @@ int C74_EXPORT main(void)
 	/* bind method "recordplus_setbuff" to the 'set' message */
 	class_addmethod(c, (method)recordplus_setbuff, "set", A_SYM, 0);
     
-    /* bind method "recordplus_resetcurrentbuff" to the 'reset' message */
-    class_addmethod(c, (method)recordplus_resetcurrentbuff, "reset", A_NOTHING, 0);
+    /* bind method "recordplus_resetcurrentbuff" to the 'clear' message */
+    class_addmethod(c, (method)recordplus_resetcurrentbuff, "clear", A_NOTHING, 0);
 	
 	/* bind method "recordplus_assist" to the assistance message */
 	class_addmethod(c, (method)recordplus_assist, "assist", A_CANT, 0);
