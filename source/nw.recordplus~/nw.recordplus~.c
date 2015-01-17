@@ -101,6 +101,9 @@ int C74_EXPORT main(void)
 	
 	/* bind method "recordplus_setbuff" to the 'set' message */
 	class_addmethod(c, (method)recordplus_setbuff, "set", A_SYM, 0);
+    
+    /* bind method "recordplus_resetcurrentbuff" to the 'reset' message */
+    class_addmethod(c, (method)recordplus_resetcurrentbuff, "reset", A_NOTHING, 0);
 	
 	/* bind method "recordplus_assist" to the assistance message */
 	class_addmethod(c, (method)recordplus_assist, "assist", A_CANT, 0);
@@ -684,6 +687,12 @@ short recordplus_updatebuff(t_recordplus *x)
  ********************************************************************************/
 void recordplus_resetcurrentbuff(t_recordplus *x)
 {
+    // clear out the buffer
+    t_buffer_obj	*b_object = buffer_ref_getobject(x->snd_buf_ref);
+    object_method(b_object, gensym("clear"));
+    
+    // then feeding the current buffer symbol to this object will reset vars
+    recordplus_setbuff(x,x->snd_sym);
     
 }
 
