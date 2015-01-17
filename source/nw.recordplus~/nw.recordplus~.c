@@ -687,12 +687,18 @@ short recordplus_updatebuff(t_recordplus *x)
  ********************************************************************************/
 void recordplus_resetcurrentbuff(t_recordplus *x)
 {
-    // clear out the buffer
-    t_buffer_obj	*b_object = buffer_ref_getobject(x->snd_buf_ref);
-    object_method(b_object, gensym("clear"));
     
-    // then feeding the current buffer symbol to this object will reset vars
-    recordplus_setbuff(x,x->snd_sym);
+    if (x->rec_stage == REC_OFF)
+    {
+        // clear out the buffer
+        t_buffer_obj	*b_object = buffer_ref_getobject(x->snd_buf_ref);
+        object_method(b_object, gensym("clear"));
+        
+        // then feeding the current buffer symbol to this object will reset vars
+        recordplus_setbuff(x,x->snd_sym);
+    } else {
+        post("%s: recording must be off to clear", OBJECT_NAME);
+    }
     
 }
 
