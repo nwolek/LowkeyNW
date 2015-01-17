@@ -8,7 +8,7 @@ This GitHub project is a [package for Cycling74's Max](https://cycling74.com/201
 * [gverb~](http://www.nathanwolek.com/tag/griesinger/)
 * [cpPan~](http://www.nathanwolek.com/2006/03/cppan-object/)
 
-It also includes several items that were lurking on my hard drive and never formally released. My goal is to slowly gather as much of my Max work here as possible, so that it is easier to track changes and share with others.
+It also includes several items that were lurking on my hard drive and never formally released. My goal is to slowly gather as much of my Max work here as possible, so that it is easier to track changes and share with others. I am also producing [short YouTube videos](http://www.youtube.com/playlist?list=PLG8vJUg0ALmuKZIw_BqdO1WK0qPdhGjDK) as I go along, so that people can easily see and hear what these items do.
 
 Externals are currently only compiled for the Mac version of [Cycling74's Max](https://cycling74.com/products/max/). If you would like to help compile a binary for Windows, please contact me.
 
