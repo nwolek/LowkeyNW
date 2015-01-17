@@ -75,6 +75,7 @@ void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count);
 void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void recordplus_setbuff(t_recordplus *x, t_symbol *s);
 short recordplus_updatebuff(t_recordplus *x);
+void recordplus_resetcurrentbuff(t_recordplus *x);
 void recordplus_assist(t_recordplus *x, t_object *b, long msg, long arg, char *s);
 void recordplus_getinfo(t_recordplus *x);
 
@@ -672,6 +673,18 @@ short recordplus_updatebuff(t_recordplus *x)
 	{
 		return false;
 	}
+}
+
+/********************************************************************************
+ short recordplus_resetcurrentbuff(t_recordplus *x)
+ 
+ inputs:			x		-- pointer to this object
+ description:	resets recording in the current buffer
+ returns:		nothing
+ ********************************************************************************/
+void recordplus_resetcurrentbuff(t_recordplus *x)
+{
+    
 }
 
 /********************************************************************************
