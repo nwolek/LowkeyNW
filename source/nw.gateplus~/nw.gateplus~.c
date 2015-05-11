@@ -64,7 +64,7 @@ int C74_EXPORT main(void)
     t_class *c;
     
     c = class_new(OBJECT_NAME, (method)gateplus_new, (method)dsp_free,
-                  (short)sizeof(t_gateplus), 0L, 1, 0);
+                  (short)sizeof(t_gateplus), 0L, A_DEFLONG, 0);
     class_dspinit(c); // add standard functions to class
     
     /* bind method "gateplus_dsp64" to the dsp64 message */
