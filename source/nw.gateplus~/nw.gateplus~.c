@@ -16,7 +16,7 @@
 #include "z_dsp.h"		// required for all MSP external objects
 #include <string.h>
 
-//#define DEBUG			//enable debugging messages
+#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.gateplus~"		// name of the object
 
@@ -87,6 +87,13 @@ void *gateplus_new(long outlets)
     
     dsp_setup((t_pxobject *)x, 2);					// two inlets
     outlet_new((t_pxobject *)x, "signal");			// one outlet
+    
+    /* setup variables */
+    x->last_ctrl_in = 0.0;
+    x->last_sig_in = 0.0;
+    
+    /* set flags to defaults */
+    x->gate_stage = GATE_CLOSED;
     
     x->x_obj.z_misc = Z_NO_INPLACE;
     
