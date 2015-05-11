@@ -198,11 +198,65 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
     while (n--) {
         
         // temporarily write zeros
-        *out_signal = 0.;
+        //*out_signal = 0.;
         count_samp++;
+        // end temporary
+        
+        // test control input for change
+        if ((lc_in == 0.) != (*in_ctrl == 0.)) {
+            
+            // what we do depends on the gate stage
+            switch (g_stage)
+            {
+                case GATE_CLOSED:
+                    ++g_stage; // change to MONITOR_OPEN
+                    break;
+                case MONITOR_OPEN:
+                    --g_stage; // change to GATE_CLOSED
+                    break;
+                case GATE_OPEN:
+                    ++g_stage; // change to MONITOR_CLOSED
+                    break;
+                case MONITOR_CLOSED:
+                    --g_stage; // change to GATE_OPEN
+                    break;
+            }
+            
+        }
+        
+        // if we are monitoring...
+        if (g_stage % 2)
+        {
+            // look for positive zero-crossing
+            if (ls_in < 0. && *in_signal >= 0.)
+            {
+                // and change gate stage
+                switch (g_stage)
+                {
+                    case MONITOR_OPEN:
+                        ++g_stage; // change to GATE_OPEN
+                        break;
+                    case MONITOR_CLOSED:
+                        g_stage = GATE_CLOSED;
+                        break;
+                }
+            }
+        }
+        
+        // let sound through under right conditions
+        if (g_stage > MONITOR_OPEN) // if GATE_OPEN or MONITOR_CLOSED
+        {
+            *out_signal = *in_signal;
+        } else {
+            *out_signal = 0.;
+        }
         
         // write sample count output
         *out_count = (double)count_samp;
+        
+        // update history
+        lc_in = *in_ctrl;
+        ls_in = *in_signal;
         
         // advance pointers
         ++in_ctrl, ++in_signal, ++out_signal;
