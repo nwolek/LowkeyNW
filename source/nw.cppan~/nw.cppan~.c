@@ -31,7 +31,7 @@
 #define DtoR 			2.0 * 3.1415927 / 360.0
 						// allows easy conversion from degrees to radians
 
-static t_class *trainshift_class;		// required global pointer to this class
+static t_class *cpPan_class;		// required global pointer to this class
 
 /* structure definition for this object */
 typedef struct _cpPan
@@ -101,7 +101,7 @@ int C74_EXPORT main(void)
     class_addmethod(c, (method)cpPan_dsp64, "dsp64", A_CANT, 0);
 	
     class_register(CLASS_BOX, c); // register the class w max
-    trainshift_class = c;
+    cpPan_class = c;
     
     #ifdef DEBUG
         post("%s: main function was called", OBJECT_NAME);
@@ -155,7 +155,7 @@ returns:		nothing
 ********************************************************************************/
 void *cpPan_new(double initial_pos)
 {
-	t_cpPan *x = (t_cpPan *) object_alloc((t_class*) trainshift_class);
+	t_cpPan *x = (t_cpPan *) object_alloc((t_class*) cpPan_class);
 	
 	dsp_setup((t_pxobject *)x, 2);					// two inlets
 	outlet_new((t_pxobject *)x, "signal");			// left outlet
