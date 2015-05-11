@@ -6,7 +6,7 @@
 ** starts & stops only after zero crossing occurs
 ** 2015/05/10 started
 **
-** Copyright © 2015 by Nathan Wolek
+** Copyright Â© 2015 by Nathan Wolek
 ** License: http://opensource.org/licenses/BSD-3-Clause
 **
 */
