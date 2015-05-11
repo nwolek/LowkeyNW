@@ -197,11 +197,6 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
     n = vectorsize;
     while (n--) {
         
-        // temporarily write zeros
-        //*out_signal = 0.;
-        count_samp++;
-        // end temporary
-        
         // test control input for change
         if ((lc_in == 0.) != (*in_ctrl == 0.)) {
             
@@ -249,6 +244,16 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
             *out_signal = *in_signal;
         } else {
             *out_signal = 0.;
+        }
+        
+        // if gate isn't open or monitoring...
+        if (g_stage == 0)
+        {
+            // don't count the samples
+            count_samp = 0;
+        } else {
+            // otherwise count the samples
+            count_samp++;
         }
         
         // write sample count output
