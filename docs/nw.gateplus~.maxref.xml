@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="nw.gateplus~" module="msp" category="LowkeyNW, MSP Routing">
+
+	<digest>
+		Route a signal with zero-crossing awareness
+	</digest>
+	
+	<description>
+		Offers functionality similar to <o>gate~</o>, but on/off changes are not executed until the next zero crossing in the audio signal. Currently offers a single outlet that allows you to switch the signal on/off.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Routing</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>Audio signal: routing control.</digest>
+			<description>Only values of 0. or 1. will be used.</description>
+		</inlet>
+		<inlet id="1" type="signal">
+			<digest>Audio signal: mono signal to be routed.</digest>
+		</inlet>
+	</inletlist>
+
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: Gated output.</digest>
+		</outlet>
+		<outlet id="0" type="signal">
+			<digest>Audio signal: Sample count while signal is open or monitoring.</digest>
+		</outlet>
+	</outletlist>
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg name="number-of-outlets" optional="1" default="1" type="int">
+			<digest>
+				Not yet implemented. 
+			</digest>
+			<description>
+				Not yet implemented. Configure the number of outlets.
+			</description>
+		</objarg>
+	</objarglist>
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Function depends on inlet
+			</digest>
+			<description>
+				In left inlet: 1 opens gate, while 0 closes gate.
+				Changes for both are delayed until the next zero crossing is detected in the signal.
+				In the event that a zero-crossing is not detected between changes, the gate will not open.
+				<br />
+				<br />
+				In right inlet: mono audio signal to be routed.
+			</description>
+		</method>
+		<method name="int">
+			<arglist>
+				<arg name="outlet-selected" optional="0" type="int" />
+			</arglist>
+			<digest>
+				Not yet implemented.
+			</digest>
+			<description>
+				Not yet implemented. 1 opens gate, while 0 closes gate.
+			</description>
+		</method>
+		<method name="getinfo">
+			<arglist />
+			<digest>
+				Post information about object to Max window
+			</digest>
+			<description>
+				Retrieves basic information about the object author and when the object was last updated. Date can be used to identify different versions of the objects in circulation.
+			</description>
+		</method>
+	</methodlist>
+	
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="gate~"/>
+		<seealso name="gate"/>
+		<seealso name="matrix~" />
+	</seealsolist>
+	
+</c74object>

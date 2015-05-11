@@ -182,7 +182,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 288.0, 338.0, 107.0, 25.0 ],
+					"patching_rect" : [ 258.0, 338.0, 107.0, 25.0 ],
 					"style" : "",
 					"text" : "Sample count"
 				}
@@ -241,7 +241,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "float" ],
-					"patching_rect" : [ 180.0, 338.0, 106.0, 22.0 ],
+					"patching_rect" : [ 180.0, 338.0, 76.0, 22.0 ],
 					"sig" : 0.0,
 					"style" : ""
 				}
