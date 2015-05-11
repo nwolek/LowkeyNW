@@ -49,6 +49,9 @@ typedef struct _gateplus
 void *gateplus_new(long outlets);
 void gateplus_dsp64(t_gateplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
+void gateplus_int(t_gateplus *x, long l);
+void gateplus_assist(t_gateplus *x, t_object *b, long msg, long arg, char *s);
+void gateplus_getinfo(t_gateplus *x);
 
 
 /********************************************************************************
@@ -66,6 +69,15 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)gateplus_new, (method)dsp_free,
                   (short)sizeof(t_gateplus), 0L, A_DEFLONG, 0);
     class_dspinit(c); // add standard functions to class
+    
+    /* bind method "gateplus_int" to the int message */
+    class_addmethod(c, (method)gateplus_int, "int", A_LONG, 0);
+    
+    /* bind method "gateplus_assist" to the assistance message */
+    class_addmethod(c, (method)gateplus_assist, "assist", A_CANT, 0);
+    
+    /* bind method "gateplus_getinfo" to the getinfo message */
+    class_addmethod(c, (method)gateplus_getinfo, "getinfo", A_NOTHING, 0);
     
     /* bind method "gateplus_dsp64" to the dsp64 message */
     class_addmethod(c, (method)gateplus_dsp64, "dsp64", A_CANT, 0);
@@ -195,5 +207,80 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
 out:
     return;
     
+}
+
+/********************************************************************************
+ void gateplus_int(t_gateplus *x, long l)
+ 
+ inputs:			x		-- pointer to our object
+ l		-- value of int input
+ description:	handles ints sent to inlets
+ returns:		nothing
+ ********************************************************************************/
+void gateplus_int(t_gateplus *x, long l)
+{
+    if (x->x_obj.z_in == 0) // if first inlet
+    {
+        // do something with the gate stage
+        post("%s: ints not implemented yet", OBJECT_NAME);
+    }
+    else if (x->x_obj.z_in == 1) // if second inlet
+    {
+        post("%s: this inlet does not accept ints", OBJECT_NAME);
+    }
+}
+
+/********************************************************************************
+ void gateplus_assist(t_gateplus *x, t_object *b, long msg, long arg, char *s)
+ 
+ inputs:			x		-- pointer to our object
+ b		--
+ msg		--
+ arg		--
+ s		--
+ description:	method called when "assist" message is received; allows inlets
+ and outlets to display assist messages as the mouse passes over them
+ returns:		nothing
+ ********************************************************************************/
+void gateplus_assist(t_gateplus *x, t_object *b, long msg, long arg, char *s)
+{
+    if (msg==ASSIST_INLET) {
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal/int) control of gate");
+                break;
+            case 1:
+                strcpy(s, "(signal) input");
+                break;
+        }
+    } else if (msg==ASSIST_OUTLET) {
+        switch (arg) {
+            case 0:
+                strcpy(s, "(signal) output");
+                break;
+            case 1:
+                strcpy(s, "(signal) sample count while active");
+                break;
+        }
+    }
+    
+#ifdef DEBUG
+    post("%s: assist message displayed", OBJECT_NAME);
+#endif /* DEBUG */
+}
+
+/********************************************************************************
+ void gateplus_getinfo(t_gateplus *x)
+ 
+ inputs:			x		-- pointer to our object
+ 
+ description:	method called when "getinfo" message is received; displays info
+ about object and last update
+ returns:		nothing
+ ********************************************************************************/
+void gateplus_getinfo(t_gateplus *x)
+{
+    post("%s object by Nathan Wolek", OBJECT_NAME);
+    post("Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
