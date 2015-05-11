@@ -38,6 +38,7 @@ typedef struct _gateplus
     
     // current gate info
     short gate_stage;       // see flags in header
+    long sample_count;      // non-zero during stages 1,2,3
     
     //history
     double last_ctrl_in;
@@ -103,11 +104,13 @@ void *gateplus_new(long outlets)
     t_gateplus *x = (t_gateplus *) object_alloc((t_class*) gateplus_class);
     
     dsp_setup((t_pxobject *)x, 2);					// two inlets
-    outlet_new((t_pxobject *)x, "signal");			// one outlet
+    outlet_new((t_pxobject *)x, "signal");			// outlet for signal to pass through
+    outlet_new((t_pxobject *)x, "signal");			// outlet for sample count
     
     /* setup variables */
     x->last_ctrl_in = 0.0;
     x->last_sig_in = 0.0;
+    x->sample_count = 0;
     
     /* set flags to defaults */
     x->gate_stage = GATE_CLOSED;
@@ -175,9 +178,10 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
     t_double *in_ctrl = ins[0];
     t_double *in_signal = ins[1];
     t_double *out_signal = outs[0];
+    t_double *out_count = outs[1];
     
     // local vars for object vars and while loop
-    long n;
+    long n, count_samp;
     short g_stage;
     double lc_in, ls_in;
     
@@ -188,12 +192,17 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
     g_stage = x->gate_stage;
     lc_in = x->last_ctrl_in;
     ls_in = x->last_sig_in;
+    count_samp = x->sample_count;
     
     n = vectorsize;
     while (n--) {
         
         // temporarily write zeros
         *out_signal = 0.;
+        count_samp++;
+        
+        // write sample count output
+        *out_count = (double)count_samp;
         
         // advance pointers
         ++in_ctrl, ++in_signal, ++out_signal;
@@ -203,6 +212,7 @@ void gateplus_perform64(t_gateplus *x, t_object *dsp64, double **ins, long numin
     x->gate_stage = g_stage;
     x->last_ctrl_in = lc_in;
     x->last_sig_in = ls_in;
+    x->sample_count = count_samp;
     
 out:
     return;
