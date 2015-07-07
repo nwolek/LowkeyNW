@@ -224,6 +224,7 @@
  ],
 		"parameters" : 		{
 			"obj-2::obj-9" : [ "live.numbox", "live.numbox", 0 ],
+			"obj-2::obj-11" : [ "live.numbox[1]", "live.numbox", 0 ],
 			"obj-2::obj-8" : [ "live.toggle", "live.toggle", 0 ]
 		}
 ,
