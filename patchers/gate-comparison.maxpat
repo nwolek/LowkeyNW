@@ -154,7 +154,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 288.5, 119.5, 130.0, 40.0 ],
-					"presentation_rect" : [ 213.0, 129.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "use 1 2 3 keys to select a source"
 				}
@@ -174,7 +173,6 @@
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 267.0, 119.5, 20.0, 20.0 ],
-					"presentation_rect" : [ 191.5, 129.0, 0.0, 0.0 ],
 					"rounded" : 60.0,
 					"style" : "",
 					"text" : "2",
@@ -207,7 +205,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 452.5, 81.0, 29.5, 22.0 ],
-					"presentation_rect" : [ 574.5, 348.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "3"
 				}
@@ -221,7 +218,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 420.5, 81.0, 29.5, 22.0 ],
-					"presentation_rect" : [ 536.0, 347.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "2"
 				}
@@ -261,7 +257,6 @@
 					"numoutlets" : 4,
 					"outlettype" : [ "int", "int", "int", "int" ],
 					"patching_rect" : [ 401.5, 19.0, 50.5, 22.0 ],
-					"presentation_rect" : [ 516.5, 278.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "key"
 				}
@@ -288,7 +283,6 @@
 					"numoutlets" : 4,
 					"outlettype" : [ "int", "int", "int", "int" ],
 					"patching_rect" : [ 98.5, 231.0, 50.5, 22.0 ],
-					"presentation_rect" : [ 344.0, 368.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "key"
 				}
