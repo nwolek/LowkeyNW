@@ -57,7 +57,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 475.5, 249.0, 29.5, 22.0 ],
-					"presentation_rect" : [ 475.5, 250.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "+~"
 				}
@@ -129,7 +128,7 @@
 					"numoutlets" : 1,
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 61.0, 91.0, 300.0, 70.0 ],
+					"patching_rect" : [ 61.0, 90.0, 300.0, 70.0 ],
 					"presentation_rect" : [ 0.0, 0.0, 300.0, 70.0 ],
 					"viewvisibility" : 1
 				}
@@ -224,6 +223,7 @@
 			}
  ],
 		"parameters" : 		{
+			"obj-2::obj-9" : [ "live.numbox", "live.numbox", 0 ],
 			"obj-2::obj-8" : [ "live.toggle", "live.toggle", 0 ]
 		}
 ,
@@ -267,6 +267,10 @@
 			}
 , 			{
 				"name" : "j.message.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "j.parameter.mxo",
 				"type" : "iLaX"
 			}
 , 			{
