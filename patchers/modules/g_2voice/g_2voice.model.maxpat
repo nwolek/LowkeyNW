@@ -38,15 +38,29 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-32",
+					"id" : "obj-25",
 					"linecount" : 2,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 309.5, 336.0, 35.0 ],
+					"patching_rect" : [ 564.0, 383.0, 357.0, 35.0 ],
 					"style" : "",
-					"text" : "j.parameter duration @type decimal @dataspace time @unit millisecond @description \"something here\""
+					"text" : "j.parameter sample_increment @type decimal @ramp/drive max @range -5. 5. @description \"something here\""
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-32",
+					"linecount" : 3,
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"patching_rect" : [ 564.0, 309.5, 371.0, 49.0 ],
+					"style" : "",
+					"text" : "j.parameter duration @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"something here\""
 				}
 
 			}
@@ -67,14 +81,14 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-34",
-					"linecount" : 2,
+					"linecount" : 3,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 245.5, 345.0, 35.0 ],
+					"patching_rect" : [ 564.0, 245.5, 371.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter frequency @type decimal @dataspace time @unit millisecond @description \"something here\""
+					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"something here\""
 				}
 
 			}
@@ -122,14 +136,15 @@
 			}
 , 			{
 				"box" : 				{
+					"format" : 6,
 					"id" : "obj-28",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 479.0, 305.0, 29.5, 22.0 ],
-					"style" : "",
-					"text" : "1."
+					"maxclass" : "flonum",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 479.0, 305.0, 50.0, 22.0 ],
+					"style" : ""
 				}
 
 			}
@@ -598,6 +613,15 @@
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-24", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-28", 0 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-25", 0 ]
 				}
 
 			}
