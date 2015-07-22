@@ -1,0 +1,14 @@
+
+- preset "default"
+- description "something about this preset"
+# ###########################################
+# 
+duration 591.433071
+frequency 158.448819
+sample_increment 394.622047
+audio/bypass 0
+audio/gain 100.000000
+audio/mix 100.000000
+audio/mute 0
+# 
+# ###########################################
