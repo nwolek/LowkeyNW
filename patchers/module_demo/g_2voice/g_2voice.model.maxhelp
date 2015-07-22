@@ -328,21 +328,21 @@
 ,
 		"dependency_cache" : [ 			{
 				"name" : "g_2voice.module.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_demo/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "g_2voice.model.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_demo/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "g_2voice.view.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_demo/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1

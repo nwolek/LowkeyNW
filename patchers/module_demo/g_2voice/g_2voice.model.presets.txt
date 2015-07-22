@@ -3,8 +3,8 @@
 - description "something about this preset"
 # ###########################################
 # 
-duration 100.0
-frequency 200.0
+duration 40.0
+frequency 80.0
 sample_increment 1.0
 audio/bypass 0
 audio/gain 100.000000
