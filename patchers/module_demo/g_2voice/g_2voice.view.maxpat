@@ -58,8 +58,8 @@
 
 					}
 ,
-					"text" : "Record",
-					"texton" : "Record",
+					"text" : "Frozen",
+					"texton" : "Filling",
 					"varname" : "live.text[3]"
 				}
 
@@ -430,8 +430,8 @@
  ],
 		"parameters" : 		{
 			"obj-19" : [ "live.dial[1]", "Duration", 0 ],
-			"obj-20" : [ "live.dial[2]", "Samp Inc", 0 ],
 			"obj-103" : [ "live.text[5]", "live.text", 0 ],
+			"obj-20" : [ "live.dial[2]", "Samp Inc", 0 ],
 			"obj-18" : [ "live.dial", "Frequency", 0 ]
 		}
 ,
