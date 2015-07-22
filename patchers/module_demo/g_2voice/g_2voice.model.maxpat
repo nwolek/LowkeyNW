@@ -83,9 +83,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 383.0, 383.0, 49.0 ],
+					"patching_rect" : [ 564.0, 383.0, 361.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter sample_increment @type decimal @ramp/drive max @range 0.01 10. @description \"controls the speed of reading through the buffer, which produces pitch effects\""
+					"text" : "j.parameter sample_increment @type decimal @ramp/drive max @range 0.01 10. @default 1. @description \"controls the speed of reading through the buffer, which produces pitch effects\""
 				}
 
 			}
@@ -97,9 +97,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 309.5, 369.0, 49.0 ],
+					"patching_rect" : [ 564.0, 309.5, 380.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter duration @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"amount of time that each grain will sound\""
+					"text" : "j.parameter duration @type decimal @ramp/drive max @range 1 5000 @default 40. @dataspace time @unit millisecond @description \"amount of time that each grain will sound\""
 				}
 
 			}
@@ -125,9 +125,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 228.5, 384.0, 49.0 ],
+					"patching_rect" : [ 564.0, 228.5, 380.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"rate at which grains will be started\""
+					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @default 80. @dataspace time @unit millisecond @description \"rate at which grains will be started\""
 				}
 
 			}
