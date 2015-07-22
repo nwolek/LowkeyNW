@@ -135,7 +135,7 @@
 						"clips" : [ 							{
 								"filename" : "cello-f2.aif",
 								"filekind" : "audiofile",
-								"loop" : 0,
+								"loop" : 1,
 								"content_state" : 								{
 									"quality" : [ "basic" ],
 									"originaltempo" : [ 120.0 ],
@@ -319,11 +319,11 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-3::obj-1::obj-9" : [ "live.numbox", "live.numbox", 0 ],
-			"obj-3::obj-1::obj-16" : [ "live.numbox[2]", "live.numbox", 0 ],
+			"obj-3::obj-1::obj-19" : [ "live.dial[1]", "Duration", 0 ],
 			"obj-3::obj-1::obj-8" : [ "live.toggle", "live.toggle", 0 ],
-			"obj-3::obj-1::obj-11" : [ "live.numbox[1]", "live.numbox", 0 ],
-			"obj-12" : [ "Gain", "Gain", 0 ]
+			"obj-12" : [ "Gain", "Gain", 0 ],
+			"obj-3::obj-1::obj-20" : [ "live.dial[2]", "Samp Inc", 0 ],
+			"obj-3::obj-1::obj-18" : [ "live.dial", "Frequency", 0 ]
 		}
 ,
 		"dependency_cache" : [ 			{

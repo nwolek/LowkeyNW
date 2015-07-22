@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 138.0, 154.0, 950.0, 671.0 ],
+		"rect" : [ 60.0, 96.0, 950.0, 671.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -44,7 +44,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 44.0, 195.0, 62.0, 22.0 ],
-					"presentation_rect" : [ 46.0, 197.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "*~ 30000."
 				}
@@ -100,7 +99,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 201.0, 305.0, 50.0, 22.0 ],
+					"patching_rect" : [ 128.0, 305.0, 50.0, 22.0 ],
 					"style" : ""
 				}
 
@@ -113,7 +112,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 245.5, 371.0, 49.0 ],
+					"patching_rect" : [ 564.0, 228.5, 371.0, 49.0 ],
 					"style" : "",
 					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"something here\""
 				}
@@ -365,7 +364,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "signal" ],
-					"patching_rect" : [ 201.0, 343.0, 91.0, 22.0 ],
+					"patching_rect" : [ 128.0, 343.0, 91.0, 22.0 ],
 					"style" : "",
 					"text" : "nw.trainshift~ 2"
 				}
@@ -378,9 +377,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 510.0, 567.0, 319.0, 22.0 ],
+					"patching_rect" : [ 510.0, 567.0, 282.0, 22.0 ],
 					"style" : "",
-					"text" : "j.model @description \"Asynchronous granular processing\""
+					"text" : "j.model @description \"2-voice granular processing\""
 				}
 
 			}
