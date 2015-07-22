@@ -61,7 +61,7 @@
 					"orientation" : 1,
 					"outlettype" : [ "signal", "signal", "", "float", "list" ],
 					"parameter_enable" : 1,
-					"patching_rect" : [ 78.0, 442.0, 165.0, 48.0 ],
+					"patching_rect" : [ 78.0, 467.0, 165.0, 48.0 ],
 					"presentation_rect" : [ 15.0, 15.0, 50.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
@@ -87,7 +87,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 78.0, 511.0, 45.0, 45.0 ],
+					"patching_rect" : [ 78.0, 536.0, 45.0, 45.0 ],
 					"style" : ""
 				}
 
@@ -328,21 +328,21 @@
 ,
 		"dependency_cache" : [ 			{
 				"name" : "g_2voice.module.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/modules/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "g_2voice.model.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/modules/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "g_2voice.view.maxpat",
-				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/modules/g_2voice",
+				"bootpath" : "/Volumes/Storage/Documents/Max/Packages/LowkeyNW/patchers/module_test/g_2voice",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1

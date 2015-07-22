@@ -3,9 +3,9 @@
 - description "something about this preset"
 # ###########################################
 # 
-duration 591.433071
-frequency 158.448819
-sample_increment 394.622047
+duration 100.0
+frequency 200.0
+sample_increment 1.0
 audio/bypass 0
 audio/gain 100.000000
 audio/mix 100.000000
