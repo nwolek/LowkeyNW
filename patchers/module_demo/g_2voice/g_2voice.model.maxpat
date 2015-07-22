@@ -38,6 +38,19 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-26",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "float" ],
+					"patching_rect" : [ 469.0, 347.0, 33.0, 22.0 ],
+					"style" : "",
+					"text" : "* -1."
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-35",
 					"maxclass" : "newobj",
 					"numinlets" : 2,
@@ -65,14 +78,14 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-25",
-					"linecount" : 2,
+					"linecount" : 3,
 					"maxclass" : "newobj",
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 383.0, 357.0, 35.0 ],
+					"patching_rect" : [ 564.0, 383.0, 383.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter sample_increment @type decimal @ramp/drive max @range -5. 5. @description \"something here\""
+					"text" : "j.parameter sample_increment @type decimal @ramp/drive max @range 0.01 10. @description \"controls the speed of reading through the buffer, which produces pitch effects\""
 				}
 
 			}
@@ -84,9 +97,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 309.5, 371.0, 49.0 ],
+					"patching_rect" : [ 564.0, 309.5, 369.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter duration @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"something here\""
+					"text" : "j.parameter duration @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"amount of time that each grain will sound\""
 				}
 
 			}
@@ -112,9 +125,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 564.0, 228.5, 371.0, 49.0 ],
+					"patching_rect" : [ 564.0, 228.5, 384.0, 49.0 ],
 					"style" : "",
-					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"something here\""
+					"text" : "j.parameter frequency @type decimal @ramp/drive max @range 1 5000 @dataspace time @unit millisecond @description \"rate at which grains will be started\""
 				}
 
 			}
@@ -169,7 +182,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 479.0, 305.0, 50.0, 22.0 ],
+					"patching_rect" : [ 469.0, 316.0, 50.0, 22.0 ],
 					"style" : ""
 				}
 
@@ -185,19 +198,6 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 402.0, 305.0, 50.0, 22.0 ],
 					"style" : ""
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-26",
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 350.0, 305.0, 34.0, 22.0 ],
-					"style" : "",
-					"text" : "100."
 				}
 
 			}
@@ -377,9 +377,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 510.0, 567.0, 282.0, 22.0 ],
+					"patching_rect" : [ 510.0, 567.0, 309.0, 22.0 ],
 					"style" : "",
-					"text" : "j.model @description \"2-voice granular processing\""
+					"text" : "j.model @description \"Basic stereo granular processing\""
 				}
 
 			}
@@ -671,6 +671,42 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-19", 3 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-26", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-20", 3 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-26", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-21", 3 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-26", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-22", 3 ],
+					"disabled" : 0,
+					"hidden" : 0,
+					"source" : [ "obj-26", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-19", 2 ],
 					"disabled" : 0,
 					"hidden" : 0,
@@ -707,70 +743,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-19", 4 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-19", 3 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-20", 4 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-20", 3 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-21", 4 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-21", 3 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-22", 4 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-28", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-22", 3 ],
+					"destination" : [ "obj-26", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-28", 0 ]
@@ -780,15 +753,6 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-24", 0 ],
-					"disabled" : 0,
-					"hidden" : 0,
-					"source" : [ "obj-29", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-26", 0 ],
 					"disabled" : 0,
 					"hidden" : 0,
 					"source" : [ "obj-29", 0 ]
