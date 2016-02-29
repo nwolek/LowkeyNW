@@ -25,9 +25,10 @@ For Max 6.1, replace the first line above with the following, and then proceed w
 
 	cd ~/Documents/Max/Packages
 
-If you do not have Git installed, you can [download this ZIP archive](https://github.com/nwolek/LowkeyNW/archive/master.zip) containing the latest changes from the master branch. After decompressing, the resulting folder can be placed in one of the following folders:
+If you do not have Git installed, you can [download the latest release here](https://github.com/nwolek/LowkeyNW/releases). After decompressing the zip archive, the resulting folder can be placed in one of the following folders:
 
-	cd ~/Documents/Max\ 7/Packages
+* `~/Documents/Max\ 7/Packages`
+* `~/Documents/Max/Packages`
 
 ##Bug reporting
 If you feel that you have found a bug, please report it via [the Issues section](https://github.com/nwolek/LowkeyNW/issues) of this GitHub project site.
