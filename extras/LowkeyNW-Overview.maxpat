@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 140.0, 163.0, 359.0, 260.0 ],
+		"rect" : [ 140.0, 163.0, 358.0, 291.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -38,6 +38,22 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-3",
+					"linecount" : 2,
+					"maxclass" : "newobj",
+					"numinlets" : 5,
+					"numoutlets" : 4,
+					"outlettype" : [ "signal", "signal", "signal", "signal" ],
+					"patching_rect" : [ 18.0, 181.0, 100.0, 35.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 16.5, 173.0, 130.0, 22.0 ],
+					"style" : "",
+					"text" : "nw.pulsesamp~ sound"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"bgcolor" : [ 0.552941, 0.160784, 0.576471, 1.0 ],
 					"fontname" : "Arial",
 					"fontsize" : 18.0,
@@ -47,7 +63,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 0.0, 7.0, 490.0, 27.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ -1.5, 234.0, 360.0, 27.0 ],
+					"presentation_rect" : [ -2.5, 266.0, 360.0, 27.0 ],
 					"style" : "",
 					"text" : "LowkeyNW Max Package  ",
 					"textcolor" : [ 0.113725, 0.847059, 0.027451, 1.0 ],
@@ -213,7 +229,7 @@
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 74.5, 283.0, 128.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 16.5, 202.0, 128.0, 22.0 ],
+					"presentation_rect" : [ 16.5, 232.0, 128.0, 22.0 ],
 					"style" : "",
 					"text" : "nw.recordplus~ sound"
 				}
@@ -228,7 +244,7 @@
 					"outlettype" : [ "signal", "signal" ],
 					"patching_rect" : [ 74.5, 254.0, 81.0, 22.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 16.5, 173.0, 81.0, 22.0 ],
+					"presentation_rect" : [ 16.5, 203.0, 81.0, 22.0 ],
 					"style" : "",
 					"text" : "nw.gateplus~"
 				}
@@ -297,7 +313,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 266.5, 180.0, 124.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 217.5, 136.0, 124.0, 20.0 ],
+					"presentation_rect" : [ 217.5, 167.0, 124.0, 20.0 ],
 					"style" : "",
 					"text" : "Comparisons",
 					"textjustification" : 1
@@ -330,7 +346,7 @@
 					"parameter_enable" : 0,
 					"patching_rect" : [ 271.0, 199.0, 115.0, 67.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 222.0, 156.0, 115.0, 67.0 ],
+					"presentation_rect" : [ 222.0, 187.0, 115.0, 67.0 ],
 					"style" : "",
 					"tabs" : [ "gate~", "record~" ]
 				}
@@ -587,6 +603,10 @@
 			}
 , 			{
 				"name" : "nw.trainshift~.mxo",
+				"type" : "iLaX"
+			}
+, 			{
+				"name" : "nw.pulsesamp~.mxo",
 				"type" : "iLaX"
 			}
  ],
