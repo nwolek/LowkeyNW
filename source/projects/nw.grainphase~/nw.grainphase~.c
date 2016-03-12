@@ -563,28 +563,10 @@ t_int *grainphase_perform0(t_int *w)
 void grainphase_perform64zero(t_grainphase *x, t_object *dsp64, double **ins, long numins, double **outs,
                               long numouts, long vectorsize, long flags, void *userparam)
 {
-    // local vars
-    t_double *curr_out[numouts];
-    long n, m;
-    
-    // fill local pointer array for outlets
-    m = numouts;
-    while(m--)
-    {
-        curr_out[m] = outs[m];
-    }
-    
-    n = vectorsize;
-    while(n--)
-    {
-        m = numouts;
-        while(m--)
-        {
-            *(curr_out[m]) = 0.0;		// save to output
-            (curr_out[m])++;			// advance the outlet pointer
-        }
-    }
-    
+	for (long channel = 0; channel<numouts; ++channel) {
+		for (long i = 0; i<vectorsize; ++i)
+			outs[channel][i] = 0.0;
+	}
 }
 
 /********************************************************************************
