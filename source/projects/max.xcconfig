@@ -16,10 +16,10 @@ ARCHS = i386 x86_64
 
 
 // Paths
-C74SUPPORT = $(SRCROOT)/../../MaxSDK/c74support
+C74SUPPORT = $(SRCROOT)/../../maxsdk/source/c74support
 HEADER_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes" "$(SRCROOT)"/..
 FRAMEWORK_SEARCH_PATHS = "$(C74SUPPORT)/max-includes" "$(C74SUPPORT)/msp-includes" "$(C74SUPPORT)/jit-includes"
-DSTROOT = $(SRCROOT)/../../externals
+DSTROOT = $(SRCROOT)/../../../externals
 // (This next path is relative to DSTROOT)
 INSTALL_PATH = /
 
@@ -71,7 +71,7 @@ GENERATE_PKGINFO_FILE = YES
 
 // Flags to enforce some build-time checks for the symbols used while not actually performing a hard link
 C74_SYM_LINKER_FLAGS = @$(C74SUPPORT)/max-includes/c74_linker_flags.txt
-C74_SYM_LINKER_FLAGS_MSP = -Wl,-U,_dsp_add,-U,_dsp_add64,-U,_z_add_signalmethod,-U,_z_dsp_free,-U,_z_dsp_setup,-U,_class_dspinit,-U,_buffer_getchannelcount,-U,_buffer_getframecount,-U,_buffer_getsamplerate,-U,_buffer_getmillisamplerate,-U,_buffer_locksamples,-U,_buffer_unlocksamples,-U,_buffer_ref_exists,-U,_buffer_ref_getobject,-U,_buffer_ref_new,-U,_buffer_ref_notify,-U,_buffer_setdirty,-U,_class_dspinitjbox,-U,_sys_getdspobjdspstate,-U,_sys_getdspstate,-U,_z_jbox_dsp_free,-U,_z_jbox_dsp_setup,-U,_dsp_resize,-U,_dspchain_start,-U,_dspchain_compile2,-U,_dspchain_tick,-U,_buffer_getinfo,-U,_sys_getsr,-U,_sys_getblksize,-U,_jit_object_method,-U,_jit_object_method_imp,-U,_jit_matrix_info_default,-U,_jit_object_findregistered,-U,_jit_object_new,-U,_jit_object_free,-U,_jit_object_new_imp,-U,_max_jit_obex_new,-U,max_jit_obex_jitob_get,-U,_max_jit_obex_free,-U,_max_jit_mop_outputmatrix,-U,_max_jit_mop_assist,-U,_max_jit_classex_standard_wrap,-U,_jit_class_addadornment,-U,_jit_class_addattr,-U,_jit_class_addmethod,-U,_jit_class_register,-U,_max_jit_attr_args,-U,_jit_class_findbyname,-U,_jit_class_new,-U,_jit_error_code,-U,_max_jit_classex_setup,-U,_max_jit_mop_free,-U,_jit_object_alloc,-U,_max_addmethod_usurp_low,-U,_max_jit_classex_mop_wrap,-U,_max_jit_mop_getoutputmode,-U,_max_jit_mop_setup_simple,-U,_max_jit_obex_adornment_get,-U,_max_jit_obex_jitob_get,-U,_jit_object_attach,-U,_jit_object_detach,-U,_jit_symbol_unique,-U,_max_jit_obex_dumpout
+C74_SYM_LINKER_FLAGS_MSP = -Wl,-U,_dsp_add,-U,_dsp_addv,-U,_dsp_add64,-U,_z_add_signalmethod,-U,_z_dsp_free,-U,_z_dsp_setup,-U,_class_dspinit,-U,_buffer_getchannelcount,-U,_buffer_getframecount,-U,_buffer_getsamplerate,-U,_buffer_getmillisamplerate,-U,_buffer_locksamples,-U,_buffer_unlocksamples,-U,_buffer_ref_exists,-U,_buffer_ref_getobject,-U,_buffer_ref_new,-U,_buffer_ref_notify,-U,_buffer_setdirty,-U,_class_dspinitjbox,-U,_sys_getdspobjdspstate,-U,_sys_getdspstate,-U,_z_jbox_dsp_free,-U,_z_jbox_dsp_setup,-U,_dsp_resize,-U,_dspchain_start,-U,_dspchain_compile2,-U,_dspchain_tick,-U,_buffer_getinfo,-U,_sys_getsr,-U,_sys_getblksize,-U,_jit_object_method,-U,_jit_object_method_imp,-U,_jit_matrix_info_default,-U,_jit_object_findregistered,-U,_jit_object_new,-U,_jit_object_free,-U,_jit_object_new_imp,-U,_max_jit_obex_new,-U,max_jit_obex_jitob_get,-U,_max_jit_obex_free,-U,_max_jit_mop_outputmatrix,-U,_max_jit_mop_assist,-U,_max_jit_classex_standard_wrap,-U,_jit_class_addadornment,-U,_jit_class_addattr,-U,_jit_class_addmethod,-U,_jit_class_register,-U,_max_jit_attr_args,-U,_jit_class_findbyname,-U,_jit_class_new,-U,_jit_error_code,-U,_max_jit_classex_setup,-U,_max_jit_mop_free,-U,_jit_object_alloc,-U,_max_addmethod_usurp_low,-U,_max_jit_classex_mop_wrap,-U,_max_jit_mop_getoutputmode,-U,_max_jit_mop_setup_simple,-U,_max_jit_obex_adornment_get,-U,_max_jit_obex_jitob_get,-U,_jit_object_attach,-U,_jit_object_detach,-U,_jit_symbol_unique,-U,_max_jit_obex_dumpout
 
 
 

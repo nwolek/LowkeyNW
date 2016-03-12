@@ -8,16 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		8E9ACFD51A2C097A00FB51EF /* nw.grainpulse~.c in Sources */ = {isa = PBXBuildFile; fileRef = 8E9ACFD41A2C097A00FB51EF /* nw.grainpulse~.c */; };
-		8E9ACFD71A2C09FA00FB51EF /* commonsyms.c in Sources */ = {isa = PBXBuildFile; fileRef = 8E9ACFD61A2C09FA00FB51EF /* commonsyms.c */; };
-		8EAC8D571A3376D4004787DB /* MaxAudioAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EAC8D561A3376D4004787DB /* MaxAudioAPI.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2273EE491A03F14F0057B483 /* max.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = max.xcconfig; path = ../max.xcconfig; sourceTree = "<group>"; };
 		2FBBEAE508F335360078DB84 /* nw.grainpulse~.mxo */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "nw.grainpulse~.mxo"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E9ACFD41A2C097A00FB51EF /* nw.grainpulse~.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "nw.grainpulse~.c"; sourceTree = "<group>"; };
-		8E9ACFD61A2C09FA00FB51EF /* commonsyms.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = commonsyms.c; path = "../../MaxSDK/c74support/max-includes/common/commonsyms.c"; sourceTree = "<group>"; };
-		8EAC8D561A3376D4004787DB /* MaxAudioAPI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MaxAudioAPI.framework; path = "../../MaxSDK/c74support/msp-includes/MaxAudioAPI.framework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -25,7 +21,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8EAC8D571A3376D4004787DB /* MaxAudioAPI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -36,9 +31,7 @@
 			isa = PBXGroup;
 			children = (
 				2273EE491A03F14F0057B483 /* max.xcconfig */,
-				8E9ACFD61A2C09FA00FB51EF /* commonsyms.c */,
 				8E9ACFD41A2C097A00FB51EF /* nw.grainpulse~.c */,
-				8EAC8D561A3376D4004787DB /* MaxAudioAPI.framework */,
 				19C28FB4FE9D528D11CA2CBB /* Products */,
 			);
 			name = iterator;
@@ -133,7 +126,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8E9ACFD71A2C09FA00FB51EF /* commonsyms.c in Sources */,
 				8E9ACFD51A2C097A00FB51EF /* nw.grainpulse~.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

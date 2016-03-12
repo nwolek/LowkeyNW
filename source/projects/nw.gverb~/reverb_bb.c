@@ -26,7 +26,7 @@ void rbb_init_sinTable(rbb_sintable *info_ptr)
 	
 	// setup sine function table
 	info_ptr->tableLength = OSC_TABLE_SIZE;
-	info_ptr->table_alloc = t_getbytes((info_ptr->tableLength) * sizeof(float));
+	info_ptr->table_alloc = sysmem_newptr((info_ptr->tableLength) * sizeof(float));
 	info_ptr->table_mem = info_ptr->table_alloc;
 	
 	// fill sine function table
@@ -50,7 +50,7 @@ returns:		nothing
 void rbb_free_sinTable(rbb_sintable *info_ptr)
 {
 	if (info_ptr->table_alloc)
-		t_freebytes(info_ptr->table_alloc,(info_ptr->tableLength) * sizeof(float));
+		sysmem_freeptr(info_ptr->table_alloc);
 	info_ptr->table_alloc = 0;
 }
 
@@ -139,7 +139,7 @@ void rbb_init_shortDelay(rbb_delaybuff_short *info_ptr)
 	
 	// setup short delay buffer
 	info_ptr->buff_length = DELAY_SHORT_MAX;
-	info_ptr->buff_alloc = t_getbytes((info_ptr->buff_length) * sizeof(float));
+	info_ptr->buff_alloc = sysmem_newptr((info_ptr->buff_length) * sizeof(float));
 	info_ptr->buff_mem = info_ptr->buff_alloc;
 	info_ptr->buff_start = info_ptr->buff_alloc;	//added 2002.08.19
 	info_ptr->buff_end = info_ptr->buff_start + info_ptr->buff_length;	//added 2002.08.19
@@ -166,7 +166,7 @@ returns:		nothing
 void rbb_free_shortDelay(rbb_delaybuff_short *info_ptr)
 {
 	if (info_ptr->buff_alloc)
-		t_freebytes(info_ptr->buff_alloc,(info_ptr->buff_length) * sizeof(float));
+		sysmem_freeptr(info_ptr->buff_alloc);
 	info_ptr->buff_alloc = 0;
 }
 
@@ -239,7 +239,7 @@ void rbb_init_longDelay(rbb_delaybuff_long *info_ptr)
 	
 	// setup long delay buffer
 	info_ptr->buff_length = DELAY_LONG_MAX;
-	info_ptr->buff_alloc = t_getbytes((info_ptr->buff_length) * sizeof(float));
+	info_ptr->buff_alloc = sysmem_newptr((info_ptr->buff_length) * sizeof(float));
 	info_ptr->buff_mem = info_ptr->buff_alloc;
 	info_ptr->buff_start = info_ptr->buff_alloc;	//added 2002.08.19
 	info_ptr->buff_end = info_ptr->buff_start + info_ptr->buff_length;	//added 2002.08.19
@@ -266,7 +266,7 @@ returns:		nothing
 void rbb_free_longDelay(rbb_delaybuff_long *info_ptr)
 {
 	if (info_ptr->buff_alloc)
-		t_freebytes(info_ptr->buff_alloc,(info_ptr->buff_length) * sizeof(float));
+		sysmem_freeptr(info_ptr->buff_alloc);
 	info_ptr->buff_alloc = 0;
 }
 
@@ -339,7 +339,7 @@ void rbb_init_allpassShort(rbb_allpass_short *info_ptr)
 	
 	// setup allpass short delay buffer
 	info_ptr->buff_length = ALLPASS_SHORT_DELAY_MAX;
-	info_ptr->buff_alloc = t_getbytes((info_ptr->buff_length) * sizeof(float));
+	info_ptr->buff_alloc = sysmem_newptr((info_ptr->buff_length) * sizeof(float));
 	info_ptr->buff_mem = info_ptr->buff_alloc;
 	info_ptr->buff_start = info_ptr->buff_alloc;	//added 2002.08.19
 	info_ptr->buff_end = info_ptr->buff_start + info_ptr->buff_length;	//added 2002.08.19
@@ -368,7 +368,7 @@ returns:		nothing
 void rbb_free_allpassShort(rbb_allpass_short *info_ptr)
 {
 	if (info_ptr->buff_alloc)
-		t_freebytes(info_ptr->buff_alloc,(info_ptr->buff_length) * sizeof(float));
+		sysmem_freeptr(info_ptr->buff_alloc);
 	info_ptr->buff_alloc = 0;
 }
 
@@ -455,7 +455,7 @@ void rbb_init_allpassLong(rbb_allpass_long *info_ptr)
 	
 	// setup allpass long delay buffer
 	info_ptr->buff_length = ALLPASS_LONG_DELAY_MAX;
-	info_ptr->buff_alloc = t_getbytes((info_ptr->buff_length) * sizeof(float));
+	info_ptr->buff_alloc = sysmem_newptr((info_ptr->buff_length) * sizeof(float));
 	info_ptr->buff_mem = info_ptr->buff_alloc;
 	info_ptr->buff_start = info_ptr->buff_alloc;	//added 2002.08.19
 	info_ptr->buff_end = info_ptr->buff_start + info_ptr->buff_length;	//added 2002.08.19
@@ -484,7 +484,7 @@ returns:		nothing
 void rbb_free_allpassLong(rbb_allpass_long *info_ptr)
 {
 	if (info_ptr->buff_alloc)
-		t_freebytes(info_ptr->buff_alloc,(info_ptr->buff_length) * sizeof(float));
+		sysmem_freeptr(info_ptr->buff_alloc);
 	info_ptr->buff_alloc = 0;
 }
 
@@ -571,7 +571,7 @@ void rbb_init_allpassMod(rbb_allpass_mod *info_ptr, rbb_sintable *osc_ptr)
 	
 	// setup allpass long delay buffer
 	info_ptr->buff_length = ALLPASS_MOD_DELAY_MAX;
-	info_ptr->buff_alloc = t_getbytes((info_ptr->buff_length) * sizeof(float));
+	info_ptr->buff_alloc = (float*)sysmem_newptr((info_ptr->buff_length) * sizeof(float));
 	info_ptr->buff_mem = info_ptr->buff_alloc;
 	info_ptr->buff_start = info_ptr->buff_alloc;	//added 2002.08.19
 	info_ptr->buff_end = info_ptr->buff_start + info_ptr->buff_length;	//added 2002.08.19
@@ -608,7 +608,7 @@ returns:		nothing
 void rbb_free_allpassMod(rbb_allpass_mod *info_ptr)
 {
 	if (info_ptr->buff_alloc)
-		t_freebytes(info_ptr->buff_alloc,(info_ptr->buff_length) * sizeof(float));
+		sysmem_freeptr(info_ptr->buff_alloc);
 	info_ptr->buff_alloc = 0;
 }
 
