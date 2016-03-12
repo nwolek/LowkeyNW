@@ -330,7 +330,7 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars for outlets, interval, width, step size and index
-    t_double *curr_out[numouts];
+//    t_double *curr_out[numouts];
     t_double curr_freq = x->ps_inlet_connected ?  *ins[0] : x->ps_freq;
     double curr_step_size;
     float *currIndex = x->ps_currIndex; // TODO: upgrade to double later
@@ -340,11 +340,11 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
     long n, m;
     
     // fill local pointer array for outlets
-    m = numouts;
-    while(m--)
-    {
-        curr_out[m] = outs[m];
-    }
+//    m = numouts;
+//    while(m--)
+//    {
+//        curr_out[m] = outs[m];
+//    }
     
     // check constraints
     // NOT NECESSARY
@@ -357,11 +357,9 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
     x->ps_stepsize = curr_step_size;
     
     n = vectorsize;
-    while(n--)
-    {
+    while (n--) {
         m = numouts;
-        while(m--)
-        {
+        while (m--) {
             temp = (double)(currIndex[m]);
             
             // check bounds //
@@ -370,15 +368,13 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
             while (temp >= 1.0)
                 temp -= 1.0;
             
-            *(curr_out[m]) = temp;		// save to output
+            *(outs[m]) = temp;		// save to output
             
             temp += curr_step_size;		// advance index
             currIndex[m] = (float)temp;	// save next index
-            (curr_out[m])++;			// advance the outlet pointer
+            (outs[m])++;			// advance the outlet pointer
         }
-        
     }
-    
 }
 
 
