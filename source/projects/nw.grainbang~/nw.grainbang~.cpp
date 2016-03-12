@@ -571,28 +571,10 @@ t_int *grainbang_perform0(t_int *w)
 void grainbang_perform64zero(t_grainbang *x, t_object *dsp64, double **ins, long numins, double **outs,
                               long numouts, long vectorsize, long flags, void *userparam)
 {
-    // local vars
-    t_double *curr_out[numouts];
-    long n, m;
-    
-    // fill local pointer array for outlets
-    m = numouts;
-    while(m--)
-    {
-        curr_out[m] = outs[m];
-    }
-    
-    n = vectorsize;
-    while(n--)
-    {
-        m = numouts;
-        while(m--)
-        {
-            *(curr_out[m]) = 0.0;		// save to output
-            (curr_out[m])++;			// advance the outlet pointer
-        }
-    }
-    
+	for (auto channel=0; channel<numouts; ++channel) {
+		for (auto i=0; i<vectorsize; ++i)
+			outs[channel][i] = 0.0;
+	}
 }
 
 /********************************************************************************
@@ -1084,7 +1066,7 @@ void grainbang_bang(t_grainbang *x)
 				post("%s: grain stage set to new grain", OBJECT_NAME);
 			#endif // DEBUG //
 		} else {
-			defer(x, (void *)grainbang_overflow,0L,0,0L); //added 2002.11.19
+			defer(x, (method)grainbang_overflow,0L,0,0L); //added 2002.11.19
 		}
 	}
 	else // all other inlets
