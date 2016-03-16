@@ -349,7 +349,7 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars for outlets, interval, width, step size and index
-//    t_double *curr_out[numouts];
+    t_double *curr_out[OUTLET_MAX];
     t_double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
     t_double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
     double curr_step_size;
@@ -360,11 +360,11 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
     long n, m;
     
     // fill local pointer array for outlets
-//    m = numouts;
- //   while(m--)
-//    {
-//        curr_out[m] = outs[m];
-//    }
+    m = numouts;
+    while(m--)
+    {
+        curr_out[m] = outs[m];
+    }
     
     // check constraints
     if (curr_length < x->ts_shortest_pulse) curr_length = x->ts_shortest_pulse;
@@ -393,14 +393,14 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
                 temp += 1.0;
             
             if (temp <= curr_width) {
-                *(outs[m]) = 1.0;		// save to output
+                *(curr_out[m]) = 1.0;		// save to output
             } else {
-                *(outs[m]) = 0.0;		// save to output
+                *(curr_out[m]) = 0.0;		// save to output
             }
             
             temp -= curr_step_size;		// advance index
             currIndex[m] = (float)temp;	// save next index
-            (outs[m])++;			// advance the outlet pointer
+            (curr_out[m])++;			// advance the outlet pointer
             
         }
         
