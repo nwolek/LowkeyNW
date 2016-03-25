@@ -1,6 +1,9 @@
 #LowkeyNW Max Package
 **By Nathan Wolek - [@LowkeyNW](http://twitter.com/lowkeynw) - [http://nathanwolek.com](http://www.nathanwolek.com)**
 
+[![Build Status](https://travis-ci.org/nwolek/LowkeyNW.svg?branch=master)](https://travis-ci.org/nwolek/LowkeyNW)
+[![Build status](https://ci.appveyor.com/api/projects/status/1amr7h91xbpp2kh0/branch/master?svg=true)](https://ci.appveyor.com/project/nwolek/lowkeynw/branch/master)
+
 ##About
 This GitHub project is a [package for Cycling74's Max](https://cycling74.com/2013/03/11/max-6-feature-packages/), versions 6.1 or higher. It gathers updated versions of projects that were formerly distributed separately as:
 
