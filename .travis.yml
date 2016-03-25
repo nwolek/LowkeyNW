@@ -1,0 +1,21 @@
+language: 
+  - objective-c
+  - c++
+  
+compiler:
+  - clang
+
+sudo: false
+os: osx
+osx_image: xcode6.4
+
+before_install:
+  - mkdir -p /tmp/cmake
+  - wget http://www.cmake.org/files/v3.3/cmake-3.3.1-Darwin-x86_64.tar.gz
+  - tar -xf cmake-3.3.1-Darwin-x86_64.tar.gz -C /tmp/cmake --strip-components=1
+  - ln -s /tmp/cmake/CMake.app/Contents/bin /tmp/cmake/bin
+
+script:
+- "cmake ."
+- "make"
+#- "make test"
