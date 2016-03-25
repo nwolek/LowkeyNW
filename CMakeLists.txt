@@ -15,6 +15,7 @@ execute_process(
 # Update version numbers based on the latest git tag to the repository
 include(${CMAKE_CURRENT_SOURCE_DIR}/source/max-sdk-core/script/git-rev.cmake)
 message("Building _____ ${GIT_TAG} _____")
+configure_file("${CMAKE_CURRENT_LIST_DIR}/package-info.json.in" "${CMAKE_CURRENT_LIST_DIR}/package-info.json" @ONLY)
 
 
 # Macro from http://stackoverflow.com/questions/7787823/cmake-how-to-get-the-name-of-all-subdirectories-of-a-directory
