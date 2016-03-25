@@ -17,3 +17,10 @@ xcuserdata
 DerivedData
 *.xcuserstate
 *.xcworkspace
+
+# Windows Stuff:
+*.suo
+*.sdf
+*.opensdf
+sysbuild
+*.sln
