@@ -1,4 +1,4 @@
-Copyright (c) 2001-2014, Nathan Wolek.
+Copyright (c) 2001-2016, Nathan Wolek.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
