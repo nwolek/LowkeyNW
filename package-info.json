@@ -22,7 +22,7 @@
 	}
 ,
 	"tags" : [ "granular", "sampling", "reverb", "zero-crossings" ],
-	"version" : "1.0.1",
+	"version" : "1.1.beta",
 	"website" : "http://www.nathanwolek.com",
 	"filelist" : 	{
 		"externals" : [ "nw.cppan~.mxo", "nw.gateplus~.mxo", "nw.grainbang~.mxo", "nw.grainphase~.mxo", "nw.grainpulse~.mxo", "nw.grainstream~.mxo", "nw.gverb~.mxo", "nw.phasorshift~.mxo", "nw.pulsesamp~.mxo", "nw.recordplus~.mxo", "nw.trainshift~.mxo" ],
