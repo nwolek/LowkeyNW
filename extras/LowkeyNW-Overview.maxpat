@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 1,
+			"minor" : 2,
 			"revision" : 0,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 140.0, 163.0, 358.0, 291.0 ],
+		"rect" : [ 14.0, 52.0, 358.0, 291.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 1,
 		"default_fontsize" : 12.0,
@@ -54,7 +54,7 @@
 			}
 , 			{
 				"box" : 				{
-					"bgcolor" : [ 0.552941, 0.160784, 0.576471, 1.0 ],
+					"bgcolor" : [ 0.364706, 0.478431, 0.384314, 1.0 ],
 					"fontname" : "Arial",
 					"fontsize" : 18.0,
 					"id" : "obj-35",
@@ -66,7 +66,7 @@
 					"presentation_rect" : [ -2.5, 266.0, 360.0, 27.0 ],
 					"style" : "",
 					"text" : "LowkeyNW Max Package  ",
-					"textcolor" : [ 0.113725, 0.847059, 0.027451, 1.0 ],
+					"textcolor" : [ 0.756863, 0.862745, 0.858824, 1.0 ],
 					"textjustification" : 2
 				}
 
@@ -201,9 +201,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "float", "bang" ],
-					"patching_rect" : [ 157.0, 444.0, 91.0, 22.0 ],
+					"patching_rect" : [ 157.0, 444.0, 108.0, 22.0 ],
 					"style" : "",
-					"text" : "buffer~ window"
+					"text" : "buffer~ window 10"
 				}
 
 			}
@@ -214,9 +214,9 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "float", "bang" ],
-					"patching_rect" : [ 157.0, 415.0, 84.0, 22.0 ],
+					"patching_rect" : [ 157.0, 415.0, 101.0, 22.0 ],
 					"style" : "",
-					"text" : "buffer~ sound"
+					"text" : "buffer~ sound 10"
 				}
 
 			}
