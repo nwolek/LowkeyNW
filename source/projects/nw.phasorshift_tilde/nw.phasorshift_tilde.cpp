@@ -11,10 +11,7 @@
 */
 
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include <string.h>
+#include "c74_msp.h"
 
 //#define DEBUG			//enable debugging messages
 
@@ -50,10 +47,8 @@ typedef struct _phasorShift
 /* method definitions for this object */
 void phasorShift_setIndexArray(t_phasorShift *x);
 void *phasorShift_new(long outlets);
-void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count);
 void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double samplerate,
                        long maxvectorsize, long flags);
-t_int *phasorShift_perform(t_int *w);
 void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
                             long numouts, long vectorsize, long flags, void *userparam);
 void phasorShift_float(t_phasorShift *x, double f);
@@ -77,8 +72,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)phasorShift_new, (method)dsp_free, (short)sizeof(t_phasorShift), 0L,
 				A_DEFLONG, 0);
     class_dspinit(c); // add standard functions to class
-    
-	class_addmethod(c, (method)phasorShift_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "phasorShift_float" to the float message */
 	class_addmethod(c, (method)phasorShift_float, "float", A_FLOAT, 0);
@@ -95,11 +88,11 @@ int C74_EXPORT main(void)
     /* bind method "phasorShift_dsp64" to the dsp64 message */
     class_addmethod(c, (method)phasorShift_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     phasorshift_class = c;
     
     #ifdef DEBUG
-        post("%s: main function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
     return 0;
@@ -131,7 +124,7 @@ void phasorShift_setIndexArray(t_phasorShift *x)
 	}
 	
 	#ifdef DEBUG
-		post("%s: pointers set", OBJECT_NAME);
+		object_post((t_object*)x, "%s: pointers set", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -165,53 +158,13 @@ void *phasorShift_new(long outlets)
 	x->ps_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        post("%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
     #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
 	return (x);
 }
 
-/********************************************************************************
-void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void phasorShift_dsp(t_phasorShift *x, t_signal **sp, short *count)
-{
-	
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    long i;
-	
-	void *v[VEC_SIZE];
-	
-	x->ps_inlet_connected = count[0];
-    x->ps_samp_rate = sp[2]->s_sr;
-	
-	v[0] = x;
-	v[1] = &(sp[1]->s_n);
-	v[2] = &(sp[1]->s_sr);
-	v[3] = sp[0]->s_vec;
-	
-	for (i = 0; i < x->ps_outletcount; i++) {
-		v[i+4] = (float *)(sp[i+1]->s_vec);	// get pointers to outputs
-	}
-	
-	dsp_addv(phasorShift_perform, VEC_SIZE, v);
-	#ifdef DEBUG
-		post("%s: ps_freq is being updated at audio rate", OBJECT_NAME);
-		post("%s: output sampling rate is %f", OBJECT_NAME, sp[1]->s_sr);
-	#endif /* DEBUG */
-
-}
 
 /********************************************************************************
  void phasorShift_dsp64()
@@ -230,7 +183,7 @@ void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double s
 {
     
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     // check if inlets are connected at audio rate
@@ -244,71 +197,6 @@ void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double s
     
 }
 
-/********************************************************************************
-t_int *phasorShift_perform(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "phasorShift_dsp"
-description:	called at interrupt level to compute object's output
-returns:		pointer to the next 
-********************************************************************************/
-t_int *phasorShift_perform(t_int *w)
-{
-	t_phasorShift *x = (t_phasorShift *)(w[1]);	// create local pointer to this object
-	int vector_size = *(int *)(w[2]);			// create lacal var for vector size
-	float samp_rate = *(float *)(w[3]);			// create lacal var for sampling rate
-	float curr_freq, step_size;					// vars for freq and stepsize
-	
-	const long outlet_count = x->ps_outletcount;// local var for number of outlets
-	float *outs[OUTLET_MAX];
-	float *currIndex;
-	long n, i;									// count for updating outlets
-	float temp;									// temp var for computations
-	
-	if (x->ps_obj.z_disabled)
-		goto out;
-	
-	if (x->ps_inlet_connected) {
-		x->ps_freq = *(float *)(w[4]);	// grab signal rate frequency input
-		curr_freq = x->ps_freq;
-		x->ps_stepsize = curr_freq / samp_rate;
-									// compute ps_table samples per output sample
-		step_size = x->ps_stepsize;	// set local var equal to global
-	} else {
-		curr_freq = x->ps_freq;
-		x->ps_stepsize = curr_freq / samp_rate;
-									// compute ps_table samples per output sample
-		step_size = x->ps_stepsize;	// set local var equal to global
-	}
-	
-	currIndex = x->ps_currIndex;	// set local var equal to global
-	
-	for (i = 0; i < outlet_count; i++) {	// grab pointers to the outlets
-		outs[i] = (float *)(w[i+5]);
-	}
-	
-	vector_size += 1;
-	while (--vector_size)		// compute for each sample in vector
-	{
-		n = outlet_count;
-		while (--n >= 0) {
-			temp = currIndex[n];	// get ps_table position
-			
-			// check bounds //
-			while (temp < 0.0)
-				temp += 1.0;
-			while (temp >= 1.0)
-				temp -= 1.0;
-				
-			*(outs[n]) = temp;		// save to output
-			
-			temp += step_size;		// advance index
-			currIndex[n] = temp;	// save next index
-			++(outs[n]);			// advance current vector pointer
-		}
-	}
-out:
-	return(w + VEC_SIZE + 1);		// pointer to next vector
-}
 
 /********************************************************************************
  void *phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long numins, double **outs,
@@ -330,8 +218,8 @@ void phasorShift_perform64(t_phasorShift *x, t_object *dsp64, double **ins, long
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars for outlets, interval, width, step size and index
-    t_double *curr_out[OUTLET_MAX];
-    t_double curr_freq = x->ps_inlet_connected ?  *ins[0] : x->ps_freq;
+    double *curr_out[OUTLET_MAX];
+    double curr_freq = x->ps_inlet_connected ?  *ins[0] : x->ps_freq;
     double curr_step_size;
     float *currIndex = x->ps_currIndex; // TODO: upgrade to double later
     
@@ -395,7 +283,7 @@ void phasorShift_float(t_phasorShift *x, double f)
 	}
 	else
 	{
-		post("%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -416,7 +304,7 @@ void phasorShift_int(t_phasorShift *x, long l)
 	}
 	else
 	{
-		post("%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -451,7 +339,7 @@ void phasorShift_assist(t_phasorShift *x, t_object *b, long msg, long arg, char 
 	}
 	
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -466,8 +354,8 @@ returns:		nothing
 ********************************************************************************/
 void phasorShift_getinfo(t_phasorShift *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
 

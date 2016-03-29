@@ -10,11 +10,7 @@
 **
 */
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include "ext_buffer.h"		// required to deal with buffer object
-#include <string.h>
+#include "c74_msp.h"
 
 
 //#define DEBUG			//enable debugging messages
@@ -82,12 +78,9 @@ typedef struct _grainstream
 } t_grainstream;
 
 void *grainstream_new(t_symbol *snd, t_symbol *win);
-t_int *grainstream_perform(t_int *w);
-t_int *grainstream_perform0(t_int *w);
 void grainstream_perform64zero(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void grainstream_initGrain(t_grainstream *x, float in_pos_start, float in_pitch_mult, float in_length, float in_gain_mult);
-void grainstream_dsp(t_grainstream *x, t_signal **sp, short *count);
 void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void grainstream_setsnd(t_grainstream *x, t_symbol *s);
 void grainstream_setwin(t_grainstream *x, t_symbol *s);
@@ -117,8 +110,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)grainstream_new, (method)dsp_free,
                   (short)sizeof(t_grainstream), 0L, A_SYM, A_SYM, 0);
     class_dspinit(c); // add standard functions to class
-    
-	class_addmethod(c, (method)grainstream_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "grainstream_setsnd" to the 'setSound' message */
 	class_addmethod(c, (method)grainstream_setsnd, "setSound", A_SYM, 0);
@@ -150,14 +141,14 @@ int C74_EXPORT main(void)
     /* bind method "grainstream_dsp64" to the dsp64 message */
     class_addmethod(c, (method)grainstream_dsp64, "dsp64", A_CANT, 0);
     
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     grainstream_class = c;
 	
 	/* needed for 'buffer~' work, checks for validity of buffer specified */
 	ps_buffer = gensym("buffer~");
 	
     #ifdef DEBUG
-        post("%s: main function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
     return 0;
@@ -207,49 +198,6 @@ void *grainstream_new(t_symbol *snd, t_symbol *win)
 	return (x);
 }
 
-/********************************************************************************
-void grainstream_dsp(t_cpPan *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void grainstream_dsp(t_grainstream *x, t_signal **sp, short *count)
-{
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    /* set buffers */
-	grainstream_setsnd(x, x->snd_sym);
-	grainstream_setwin(x, x->win_sym);
-	
-	/* test inlet 2 and 3 for signal data */
-	x->grain_freq_connected = count[0];
-	x->grain_pos_start_connected = count[1];
-	x->grain_pitch_connected = count[2];
-    x->grain_gain_connected = count[3];
-	
-	x->output_sr = sp[4]->s_sr;
-	x->output_1oversr = 1.0 / x->output_sr;
-	
-	if (!count[4]) {	// nothing computed
-		//dsp_add(grainstream_perform0, 2, sp[3]->s_vec, sp[3]->s_n);
-		#ifdef DEBUG
-			post("%s: no output computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	} else {		// output computed
-		dsp_add(grainstream_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec,
-			sp[3]->s_vec, sp[3]->s_n);
-		#ifdef DEBUG
-			post("%s: output is being computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	}
-	
-}
 
 /********************************************************************************
  void grainstream_dsp64()
@@ -268,7 +216,7 @@ void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double s
 {
     
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     // set buffers
@@ -287,305 +235,17 @@ void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double s
     if (count[4] || count[5]) // if either output is connected
     {
         #ifdef DEBUG
-            post("%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainstream_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            post("%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
         #endif /* DEBUG */
     }
     
 }
 
-/********************************************************************************
-t_int *grainstream_perform(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "grainstream_dsp"
-description:	called at interrupt level to compute object's output; used when
-		outlets are connected; tests inlet 2 & 3 to use either control or audio
-		rate data
-returns:		pointer to the next 
-********************************************************************************/
-t_int *grainstream_perform(t_int *w)
-{
-	t_grainstream *x = (t_grainstream *)(w[1]);
-	float *in_freq = (float *)(w[2]);
-	float *in_pos_start = (float *)(w[3]);
-	float *in_pitch_mult = (float *)(w[4]);
-	float *out = (t_float *)(w[5]);
-	int vec_size = (int)(w[6]);
-	float out_1oversr = (float)x->output_1oversr;
-	
-	t_buffer_obj *snd_object, *win_object;
-	float *tab_s, *tab_w;
-	double s_step_size, w_step_size;
-	double  snd_out, win_out;//, last_s, last_w;	//removed 2005.02.03
-	double index_s, index_w, last_index_w, temp_index_frac;
-	long size_s, size_w, temp_index_int;
-	short interp_s, interp_w, g_direction;
-	
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-	
-	if (x->x_obj.z_disabled)					// object is enabled
-		goto out;
-    if ((x->snd_buf_ptr == NULL) || (x->win_buf_ptr == NULL))		// buffer pointers are defined
-        goto zero;
-	
-    // get sound buffer info
-    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-    tab_s = buffer_locksamples(snd_object);
-    if (!tab_s)		// buffer samples were not accessible
-        goto zero;
-    size_s = buffer_getframecount(snd_object);
-    
-    // get window buffer info
-    win_object = buffer_ref_getobject(x->win_buf_ptr);
-    tab_w = buffer_locksamples(win_object);
-    if (!tab_w)		// buffer samples were not accessible
-        goto zero;
-    size_w = buffer_getframecount(win_object);
-	
-	// get option settings
-	interp_s = x->snd_interp;
-	interp_w = x->win_interp;
-	g_direction = x->grain_direction;
-	// get pointer info
-	s_step_size = x->snd_step_size;
-	w_step_size = x->win_step_size;
-	index_s = x->curr_snd_pos;
-	index_w = x->curr_win_pos;
-	// history
-	last_index_w = x->win_last_index;
-	
-	while (--vec_size) {
-		index_w += w_step_size;
-		
-		/* check bounds of window index */
-		while (index_w < 0)
-			index_w += size_w;
-		while (index_w >= size_w)
-			index_w -= size_w;
-			
-		if (index_w < last_index_w) {		// if window has wrapped...
-			if (index_w < 10.0) {			// and is at beginning...
-				// ...then begin a new grain
-				
-				if (x->next_snd_buf_ptr != NULL) {	//added 2002.07.24
-                    buffer_unlocksamples(snd_object);
-                    x->snd_buf_ptr = x->next_snd_buf_ptr;
-                    x->next_snd_buf_ptr = NULL;
-                    
-                    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-                    tab_s = buffer_locksamples(snd_object);
-                    if (!tab_s)		// buffer samples were not accessible
-                        goto zero;
-                    size_s = buffer_getframecount(snd_object);
-					
-					#ifdef DEBUG
-						post("%s: sound buffer pointer updated", OBJECT_NAME);
-					#endif /* DEBUG */
-				}
-				if (x->next_win_buf_ptr != NULL) {	//added 2002.07.24
-                    buffer_unlocksamples(win_object);
-                    x->win_buf_ptr = x->next_win_buf_ptr;
-                    x->next_win_buf_ptr = NULL;
-                    
-                    win_object = buffer_ref_getobject(x->win_buf_ptr);
-                    tab_w = buffer_locksamples(win_object);
-                    if (!tab_w)	{	// buffer samples were not accessible
-                        goto zero;
-                    }
-                    size_w = buffer_getframecount(win_object);
-					
-					#ifdef DEBUG
-						post("%s: window buffer pointer updated", OBJECT_NAME);
-					#endif /* DEBUG */
-				}
-				
-				//
-				//
-				
-				x->grain_direction = x->next_grain_direction;
-				g_direction = x->grain_direction;
-				
-				// test if freq should be at audio or control rate
-				if (x->grain_freq_connected) { // if freq is at audio rate
-					if (*in_freq != 0.0) x->grain_freq = *in_freq;
-				} else { // if freq is at control rate
-					if (x->next_grain_freq != 0.0) x->grain_freq = x->next_grain_freq;
-				}
-				x->grain_length = 1000.0 / x->grain_freq;
-				
-				// test if pitch should be at audio or control rate
-				if (x->grain_pitch_connected) { // if pitch is at audio rate
-					x->grain_pitch = *in_pitch_mult;
-				} else { // if pitch is at control rate
-					x->grain_pitch = x->next_grain_pitch;
-				}
-				x->grain_sound_length = x->grain_length * x->grain_pitch;
-				
-				// test if pos_start should be at audio or control rate
-				if (x->grain_pos_start_connected) { // if position is at audio rate
-					if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = *in_pos_start * buffer_getmillisamplerate(snd_object);
-					} else {	// if reverse...
-						x->grain_pos_start = (*in_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
-					}
-				} else { // if position is at control rate
-					if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-						x->grain_pos_start = x->next_grain_pos_start * buffer_getmillisamplerate(snd_object);
-					} else {	// if reverse...
-						x->grain_pos_start = (x->next_grain_pos_start + x->grain_sound_length) * buffer_getmillisamplerate(snd_object);
-					}
-				}
-				// compute window buffer step size per vector sample 
-				x->win_step_size = size_w * x->grain_freq * out_1oversr;
-				// compute sound buffer step size per vector sample
-				x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * out_1oversr;
-				// reset position tracking variables
-				if (x->grain_direction == FORWARD_GRAINS) {	// if forward...
-					x->curr_snd_pos = x->grain_pos_start - x->snd_step_size;
-				} else {	// if reverse...
-					x->curr_snd_pos = x->grain_pos_start + x->snd_step_size;
-				}
-				x->curr_win_pos = 0.0;
-				// reset history
-				//x->snd_last_out = x->win_last_out = 0.0;	//removed 2005.02.03
-				
-				// update local vars
-				s_step_size = x->snd_step_size;
-				w_step_size = x->win_step_size;
-				index_s = x->curr_snd_pos;
-				index_w = x->curr_win_pos;
-				
-				#ifdef DEBUG
-					post("%s: beginning of grain", OBJECT_NAME);
-				#endif /* DEBUG */
-					
-			}
-		}
-		
-		/* sound index is a double because it uses interp */
-		if (g_direction == FORWARD_GRAINS) {	// if forward...
-			index_s += s_step_size;		// add to sound index
-		} else {	// if reverse...
-			index_s -= s_step_size;		// subtract from sound index
-		}
-		
-		/* check bounds of sound index */
-		while (index_s < 0)
-			index_s += size_s;
-		while (index_s >= size_s)
-			index_s -= size_s;
-		
-		//WINDOW OUT
-		
-		/* handle temporary vars for interpolation */
-		temp_index_int = (long)(index_w); // integer portion of index
-		temp_index_frac = index_w - (double)temp_index_int; // fractional portion of index
-		
-		/*
-		if (nc_w > 1) // if buffer has multiple channels...
-		{
-			// get index to sample from within the interleaved frame
-			temp_index_int = temp_index_int * nc_w + chan_w;
-		}
-		*/
-		
-		switch (interp_w) {
-			case INTERP_ON:
-				// perform linear interpolation on window buffer output
-				win_out = mcLinearInterp(tab_w, temp_index_int, temp_index_frac, size_w, 1);
-				break;
-			case INTERP_OFF:
-				// interpolation sounds better than following, but uses more CPU
-				win_out = tab_w[temp_index_int];
-				break;
-		}
-		
-		//SOUND OUT
-		
-		/* handle temporary vars for interpolation */
-		temp_index_int = (long)(index_s); // integer portion of index
-		temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
-		
-		/*
-		if (nc_s > 1) // if buffer has multiple channels...
-		{
-			// get index to sample from within the interleaved frame
-			temp_index_int = temp_index_int * nc_s + chan_s;
-		}
-		*/
-		
-		switch (interp_s) {
-			case INTERP_ON:
-				// perform linear interpolation on sound buffer output
-				snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
-				break;
-			case INTERP_OFF:
-				// interpolation sounds better than following, but uses more CPU
-				snd_out = tab_s[temp_index_int];
-				break;
-		}
-		
-		/* multiply snd_out by win_out */
-		*++out = snd_out * win_out;
-		
-		/* update last output variables */
-		//last_s = snd_out;	//removed 2005.02.03
-		//last_w = win_out;	//removed 2005.02.03
-		last_index_w = index_w;
-		
-		/* advance other pointers */
-		++in_freq, ++in_pos_start, ++in_pitch_mult;
-	}
-	
-	/* update global position and step_size vars */
-	x->curr_snd_pos = index_s;
-	x->curr_win_pos = index_w;
-	x->snd_step_size = s_step_size;
-	x->win_step_size = w_step_size;
-	
-	/* update last output variables */
-	//x->snd_last_out = last_s;	//removed 2005.02.03
-	//x->win_last_out = last_w;	//removed 2005.02.03
-	x->win_last_index = index_w;
-	
-    buffer_unlocksamples(snd_object);
-    buffer_unlocksamples(win_object);
-	
-	return (w + 7);
-	
-zero:
-	while (--vec_size >= 0) *++out = 0.;
-out:
-	return (w + 7);
-}
-
-/********************************************************************************
-t_int *grainstream_perform0(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "grainstream_dsp"
-description:	called at interrupt level to compute object's output; used when
-		nothing is connected to output; saves CPU cycles
-returns:		pointer to the next 
-********************************************************************************/
-t_int *grainstream_perform0(t_int *w)
-{
-	t_float *out = (t_float *)(w[1]);
-	int vec_size = (int)(w[2]);
-
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-
-	while (--vec_size >= 0) {
-		*++out = 0.;
-	}
-
-	return (w + 3);
-}
 
 /********************************************************************************
  void *grainstream_perform64zero()
@@ -631,17 +291,17 @@ void grainstream_perform64(t_grainstream *x, t_object *dsp64, double **ins, long
                           long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars outlets and inlets
-    t_double *in_freq = ins[0];
-    t_double *in_sound_start = ins[1];
-    t_double *in_sample_increment = ins[2];
-    t_double *in_gain = ins[3];
-    t_double *out_signal = outs[0];
-    t_double *out_signal2 = outs[1];
-    t_double *out_sample_count = outs[2];
+    double *in_freq = ins[0];
+    double *in_sound_start = ins[1];
+    double *in_sample_increment = ins[2];
+    double *in_gain = ins[3];
+    double *out_signal = outs[0];
+    double *out_signal2 = outs[1];
+    double *out_sample_count = outs[2];
     
     // local vars for snd and win buffer
     t_buffer_obj *snd_object, *win_object;
-    t_float *tab_s, *tab_w;
+    float *tab_s, *tab_w;
     double snd_out, win_out;
     long size_s, size_w;
     
@@ -843,7 +503,7 @@ out:
 void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, float in_pitch_mult, float in_gain_mult)
 {
     #ifdef DEBUG
-        post("%s: initializing grain", OBJECT_NAME);
+        object_post((t_object*)x, "%s: initializing grain", OBJECT_NAME);
     #endif /* DEBUG */
     
     /* should the buffers be updated ? */
@@ -856,7 +516,7 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
         x->next_snd_buf_ptr = NULL;
         
         #ifdef DEBUG
-            post("%s: sound buffer pointer updated", OBJECT_NAME);
+            object_post((t_object*)x, "%s: sound buffer pointer updated", OBJECT_NAME);
         #endif /* DEBUG */
     }
     if (x->next_win_buf_ptr != NULL) {
@@ -864,7 +524,7 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
         x->next_win_buf_ptr = NULL;
         
         #ifdef DEBUG
-            post("%s: window buffer pointer updated", OBJECT_NAME);
+            object_post((t_object*)x, "%s: window buffer pointer updated", OBJECT_NAME);
         #endif /* DEBUG */
     }
     
@@ -918,9 +578,9 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     x->curr_count_samp = -1;
     
     #ifdef DEBUG
-        post("%s: beginning of grain", OBJECT_NAME);
-        post("%s: win step size = %f samps", OBJECT_NAME, x->win_step_size);
-        post("%s: snd step size = %f samps", OBJECT_NAME, x->snd_step_size);
+        object_post((t_object*)x, "%s: beginning of grain", OBJECT_NAME);
+        object_post((t_object*)x, "%s: win step size = %f samps", OBJECT_NAME, x->win_step_size);
+        object_post((t_object*)x, "%s: snd step size = %f samps", OBJECT_NAME, x->snd_step_size);
     #endif /* DEBUG */
     
     return;
@@ -944,7 +604,7 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // if first buffer make current buffer
@@ -953,7 +613,7 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
 				//x->snd_last_out = 0.0;	//removed 2005.02.03
 				
 				#ifdef DEBUG
-					post("%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->snd_sym = s;
@@ -962,12 +622,12 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
 				//x->snd_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					post("%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
 		x->next_snd_buf_ptr = NULL;
 	}
 }
@@ -988,7 +648,7 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->win_buf_ptr == NULL) { // if first buffer make current buffer
@@ -998,7 +658,7 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
 				x->win_last_index = buffer_getframecount(b_object);
 				
 				#ifdef DEBUG
-					post("%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->win_sym = s;
@@ -1007,12 +667,12 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
 				//x->win_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					post("%s: next window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: next window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		error("%s: no buffer~ > %s < found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "%s: no buffer~ > %s < found", OBJECT_NAME, s->s_name);
 		x->next_win_buf_ptr = NULL;
 	}
 }
@@ -1044,7 +704,7 @@ void grainstream_float(t_grainstream *x, double f)
             x->next_grain_gain = f;
             break;
         default:
-            post("%s: inlet does not accept floats", OBJECT_NAME);
+            object_post((t_object*)x, "%s: inlet does not accept floats", OBJECT_NAME);
             break;
     }
 }
@@ -1076,7 +736,7 @@ void grainstream_int(t_grainstream *x, long l)
             x->next_grain_gain = (double)l;
             break;
         default:
-            post("%s: inlet does not accept ints", OBJECT_NAME);
+            object_post((t_object*)x, "%s: inlet does not accept ints", OBJECT_NAME);
             break;
     }
 }
@@ -1096,15 +756,15 @@ void grainstream_sndInterp(t_grainstream *x, long l)
 	if (l == INTERP_OFF) {
 		x->snd_interp = INTERP_OFF;
 		#ifdef DEBUG
-			post("%s: sndInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "%s: sndInterp is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->snd_interp = INTERP_ON;
 		#ifdef DEBUG
-			post("%s: sndInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "%s: sndInterp is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: sndInterp message was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "%s: sndInterp message was not understood", OBJECT_NAME);
 	}
 }
 
@@ -1123,15 +783,15 @@ void grainstream_winInterp(t_grainstream *x, long l)
 	if (l == INTERP_OFF) {
 		x->win_interp = INTERP_OFF;
 		#ifdef DEBUG
-			post("%s: winInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "%s: winInterp is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->win_interp = INTERP_ON;
 		#ifdef DEBUG
-			post("%s: winInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "%s: winInterp is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: winInterp was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "%s: winInterp was not understood", OBJECT_NAME);
 	}
 }
 
@@ -1149,15 +809,15 @@ void grainstream_reverse(t_grainstream *x, long l)
 	if (l == REVERSE_GRAINS) {
 		x->next_grain_direction = REVERSE_GRAINS;
 		#ifdef DEBUG
-			post("%s: reverse is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "%s: reverse is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == FORWARD_GRAINS) {
 		x->next_grain_direction = FORWARD_GRAINS;
 		#ifdef DEBUG
-			post("%s: reverse is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "%s: reverse is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: reverse was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "%s: reverse was not understood", OBJECT_NAME);
 	}
 	
 }
@@ -1222,8 +882,8 @@ returns:		nothing
 ********************************************************************************/
 void grainstream_getinfo(t_grainstream *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
 

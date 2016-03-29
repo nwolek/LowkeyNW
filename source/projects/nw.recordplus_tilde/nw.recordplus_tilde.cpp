@@ -11,12 +11,7 @@
 **
 */
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include "ext_buffer.h"		// required to deal with buffer object
-#include "ext_systime.h"// required to get ticks
-#include <string.h>
+#include "c74_msp.h"
 
 //#define DEBUG			//enable debugging messages
 
@@ -68,10 +63,7 @@ typedef struct _recordplus
 } t_recordplus;
 
 void *recordplus_new(t_symbol *snd);
-t_int *recordplus_perform(t_int *w);
-t_int *recordplus_perform0(t_int *w);
 void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
-void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count);
 void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void recordplus_setbuff(t_recordplus *x, t_symbol *s);
 short recordplus_updatebuff(t_recordplus *x);
@@ -96,8 +88,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)recordplus_new, (method)dsp_free,
                   (short)sizeof(t_recordplus), 0L, A_SYM, 0);
     class_dspinit(c); // add standard functions to class
-    
-	class_addmethod(c, (method)recordplus_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "recordplus_setbuff" to the 'set' message */
 	class_addmethod(c, (method)recordplus_setbuff, "set", A_SYM, 0);
@@ -114,7 +104,7 @@ int C74_EXPORT main(void)
     /* bind method "recordplus_dsp64" to the dsp64 message */
     class_addmethod(c, (method)recordplus_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     recordplus_class = c;
     
 	/* needed for 'buffer~' work, checks for validity of buffer specified */
@@ -161,45 +151,6 @@ void *recordplus_new(t_symbol *snd)
 	return (x);
 }
 
-/********************************************************************************
-void recordplus_dsp(t_cpPan *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count)
-{
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    /* set buffers */
-	recordplus_setbuff(x, x->snd_sym);
-	
-	x->input_sr = sp[1]->s_sr;
-	x->input_1oversr = 1.0 / x->input_sr;
-	x->input_msr = x->input_sr * 0.001;
-	
-	if (count[1] && count[0]) {	// if inputs connected..
-		// output is computed
-		dsp_add(recordplus_perform, 5, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
-			sp[1]->s_n);
-		#ifdef DEBUG
-			post("%s: output is being computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	} else {					// if not...
-		// no output computed
-		//dsp_add(recordplus_perform0, 2, sp[4]->s_vec, sp[4]->s_n);
-		#ifdef DEBUG
-			post("%s: no output computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	}
-	
-}
 
 /********************************************************************************
  void recordplus_dsp64()
@@ -216,7 +167,7 @@ void recordplus_dsp(t_recordplus *x, t_signal **sp, short *count)
 void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
 {
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     // set buffer
@@ -229,201 +180,17 @@ void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double sam
     
     if (count[1] && count[0]) { // if both inputs connected
         #ifdef DEBUG
-            post("%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)recordplus_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            post("%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
         #endif /* DEBUG */
     }
     
 }
 
-/********************************************************************************
-t_int *recordplus_perform(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "recordplus_dsp"
-description:	called at interrupt level to compute object's output; used when
-		outlets are connected; tests inlet 2 3 & 4 to use either control or audio
-		rate data
-returns:		pointer to the next 
-********************************************************************************/
-t_int *recordplus_perform(t_int *w)
-{
-	t_recordplus *x = (t_recordplus *)(w[1]);
-	float *in_ctrl = (float *)(w[2]);
-	float *in_signal = (float *)(w[3]);
-	t_float *out = (t_float *)(w[4]);
-	int vec_size = (int)(w[5]);
-    t_buffer_obj *snd_object;
-	short r_stage;
-	double lc_in, ls_in, sync_v, sync_s;
-	long r_pos, s_size;
-	float *s_tab;
-	long saverpos;
-	
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-	
-	/* check to make sure buffers are loaded with proper file types*/
-	if (x->x_obj.z_disabled)						// object is enabled
-		goto out;
-	if (x->snd_buf_ref == NULL)		// buffer pointers are defined
-		goto zero;
-	
-    // get sound buffer info
-    snd_object = buffer_ref_getobject(x->snd_buf_ref);
-    s_tab = buffer_locksamples(snd_object);
-    if (!s_tab)		// buffer samples were not accessible
-        goto zero;
-    s_size = buffer_getframecount(snd_object);
-	
-	// assign values to local vars
-	r_stage = x->rec_stage;
-	lc_in = x->last_ctrl_in;
-	ls_in = x->last_sig_in;
-	sync_v = x->sync_val;
-	sync_s = x->sync_step;
-	r_pos = x->rec_position;
-	
-	// track r_pos to see if we wrote anything
-	saverpos = r_pos;
-	
-	while (--vec_size) {
-		
-		// test ctrl input
-		if ((lc_in == 0.) != (*in_ctrl == 0.)) // change in control
-		{
-			switch (r_stage)
-			{
-				case REC_OFF:
-					++r_stage; // MONITOR_ON
-					if (recordplus_updatebuff(x)) 
-					{
-						// old the current samples
-                        buffer_unlocksamples(snd_object);
-						
-                        // get new sound buffer info
-                        snd_object = buffer_ref_getobject(x->snd_buf_ref);
-                        s_tab = buffer_locksamples(snd_object);
-                        if (!s_tab)		// buffer samples were not accessible
-                            goto zero;
-                        s_size = buffer_getframecount(snd_object);
-                        
-                        // update tracking vars
-						sync_v = x->sync_val;
-						sync_s = x->sync_step;
-						r_pos = x->rec_position;
-						
-					}
-					break;
-				case MONITOR_ON:
-					--r_stage; // REC_OFF
-					break;
-				case REC_ON:
-					++r_stage; // MONITOR_OFF
-					break;
-				case MONITOR_OFF:
-					--r_stage; // REC_ON
-					break;
-			}
-		}
-		
-		// test for positive zero-crossing
-		if (r_stage % 2) // if MONITOR_ON or MONITOR_OFF
-		{
-			if (ls_in < 0. && *in_signal >= 0.)
-			{
-				switch (r_stage)
-				{
-					case MONITOR_ON:
-						++r_stage; // REC_ON
-						break;
-					case MONITOR_OFF:
-						r_stage = REC_OFF;
-						break;
-				}
-			}
-		}
-		
-		// record under right conditions
-		if (r_stage > MONITOR_ON) // REC_ON or MONITOR_OFF
-		{
-			
-			s_tab[r_pos] = *in_signal;
-			
-			++r_pos;
-			while (r_pos > s_size) 
-			{
-				r_pos = 0;
-			}
-			
-			sync_v += sync_s;
-			while (sync_v > 1.0) 
-			{
-				sync_v = 0.0;
-			}
-		}
-		
-		// update history
-		lc_in = *in_ctrl;
-		ls_in = *in_signal;
-		
-		// advance other pointers
-		++in_ctrl, ++in_signal;
-		
-		// update sync output
-		*++out = sync_v;
-		
-	}
-	
-	// update modtime
-	if (r_pos > saverpos)
-		buffer_setdirty(snd_object);
-	
-	// update global vars
-	x->rec_stage = r_stage;
-	x->last_ctrl_in = lc_in;
-	x->last_sig_in = ls_in;
-	x->sync_val = sync_v;
-	x->rec_position = r_pos;
-	
-	// unlock samples
-    buffer_unlocksamples(snd_object);
-	
-	return (w + 6);
-
-zero:
-		while (--vec_size) {
-			*++out = 0.0;
-		}
-out:
-		return (w + 6);
-}	
-
-/********************************************************************************
-t_int *recordplus_perform0(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "recordplus_dsp"
-description:	called at interrupt level to compute object's output; used when
-		nothing is connected to output; saves CPU cycles
-returns:		pointer to the next 
-********************************************************************************/
-t_int *recordplus_perform0(t_int *w)
-{
-	t_float *out = (t_float *)(w[1]);
-	int vec_size = (int)(w[2]);
-
-	vec_size += 1;		//increase by one for pre-decrement
-	--out;				//decrease by one for pre-increment
-
-	while (--vec_size >= 0) {
-		*++out = 0.;
-	}
-
-	return (w + 3);
-}
 
 /********************************************************************************
  void *recordplus_perform64()
@@ -444,13 +211,13 @@ t_int *recordplus_perform0(t_int *w)
 void recordplus_perform64(t_recordplus *x, t_object *dsp64, double **ins, long numins, double **outs, long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars outlets and inlets
-    t_double *in_ctrl = ins[0];
-    t_double *in_signal = ins[1];
-    t_double *out_sync = outs[0];
+    double *in_ctrl = ins[0];
+    double *in_signal = ins[1];
+    double *out_sync = outs[0];
     
     // local vars for snd buffer
     t_buffer_obj *snd_object;
-    t_float *s_tab;
+    float *s_tab;
     long s_size, r_pos;
     
     // local vars for object vars and while loop
@@ -616,7 +383,7 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ref = NULL;
 		} else {
 			if (x->snd_buf_ref == NULL) { // if first buffer make current buffer
@@ -627,7 +394,7 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 				x->snd_buf_ref = b;			// last so that all is ready
 				
 				#ifdef DEBUG
-					post("%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				if (b != x->snd_buf_ref) // if it is not the same as current
@@ -637,13 +404,13 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 					x->next_snd_buf_ref = b;	// last so that all is ready
 					
 					#ifdef DEBUG
-						post("%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+						object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 					#endif /* DEBUG */
 				}
 			}
 		}
 	} else {
-		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
 		x->next_snd_buf_ref = NULL;
 	}
 }
@@ -667,7 +434,7 @@ short recordplus_updatebuff(t_recordplus *x)
 		x->next_snd_buf_ref = NULL;
 		
 		#ifdef DEBUG
-			post("%s: new buffer~ > %s < is being used", OBJECT_NAME, x->snd_sym);
+			object_post((t_object*)x, "%s: new buffer~ > %s < is being used", OBJECT_NAME, x->snd_sym);
 		#endif /* DEBUG */
 		
 		return true;
@@ -697,7 +464,7 @@ void recordplus_resetcurrentbuff(t_recordplus *x)
         // then feeding the current buffer symbol to this object will reset vars
         recordplus_setbuff(x,x->snd_sym);
     } else {
-        post("%s: recording must be off to clear", OBJECT_NAME);
+        object_post((t_object*)x, "%s: recording must be off to clear", OBJECT_NAME);
     }
     
 }
@@ -736,7 +503,7 @@ void recordplus_assist(t_recordplus *x, t_object *b, long msg, long arg, char *s
 	}
 	
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -751,6 +518,6 @@ returns:		nothing
 ********************************************************************************/
 void recordplus_getinfo(t_recordplus *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }

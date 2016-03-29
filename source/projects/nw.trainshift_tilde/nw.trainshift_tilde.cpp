@@ -11,10 +11,7 @@
 */
 
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include <string.h>
+#include "c74_msp.h"
 
 //#define DEBUG			//enable debugging messages
 
@@ -49,10 +46,8 @@ typedef struct _trainShift
 /* method definitions for this object */
 void trainShift_setIndexArray(t_trainShift *x);
 void *trainShift_new(long outlets);
-void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count);
 void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double samplerate,
                       long maxvectorsize, long flags);
-t_int *trainShift_perform(t_int *w);
 void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void trainShift_float(t_trainShift *x, double f);
 void trainShift_int(t_trainShift *x, long l);
@@ -75,8 +70,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)trainShift_new, (method)dsp_free, (short)sizeof(t_trainShift), 0L,
 				A_DEFLONG, 0);
     class_dspinit(c); // add standard functions to class
-    
-	class_addmethod(c, (method)trainShift_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "trainShift_float" to the float message */
 	class_addmethod(c, (method)trainShift_float, "float", A_FLOAT, 0);
@@ -93,11 +86,11 @@ int C74_EXPORT main(void)
     /* bind method "trainShift_dsp64" to the dsp64 message */
     class_addmethod(c, (method)trainShift_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     trainshift_class = c;
 	
 	#ifdef DEBUG
-		post("%s: main function was called", OBJECT_NAME);
+		object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
 	#endif /* DEBUG */
     
     return 0;
@@ -128,7 +121,7 @@ void trainShift_setIndexArray(t_trainShift *x)
 	}
 	
 	#ifdef DEBUG
-		post("%s: pointers set", OBJECT_NAME);
+		object_post((t_object*)x, "%s: pointers set", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -164,61 +157,13 @@ void *trainShift_new(long outlets)
 	x->ts_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        post("%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
     #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
 	return (x);
 }
 
-/********************************************************************************
-void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void trainShift_dsp(t_trainShift *x, t_signal **sp, short *count)
-{
-    
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    long i;
-	
-	void *v[VEC_SIZE];
-	
-	// check if inlets are connected at audio rate
-	x->ts_interval_connected = count[0];
-	x->ts_width_connected = count[1];
-	
-    x->ts_samp_rate = sp[2]->s_sr;
-	x->ts_shortest_pulse = 2000.0 / x->ts_samp_rate;
-	
-    // TODO: not sure this is needed, since constraints happen in float and perform methods
-	if (x->ts_interval_ms < x->ts_shortest_pulse)
-		x->ts_interval_ms = x->ts_shortest_pulse;
-	
-	v[0] = x;
-	v[1] = &(sp[2]->s_n);
-	v[2] = &(sp[2]->s_sr);
-	v[3] = sp[0]->s_vec;
-	v[4] = sp[1]->s_vec;
-	
-	for (i = 0; i < x->ts_outletcount; i++) {
-		v[i+5] = (float *)(sp[i+2]->s_vec);	// get pointers to outputs
-	}
-	
-	dsp_addv(trainShift_perform, VEC_SIZE, v);
-	#ifdef DEBUG
-		post("%s: output sampling rate is %f", OBJECT_NAME, sp[2]->s_sr);
-	#endif /* DEBUG */
-
-}
 
 /********************************************************************************
  void trainShift_dsp64()
@@ -237,7 +182,7 @@ void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double sam
 {
     
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     // check if inlets are connected at audio rate
@@ -253,81 +198,6 @@ void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double sam
 
 }
 
-/********************************************************************************
-t_int *trainShift_perform(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "trainShift_dsp"
-description:	called at interrupt level to compute object's output
-returns:		pointer to the next 
-********************************************************************************/
-t_int *trainShift_perform(t_int *w)
-{
-	t_trainShift *x = (t_trainShift *)(w[1]);	// create local pointer to this object
-	int vector_size = *(int *)(w[2]);			// create lacal var for vector size
-	float samp_rate = *(float *)(w[3]);			// create lacal var for sampling rate
-	float curr_length, curr_width;				// local vars for interval and width
-	float curr_step_size;						// step size for each sample
-	
-	const long outlet_count = x->ts_outletcount;// local var for number of outlets
-	float *outs[OUTLET_MAX];
-	float *currIndex;
-	long n, i;									// count for updating outlets
-	float temp;									// temp var for computations
-	
-	if (x->ts_obj.z_disabled)
-		goto out;
-	
-	if (x->ts_interval_connected) {		// if audio rate connection...
-		temp = *(float *)(w[4]);		// grab audio rate interval input
-		if (temp > x->ts_shortest_pulse) {	// check restrictions...
-			x->ts_interval_ms = temp;	// set global
-		} else {
-			x->ts_interval_ms = x->ts_shortest_pulse;
-		}
-	}
-	curr_length = x->ts_interval_ms;
-	x->ts_step_size = 1000.0 / (curr_length * samp_rate);
-	curr_step_size = x->ts_step_size;
-	
-	if (x->ts_width_connected) {			// if audio rate connection...
-		temp = *(float *)(w[5]);			// grab audio rate width input
-		if (temp >= 0.0 && temp <= 1.0) {	// check restrictions...
-			x->ts_width_ratio = temp;		// set global
-		}
-	}
-	curr_width = x->ts_width_ratio;			// grab control rate width input
-	
-	currIndex = x->ts_currIndex;	// set local var equal to global
-	
-	for (i = 0; i < outlet_count; i++) {	// grab pointers to the outlets
-		outs[i] = (float *)(w[i+6]);
-	}
-	
-	vector_size += 1;
-	while (--vector_size)		// compute for each sample in vector
-	{
-		n = outlet_count;
-		while (--n >= 0) {
-			temp = currIndex[n];	// get ts_table position
-			
-			// check bounds //
-			while (temp < 0.0)
-				temp += 1.0;
-				
-			if (temp <= curr_width) {
-				*(outs[n]) = 1.0;		// save to output
-			} else {
-				*(outs[n]) = 0.0;		// save to output
-			}
-			
-			temp -= curr_step_size;		// advance index
-			currIndex[n] = temp;	// save next index
-			++(outs[n]);			// advance current vector pointer
-		}
-	}
-out:
-	return(w + VEC_SIZE + 1);		// pointer to next vector
-}
 
 /********************************************************************************
  void *trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long numins, double **outs,
@@ -349,9 +219,9 @@ void trainShift_perform64(t_trainShift *x, t_object *dsp64, double **ins, long n
                             long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars for outlets, interval, width, step size and index
-    t_double *curr_out[OUTLET_MAX];
-    t_double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
-    t_double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
+    double *curr_out[OUTLET_MAX];
+    double curr_length = x->ts_interval_connected ? *ins[0] : x->ts_interval_ms;
+    double curr_width = x->ts_width_connected ? *ins[1] : x->ts_width_ratio;
     double curr_step_size;
     float *currIndex = x->ts_currIndex; // TODO: upgrade to double later
     
@@ -425,7 +295,7 @@ void trainShift_float(t_trainShift *x, double f)
 		if (f > x->ts_shortest_pulse) { // if greater than two samples...
 			x->ts_interval_ms = f;				// save interval input
 		} else { // if not...
-			post("%s: pulse interval must be greater than %f", OBJECT_NAME, 
+			object_post((t_object*)x, "%s: pulse interval must be greater than %f", OBJECT_NAME, 
 				x->ts_shortest_pulse);
 			x->ts_interval_ms = x->ts_shortest_pulse;
 		}
@@ -435,12 +305,12 @@ void trainShift_float(t_trainShift *x, double f)
 		if (f >= 0.0 && f <= 1.0) { // if within 0 and 1 bounds...
 			x->ts_width_ratio = f;				// save width input
 		} else { // if not..
-			post("%s: pulse width must be between 0 and 1", OBJECT_NAME);
+			object_post((t_object*)x, "%s: pulse width must be between 0 and 1", OBJECT_NAME);
 		}
 	}
 	else
 	{
-		post("%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -460,18 +330,18 @@ void trainShift_int(t_trainShift *x, long l)
 		if (l > x->ts_shortest_pulse) { // if greater than two samples...
 			x->ts_interval_ms = (double) l;			// save interval input
 		} else { // if not...
-			post("%s: pulse interval must be greater than %f", OBJECT_NAME, 
+			object_post((t_object*)x, "%s: pulse interval must be greater than %f", OBJECT_NAME, 
 				x->ts_shortest_pulse);
 			x->ts_interval_ms = x->ts_shortest_pulse;
 		}
 	}
 	else if (x->ts_obj.z_in == 1) // if second inlet
 	{
-		post("%s: pulse width must be a float between 0 and 1", OBJECT_NAME);
+		object_post((t_object*)x, "%s: pulse width must be a float between 0 and 1", OBJECT_NAME);
 	}
 	else
 	{
-		post("%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -509,7 +379,7 @@ void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s
 	}
 	
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -524,6 +394,6 @@ returns:		nothing
 ********************************************************************************/
 void trainShift_getinfo(t_trainShift *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }
