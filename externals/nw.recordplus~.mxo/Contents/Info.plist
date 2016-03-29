@@ -25,7 +25,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string></string>
+	<string>1.1.beta2</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LSRequiresCarbon</key>
