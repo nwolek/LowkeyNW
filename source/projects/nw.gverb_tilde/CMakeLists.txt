@@ -19,5 +19,10 @@ add_library(
 )
 
 
+if (APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/../../Info.plist.in)
+endif ()
+
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-core/script/max-posttarget.cmake)
 

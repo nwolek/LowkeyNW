@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>nw.cppan~</string>
+	<string>${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
-	<string>com.nathanwolek.nw.cppan~</string>
+	<string>com.nathanwolek.${MACOSX_BUNDLE_EXECUTABLE_NAME}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	
@@ -19,11 +19,11 @@
 	<string>max2</string>
 	
 	<key>CFBundleVersion</key>
-	<string>1.1.beta2</string>
+	<string>@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.beta2</string>
+	<string>@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@</string>
 	<key>CFBundleLongVersionString</key>
-	<string>nw.cppan~ 1.1.beta2 - Copyright © 2001-2016, Nathan Wolek. All rights reserved.</string>
+	<string>${MACOSX_BUNDLE_EXECUTABLE_NAME} @GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@ - Copyright © 2001-2016, Nathan Wolek. All rights reserved.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2001-2016, Nathan Wolek. All rights reserved.</string>
 	
