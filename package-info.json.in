@@ -6,17 +6,18 @@
 	"extends" : "",
 	"extensible" : 0,
 	"homepatcher" : "LowkeyNW-Overview.maxpat",
-	"max_version_max" : "7.2",
-	"max_version_min" : "6.1",
+	"max_version_max" : "none",
+	"max_version_min" : "none",
 	"name" : "LowkeyNW",
 	"os" : 	{
 		"macintosh" : 		{
-			"platform" : [ "x64" ],
-			"min_version" : "10.7.x"
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
 		}
 ,
 		"windows" : 		{
-
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
 		}
 
 	}
