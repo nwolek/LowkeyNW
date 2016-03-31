@@ -1,10 +1,6 @@
 {
 	"author" : "Nathan Wolek",
-	"authors" : [  ],
 	"description" : "Contains updated objects from the Granular Toolkit, a classic stereo reverb and some twists on standard MSP objects that makes them savvy about zero-crossings. ",
-	"displayname" : "",
-	"extends" : "",
-	"extensible" : 0,
 	"homepatcher" : "LowkeyNW-Overview.maxpat",
 	"max_version_max" : "none",
 	"max_version_min" : "none",
@@ -13,26 +9,17 @@
 		"macintosh" : 		{
 			"platform" : [ "ia32", "x64" ],
 			"min_version" : "none"
-		}
-,
+		},
 		"windows" : 		{
 			"platform" : [ "ia32", "x64" ],
 			"min_version" : "none"
 		}
-
-	}
-,
+	},
+	"package_extra" : { 
+		"reverse_domain" : "com.nathanwolek",
+		"copyright" : "Copyright © 2001-2016, Nathan Wolek. All rights reserved."
+	},
 	"tags" : [ "granular", "sampling", "reverb", "zero-crossings" ],
 	"version" : "@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@",
-	"website" : "http://www.nathanwolek.com",
-	"filelist" : 	{
-		"externals" : [ "nw.cppan~.mxo", "nw.gateplus~.mxo", "nw.grainbang~.mxo", "nw.grainphase~.mxo", "nw.grainpulse~.mxo", "nw.grainstream~.mxo", "nw.gverb~.mxo", "nw.phasorshift~.mxo", "nw.pulsesamp~.mxo", "nw.recordplus~.mxo", "nw.trainshift~.mxo" ],
-		"patchers" : [ "buffer-scrub-demo.maxpat", "gate-comparison.maxpat", "module_demo/g_2voice/g_2voice.model.maxhelp", "module_demo/g_2voice/g_2voice.model.maxpat", "module_demo/g_2voice/g_2voice.model.presets.txt", "module_demo/g_2voice/g_2voice.module.maxpat", "module_demo/g_2voice/g_2voice.view.maxpat", "module_demo/readme.md", "record-comparison.maxpat", "reverb-mix-demo.maxpat", "time-stretch-demo.maxpat" ],
-		"help" : [ "nw.cppan~.maxhelp", "nw.gateplus~.maxhelp", "nw.grainbang~.maxhelp", "nw.grainphase~.maxhelp", "nw.grainpulse~.maxhelp", "nw.grainstream~.maxhelp", "nw.gverb~.maxhelp", "nw.phasorshift~.maxhelp", "nw.pulsesamp~.maxhelp", "nw.recordplus~.maxhelp", "nw.trainshift~.maxhelp" ],
-		"media" : [ "grain_windows/3stage-linear_30.aiff", "grain_windows/3stage-linear_50.aiff", "grain_windows/blackman-harris.aiff", "grain_windows/blackman.aiff", "grain_windows/expodec.aiff", "grain_windows/gauss.aiff", "grain_windows/hamming.aiff", "grain_windows/hanning.aiff", "grain_windows/quasi-gauss_30.aiff", "grain_windows/quasi-gauss_50.aiff", "grain_windows/rexpodec.aiff", "grain_windows/triangle.aiff" ],
-		"docs" : [ "nw.cppan~.maxref.xml", "nw.gateplus~.maxref.xml", "nw.grainbang~.maxref.xml", "nw.grainphase~.maxref.xml", "nw.grainpulse~.maxref.xml", "nw.grainstream~.maxref.xml", "nw.gverb~.maxref.xml", "nw.phasorshift~.maxref.xml", "nw.pulsesamp~.maxref.xml", "nw.recordplus~.maxref.xml", "nw.trainshift~.maxref.xml" ],
-		"javascript" : [ "nw.cycle.js" ],
-		"extras" : [ "LowkeyNW-Overview.maxpat" ]
-	}
-
+	"website" : "http://www.nathanwolek.com"
 }
