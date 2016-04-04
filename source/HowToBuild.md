@@ -26,7 +26,7 @@ You will also need to install [CMake](https://cmake.org/download/).
 You can build on the command line using Makefiles, or you can generate an Xcode project and use the GUI to build.
 
 * Xcode: Run `cmake -G Xcode ..` and then open the Xcode project from this "build" folder.
-* Make: Run `cmake ..` and then run `make`
+* Terminal: Run `cmake -G Xcode ..` and then run `cmake --build . --config Release`
 
 ### Windows
 
