@@ -6,21 +6,26 @@
 	"extends" : "",
 	"extensible" : 0,
 	"homepatcher" : "LowkeyNW-Overview.maxpat",
-	"max_version_max" : "7.2",
-	"max_version_min" : "6.1",
+	"max_version_max" : "none",
+	"max_version_min" : "none",
 	"name" : "LowkeyNW",
 	"os" : 	{
 		"macintosh" : 		{
-			"platform" : [ "x64" ],
-			"min_version" : "10.7.x"
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
 		}
 ,
 		"windows" : 		{
-
+			"platform" : [ "ia32", "x64" ],
+			"min_version" : "none"
 		}
 
 	}
 ,
+	"package_extra" : { 
+		"reverse_domain" : "com.nathanwolek",
+		"copyright" : "Copyright (c) 2016 Cycling '74"
+	},
 	"tags" : [ "granular", "sampling", "reverb", "zero-crossings" ],
 	"version" : "1.1.beta2",
 	"website" : "http://www.nathanwolek.com",

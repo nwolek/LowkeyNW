@@ -10,11 +10,7 @@
 **
 */
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include "ext_buffer.h"		// required to deal with buffer object
-#include <string.h>
+#include "c74_msp.h"
 
 //#define DEBUG			//enable debugging messages
 
@@ -82,11 +78,8 @@ typedef struct _nw_pulsesamp
 } t_nw_pulsesamp;
 
 void *nw_pulsesamp_new(t_symbol *snd);
-t_int *nw_pulsesamp_perform(t_int *w);
-t_int *nw_pulsesamp_perform0(t_int *w);
 void nw_pulsesamp_perform64zero(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
-void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count);
 void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags);
 void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s);
 void nw_pulsesamp_float(t_nw_pulsesamp *x, double f);
@@ -116,8 +109,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)nw_pulsesamp_new, (method)dsp_free,
                   (short)sizeof(t_nw_pulsesamp), 0L, A_SYM, 0);
     class_dspinit(c); // add standard functions to class
-    
-    class_addmethod(c, (method)nw_pulsesamp_dsp, "dsp", A_CANT, 0);
 	
 	/* bind method "nw_pulsesamp_setsnd" to the 'set' message */
 	class_addmethod(c, (method)nw_pulsesamp_setsnd, "set", A_SYM, 0);
@@ -143,14 +134,14 @@ int C74_EXPORT main(void)
     /* bind method "nw_pulsesamp_dsp64" to the dsp64 message */
     class_addmethod(c, (method)nw_pulsesamp_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     pulsesamp_class = c;
 	
 	/* needed for 'buffer~' work, checks for validity of buffer specified */
 	ps_buffer = gensym("buffer~");
 	
     #ifdef DEBUG
-        post("%s: main function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
     return 0;
@@ -199,57 +190,6 @@ void *nw_pulsesamp_new(t_symbol *snd)
 	return (x);
 }
 
-/********************************************************************************
-void nw_pulsesamp_dsp(t_cpPan *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void nw_pulsesamp_dsp(t_nw_pulsesamp *x, t_signal **sp, short *count)
-{
-	
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    /* set buffers */
-	nw_pulsesamp_setsnd(x, x->snd_sym);
-	
-	/* set current snd position to 1 more than length */
-    t_buffer_obj *snd_object =  buffer_ref_getobject(x->snd_buf_ptr);
-	x->curr_snd_pos = (float)(buffer_getframecount(snd_object)) + 1.0;
-	
-	/* test inlet 2 and 3 for signal data */
-	x->grain_samp_inc_connected = count[1];
-	x->grain_gain_connected = count[2];
-	x->grain_start_connected = count[3];  // add 2005.10.10
-	x->grain_end_connected = count[4];    // add 2005.10.10
-	
-	x->output_sr = sp[5]->s_sr;				// change 2005.10.10
-	x->output_1oversr = 1.0 / x->output_sr;
-	
-	//set overflow status, added 2002.10.28
-	x->overflow_status = OVERFLOW_OFF;
-	
-	if (count[5] && count[0]) {	// if input and output connected..
-		// output is computed
-		dsp_add(nw_pulsesamp_perform, 9, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
-			sp[5]->s_vec, sp[6]->s_vec, sp[7]->s_vec, sp[8]->s_vec, sp[5]->s_n);
-		#ifdef DEBUG
-			post("%s: output is being computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	} else {					// if not...
-		// no output computed
-		#ifdef DEBUG
-			post("%s: no output computed", OBJECT_NAME);
-		#endif /* DEBUG */
-	}
-	
-}
 
 /********************************************************************************
 void nw_pulsesamp_dsp64()
@@ -268,7 +208,7 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
 {
     
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     /* set buffers */
@@ -288,239 +228,17 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
     
     if (count[5] && count[0]) {	// if input and output connected..
         #ifdef DEBUG
-            post("%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)nw_pulsesamp_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            post("%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
         #endif /* DEBUG */
     }
     
 }
 
-/********************************************************************************
-t_int *nw_pulsesamp_perform(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "nw_pulsesamp_dsp"
-description:	called at interrupt level to compute object's output; used when
-		outlets are connected; tests inlet 2 3 & 4 to use either control or audio
-		rate data
-returns:		pointer to the next 
-********************************************************************************/
-t_int *nw_pulsesamp_perform(t_int *w)
-{
-	t_nw_pulsesamp *x = (t_nw_pulsesamp *)(w[1]);		//pointer to class
-	float *in_pulse = (float *)(w[2]);			//pulse control
-	float *in_samp_inc = (float *)(w[3]);		//sample increment
-	float *in_gain = (float *)(w[4]);			//gain
-	t_float *out = (t_float *)(w[5]);			//signal output
-	t_float *out2 = (t_float *)(w[6]); 			//overflow
-	t_float *out3 = (t_float *)(w[7]); 			//bang/click output; add 2007.04.13
-	t_float *out4 = (t_float *)(w[8]); 			//sample count output; add 2007.04.10
-	int vec_size = (int)(w[9]);					//vector size
-	t_buffer_obj *snd_object;
-	t_float *tab_s;
-	double s_step_size, g_gain, temp_index_frac;
-	float  snd_out, last_s;
-	double index_s, index_s_start, index_s_end;
-	long size_s, count_samp, temp_index_int;
-	short interp_s, g_direction, of_status;
-	float last_pulse;
-	
-	
-	/* check to make sure buffers are loaded with proper file types*/
-	if (x->x_obj.z_disabled)		// object is enabled
-		goto out;
-	if (x->snd_buf_ptr == NULL)		// buffer pointer is defined
-		goto zero;
-	
-    // get buffer info
-    snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-    tab_s = buffer_locksamples(snd_object);
-    if (!tab_s)		// buffer samples were not accessible
-        goto zero;
-    size_s = buffer_getframecount(snd_object);
-    
-	// get interpolation options
-	interp_s = x->snd_interp;
-	
-	// get grain options
-	g_gain = x->grain_gain;
-	g_direction = x->grain_direction;
-	of_status = x->overflow_status;
-	// get pointer info
-	s_step_size = x->snd_step_size;
-	index_s = x->curr_snd_pos;
-	index_s_start = x->grain_start; //add 2005.10.10
-	index_s_end = x->grain_end; //add 2005.10.10
-	// get history from last vector
-	last_s = x->snd_last_out;
-	last_pulse = x->last_pulse_in;		//added 2004.03.15
-	count_samp = x->curr_count_samp;	//added 2007.04.10
-	
-	
-	while (vec_size--) {
-	
-		/* check bounds of window index */
-		if (index_s > size_s) {
-			if (last_pulse == 0.0 && *in_pulse == 1.0) { // if pulse begins...
-				nw_pulsesamp_initGrain(x, *in_samp_inc, *in_gain, 0., 0.);
-				
-				/* set local vars */
-				// get grain options
-				g_gain = x->grain_gain;
-				g_direction = x->grain_direction;
-				// get pointer info
-				s_step_size = x->snd_step_size;
-				index_s = x->curr_snd_pos;
-				index_s_start = x->grain_start; //add 2005.10.10
-				index_s_end = x->grain_end;		// add 2005.10.10
-				// get buffer info
-				snd_object = buffer_ref_getobject(x->snd_buf_ptr);
-                tab_s = buffer_locksamples(snd_object); // TODO: add check for valid table, see index~.c line 66
-                size_s = buffer_getframecount(snd_object);
-				last_s = x->snd_last_out;
-				count_samp = x->curr_count_samp;	//add 2007.04.10
-				
-				//pulse tracking for overflow
-				of_status = OVERFLOW_OFF;
-			} else { // if not...
-				*out++ = 0.0;
-				*out2++ = 0.0;
-				*out3++ = 0.0;	//add 2007.04.10
-				*out4++ = 0.0;	//add 2007.04.10
-				last_pulse = *in_pulse;
-				in_pulse++, in_samp_inc++, in_gain++;
-				continue;
-			}
-		}
-		
-		//pulse tracking for overflow, added 2002.10.29
-		if (!of_status) {
-			if (last_pulse == 1.0 && *in_pulse == 0.0) { // if grain on & pulse ends...
-				of_status = OVERFLOW_ON;	//start overflowing
-			}
-		}
-		
-		/* advance index of buffers */
-		if (g_direction == FORWARD_GRAINS) {	// if forward...
-			index_s += s_step_size;		// add to sound index
-			
-			/* check bounds of buffer index */
-			if (index_s > index_s_end) {			// change 2005.10.10
-				index_s = size_s + s_step_size;
-				*out++ = 0.0;
-				*out2++ = 0.0;
-				*out3++ = 0.0;
-				*out4++ = 0.0;	//add 2007.04.10
-				last_pulse = *in_pulse;
-				in_pulse++, in_samp_inc++, in_gain++;
-				#ifdef DEBUG
-					post("%s: end of grain", OBJECT_NAME);
-				#endif /* DEBUG */
-				continue;
-			}
-			
-		} else {	// if reverse...
-			index_s -= s_step_size;		// subtract from sound index
-			
-			/* check bounds of buffer index */
-			if (index_s < index_s_start) {			// change 2005.10.10
-				index_s = size_s + s_step_size;
-				*out++ = 0.0;
-				*out2++ = 0.0;
-				*out3++ = 0.0;
-				*out4++ = 0.0;	//add 2007.04.10
-				last_pulse = *in_pulse;
-				in_pulse++, in_samp_inc++, in_gain++;
-				#ifdef DEBUG
-					post("%s: end of grain", OBJECT_NAME);
-				#endif /* DEBUG */
-				continue;
-			}
-			
-		}
-		
-        // compute temporary vars for interpolation
-        temp_index_int = (long)(index_s); // integer portion of index
-        temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
-        
-		if (interp_s == INTERP_OFF) {
-			/* interpolation sounds better than following, but uses more CPU */
-			snd_out = tab_s[(long)index_s];
-		} else { // if INTERP_ON //
-			/* perform interpolation on sound buffer output */
-			snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
-		}
-		
-		/* multiply snd_out by win_value */
-		*out++ = snd_out * g_gain;
-		
-		if (of_status) {
-			*out2++ = *in_pulse;
-		} else {
-			*out2++ = 0.0;
-		}
-		
-		if (!count_samp) {	// click with first sample out
-			*out3++ = 1.0;
-		} else {	// otherwise send zero
-			*out3++ = 0.0;
-		}
-		
-		*out4++ = (double)count_samp;	//add 2007.04.10
-		
-		/* update last output variables */
-		last_pulse = *in_pulse;
-		last_s = snd_out;
-		
-		//advance input pointers
-		in_pulse++, in_samp_inc++, in_gain++;
-		count_samp++;	//add 2007.04.10
-	}	
-	
-	/* update last output variables */
-	x->snd_last_out = last_s;
-	x->curr_snd_pos = index_s;
-	x->last_pulse_in = last_pulse;
-	x->overflow_status = of_status;
-	x->curr_count_samp = count_samp;	//added 2007.04.10
-    
-    buffer_unlocksamples(snd_object);
-	return (w + 10);
-
-zero:
-		while (--vec_size) {
-			*out++ = 0.0;
-			*out2++ = -1.0;
-			*out3++ = 0.0;
-			*out4++ = 0.0;	//add 2007.04.10
-		}
-out:
-		return (w + 10);
-}	
-
-/********************************************************************************
-t_int *nw_pulsesamp_perform0(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "nw_pulsesamp_dsp"
-description:	called at interrupt level to compute object's output; used when
-		nothing is connected to output; saves CPU cycles
-returns:		pointer to the next 
-********************************************************************************/
-t_int *nw_pulsesamp_perform0(t_int *w)
-{
-	t_float *out = (t_float *)(w[1]);
-	int vec_size = (int)(w[2]);
-
-	
-	while (vec_size-- >= 0) {
-		*out++ = 0.;
-	}
-
-	return (w + 3);
-}
 
 /********************************************************************************
 void *nw_pulsesamp_perform64zero()
@@ -566,19 +284,19 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                                 long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars outlets and inlets
-    t_double *in_pulse = ins[0];
-    t_double *in_sample_increment = ins[1];
-    t_double *in_gain = ins[2];
-    t_double *in_start = ins[3];
-    t_double *in_end = ins[4];
-    t_double *out_signal = outs[0];
-    t_double *out_signal2 = outs[1];
-    t_double *out_sample_count = outs[2];
-    t_double *out_overflow = outs[3];
+    double *in_pulse = ins[0];
+    double *in_sample_increment = ins[1];
+    double *in_gain = ins[2];
+    double *in_start = ins[3];
+    double *in_end = ins[4];
+    double *out_signal = outs[0];
+    double *out_signal2 = outs[1];
+    double *out_sample_count = outs[2];
+    double *out_overflow = outs[3];
     
     // local vars for snd buffer
     t_buffer_obj *snd_object;
-    t_float *tab_s;
+    float *tab_s;
     float snd_out;
     long size_s;
     
@@ -696,7 +414,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                 *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
-                    post("%s: end of grain", OBJECT_NAME);
+                    object_post((t_object*)x, "%s: end of grain", OBJECT_NAME);
                 #endif /* DEBUG */
                 goto advance_pointers;
             }
@@ -713,7 +431,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
                 *out_sample_count = (double)count_samp;
                 last_pulse = *in_pulse;
                 #ifdef DEBUG
-                    post("%s: end of grain", OBJECT_NAME);
+                    object_post((t_object*)x, "%s: end of grain", OBJECT_NAME);
                 #endif /* DEBUG */
                 goto advance_pointers;
             }
@@ -798,7 +516,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	float in_start, float in_end)
 {
 	#ifdef DEBUG
-		post("%s: initializing grain", OBJECT_NAME);
+		object_post((t_object*)x, "%s: initializing grain", OBJECT_NAME);
 	#endif /* DEBUG */
     
     t_buffer_obj	*snd_object;
@@ -808,7 +526,7 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 		x->next_snd_buf_ptr = NULL;
 		
 		#ifdef DEBUG
-			post("%s: buffer pointer updated", OBJECT_NAME);
+			object_post((t_object*)x, "%s: buffer pointer updated", OBJECT_NAME);
 		#endif /* DEBUG */
 	}
 	
@@ -858,8 +576,8 @@ void nw_pulsesamp_initGrain(t_nw_pulsesamp *x, float in_samp_inc, float in_gain,
 	x->curr_count_samp = -1;
 	
 	#ifdef DEBUG
-		post("%s: beginning of grain", OBJECT_NAME);
-		post("%s: samp_inc = %f samps", OBJECT_NAME, x->snd_step_size);
+		object_post((t_object*)x, "%s: beginning of grain", OBJECT_NAME);
+		object_post((t_object*)x, "%s: samp_inc = %f samps", OBJECT_NAME, x->snd_step_size);
 	#endif /* DEBUG */
 }
 
@@ -879,7 +597,7 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
 		if (buffer_getchannelcount(b_object) != 1) {
-			error("%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // make current buffer
@@ -888,7 +606,7 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 				x->snd_last_out = 0.0;
 				
 				#ifdef DEBUG
-					post("%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			} else { // defer to next buffer
 				x->snd_sym = s;
@@ -897,13 +615,13 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 				//x->snd_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					post("%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
 				#endif /* DEBUG */
 			}
 		}
         
 	} else {
-		error("%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
 		x->next_snd_buf_ptr = NULL;
 	}
 }
@@ -940,7 +658,7 @@ void nw_pulsesamp_float(t_nw_pulsesamp *x, double f)
 	}
 	else
 	{
-		post("%s: this inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: this inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -975,7 +693,7 @@ void nw_pulsesamp_int(t_nw_pulsesamp *x, long l)
 	}
 	else
 	{
-		post("%s: this inlet does not accept ints", OBJECT_NAME);
+		object_post((t_object*)x, "%s: this inlet does not accept ints", OBJECT_NAME);
 	}
 }
 
@@ -994,15 +712,15 @@ void nw_pulsesamp_sndInterp(t_nw_pulsesamp *x, long l)
 	if (l == INTERP_OFF) {
 		x->snd_interp = INTERP_OFF;
 		#ifdef DEBUG
-			post("%s: interpolation is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "%s: interpolation is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->snd_interp = INTERP_ON;
 		#ifdef DEBUG
-			post("%s: interpolation is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "%s: interpolation is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: interpolation message was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "%s: interpolation message was not understood", OBJECT_NAME);
 	}
 }
 
@@ -1020,15 +738,15 @@ void nw_pulsesamp_reverse(t_nw_pulsesamp *x, long l)
 	if (l == REVERSE_GRAINS) {
 		x->next_grain_direction = REVERSE_GRAINS;
 		#ifdef DEBUG
-			post("%s: reverse is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "%s: reverse is set to on", OBJECT_NAME);
 		#endif // DEBUG //
 	} else if (l == FORWARD_GRAINS) {
 		x->next_grain_direction = FORWARD_GRAINS;
 		#ifdef DEBUG
-			post("%s: reverse is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "%s: reverse is set to off", OBJECT_NAME);
 		#endif // DEBUG //
 	} else {
-		error("%s: reverse was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "%s: reverse was not understood", OBJECT_NAME);
 	}
 	
 }
@@ -1083,7 +801,7 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 	}
 	
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -1098,8 +816,8 @@ returns:		nothing
 ********************************************************************************/
 void nw_pulsesamp_getinfo(t_nw_pulsesamp *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
 /********************************************************************************

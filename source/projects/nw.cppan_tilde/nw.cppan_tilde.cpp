@@ -11,11 +11,7 @@
 */
 
 
-#include "ext.h"		// required for all MAX external objects
-#include "ext_obex.h"   // required for new style MAX objects
-#include "z_dsp.h"		// required for all MSP external objects
-#include <math.h>		// required for certain math functions
-#include <string.h>
+#include "c74_msp.h"
 
 //#define DEBUG			//enable debugging messages
 
@@ -48,11 +44,8 @@ typedef struct _cpPan
 /* method definitions for this object */
 void cpPan_fillTables(t_cpPan *x);
 void *cpPan_new(double initial_pos);
-void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count);
 void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
                   long maxvectorsize, long flags);
-t_int *cpPan_perform1(t_int *w);
-t_int *cpPan_perform2(t_int *w);
 void cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void cpPan_perform64a(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,long numouts, long vectorsize, long flags, void *userparam);
 void cpPan_float(t_cpPan *x, double f);
@@ -80,8 +73,6 @@ int C74_EXPORT main(void)
     c = class_new(OBJECT_NAME, (method)cpPan_new, (method)dsp_free, (short)sizeof(t_cpPan), 0L,
                   A_DEFFLOAT, 0);
     class_dspinit(c); // add standard functions to class
-    
-	class_addmethod(c, (method)cpPan_dsp, "dsp", A_CANT, 0);
 	
 	#ifdef DEBUG
 		class_addmethod(c, (method)cpPan_table, "table", A_DEFLONG, 0);
@@ -100,11 +91,11 @@ int C74_EXPORT main(void)
     /* bind method "cpPan_dsp64" to the dsp64 message */
     class_addmethod(c, (method)cpPan_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(CLASS_BOX, c); // register the class w max
+    class_register(C74_CLASS_BOX, c); // register the class w max
     cpPan_class = c;
     
     #ifdef DEBUG
-        post("%s: main function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
     return 0;
@@ -141,7 +132,7 @@ void cpPan_fillTables(t_cpPan *x)
 	}
 	
 	#ifdef DEBUG
-		post("%s: Tables filled", OBJECT_NAME);
+		object_post((t_object*)x, "%s: Tables filled", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -167,47 +158,13 @@ void *cpPan_new(double initial_pos)
 	x->x_obj.z_misc = Z_NO_INPLACE;
 	
     #ifdef DEBUG
-        post("%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
 	/* return a pointer to the new object */
 	return (x);
 }
 
-/********************************************************************************
-void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count)
-
-inputs:			x		-- pointer to this object
-				sp		-- array of pointers to input & output signals
-				count	-- array of shorts detailing number of signals attached
-					to each inlet
-description:	called when DSP call chain is built; adds object to signal flow
-returns:		nothing
-********************************************************************************/
-void cpPan_dsp(t_cpPan *x, t_signal **sp, short *count)
-{
-    
-    #ifdef DEBUG
-        post("%s: adding 32 bit perform method", OBJECT_NAME);
-    #endif /* DEBUG */
-    
-    if (count[1])
-	{
-		dsp_add(cpPan_perform2, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, 
-				sp[3]->s_vec, sp[0]->s_n);
-		#ifdef DEBUG
-			post("%s: pan values are being updated at audio rate", OBJECT_NAME);
-		#endif /* DEBUG */
-	}
-	else
-	{
-		dsp_add(cpPan_perform1, 5, x, sp[0]->s_vec, sp[2]->s_vec, sp[3]->s_vec, 
-				sp[0]->s_n);
-		#ifdef DEBUG
-			post("%s: pan values are being updated at control rate", OBJECT_NAME);
-		#endif /* DEBUG */
-	}
-}
 
 /********************************************************************************
  void cpPan_dsp64()
@@ -226,108 +183,26 @@ void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
 {
     
     #ifdef DEBUG
-        post("%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
     #endif /* DEBUG */
     
     if (count[1])
     {
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64a, 0, NULL);
         #ifdef DEBUG
-            post("%s: pan values are being updated at audio rate", OBJECT_NAME);
+            object_post((t_object*)x, "%s: pan values are being updated at audio rate", OBJECT_NAME);
         #endif /* DEBUG */
     }
     else
     {
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64c, 0, NULL);
         #ifdef DEBUG
-            post("%s: pan values are being updated at control rate", OBJECT_NAME);
+            object_post((t_object*)x, "%s: pan values are being updated at control rate", OBJECT_NAME);
         #endif /* DEBUG */
     }
     
 }
 
-/********************************************************************************
-t_int *cpPan_perform1(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "cpPan_dsp"
-description:	called at interrupt level to compute object's output; used when
-		the panning information is input at the control rate
-returns:		pointer to the next 
-********************************************************************************/
-t_int *cpPan_perform1(t_int *w)
-{
-	float valL, valR;						// initialize value variables for loop
-	
-	t_cpPan *x = (t_cpPan *)(w[1]);			// create local pointer to this object
-	float *in = (float *)(w[2]);			// create local pointer to audio input
-	float *outL = (float *)(w[3]);			// create local pointer to left output
-	float *outR = (float *)(w[4]);			// create local pointer to right output
-	long vector_size = w[5] + 1;				// create lacal var for vector size
-	
-	float multL = x->curr_multL;			// get current left channel multiplier
-	float multR = x->curr_multR;			// get current right channel multiplier
-	
-	while (--vector_size)					// compute for each sample in vector
-	{
-		valL = *in;
-		*outL = multL * valL;				// multiply left value by table value
-		
-		valR = *in;
-		*outR = multR * valR;				// multiply right value by table value
-		
-		++in, ++outL, ++outR;				// advance the pointers
-	}
-	return(w + 6);							// pointer to next argument index
-}
-
-/********************************************************************************
-t_int *cpPan_perform2(t_int *w)
-
-inputs:			w		-- array of signal vectors specified in "cpPan_dsp"
-description:	called at interrupt level to compute object's output; used when
-		the panning information is input at the audio rate
-returns:		pointer to the next 
-********************************************************************************/
-t_int *cpPan_perform2(t_int *w)
-{
-	float valL, valR, pan_val;	
-	long pan_index;							// initialize variables for loop
-	
-	t_cpPan *x = (t_cpPan *)(w[1]);			// create local pointer to this object
-	float *in = (float *)(w[2]);			// create local pointer to audio input
-	float *pan_in = (t_float *)(w[3]);		// create local pointer to pan input
-	float *outL = (float *)(w[4]);			// create local pointer to left output
-	float *outR = (float *)(w[5]);			// create local pointer to right output
-	int vector_size = (int)(w[6]) + 1;		// create lacal var for vector size
-	float *tabL = x->table_left;			// create local pointer to left table
-	float *tabR = x->table_right;			// create local pointer to right table
-	
-	while (--vector_size)					// compute for each sample in vector
-	{
-		pan_val = *pan_in;								// get "pan_val"
-		
-		if (pan_val < 0.0)			// if less than 0
-		{
-			pan_val = 0.0;
-		}
-		else if (pan_val > 1.0)		// if greater than table length
-		{
-			pan_val = 1.0;
-		}
-		
-		pan_index = (long) ((pan_val * (float)(TABLE_SIZE - 1)) + 0.5);	
-											// set "pan_index"
-		
-		valL = *in;
-		*outL = tabL[pan_index] * valL;	// multiply left value by table value
-		
-		valR = *in;
-		*outR = tabR[pan_index] * valR;	// multiply right value by table value
-		
-		++in, ++outL, ++outR, ++pan_in;		// advance the pointers
-	}
-	return(w + 7);							// pointer to next argument index
-}
 
 /********************************************************************************
  void *cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, double **outs,
@@ -349,9 +224,9 @@ void cpPan_perform64c(t_cpPan *x, t_object *dsp64, double **ins, long numins, do
                           long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars
-    t_double *in = ins[0];
-    t_double *outL = outs[0];
-    t_double *outR = outs[1];
+    double *in = ins[0];
+    double *outL = outs[0];
+    double *outR = outs[1];
     double multL = x->curr_multL;			// get current left channel multiplier
     double multR = x->curr_multR;			// get current right channel multiplier
     
@@ -399,10 +274,10 @@ void cpPan_perform64a(t_cpPan *x, t_object *dsp64, double **ins, long numins, do
                       long numouts, long vectorsize, long flags, void *userparam)
 {
     // local vars
-    t_double *in = ins[0];
-    t_double *pan_in = ins[1];
-    t_double *outL = outs[0];
-    t_double *outR = outs[1];
+    double *in = ins[0];
+    double *pan_in = ins[1];
+    double *outL = outs[0];
+    double *outR = outs[1];
     float *tabL = x->table_left;			// create local pointer to left table, TODO: update to doubles
     float *tabR = x->table_right;			// create local pointer to right table, TODO: update to doubles
     
@@ -459,7 +334,7 @@ void cpPan_float(t_cpPan *x, double f)
 	}
 	else if (x->x_obj.z_in == 0)
 	{
-		post("%s: left inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "%s: left inlet does not accept floats", OBJECT_NAME);
 	}
 }
 
@@ -489,7 +364,7 @@ void cpPan_setPosVars(t_cpPan *x, double f)
 	}
 	else
 	{
-		post("%s: pan value is out of range", OBJECT_NAME);	
+		object_post((t_object*)x, "%s: pan value is out of range", OBJECT_NAME);	
 	}
 }
 
@@ -527,7 +402,7 @@ void cpPan_assist(t_cpPan *x, t_object *b, long msg, long arg, char *s)
 		}
 	}
 	#ifdef DEBUG
-		post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
 	#endif /* DEBUG */
 }
 
@@ -542,8 +417,8 @@ returns:		nothing
 ********************************************************************************/
 void cpPan_getinfo(t_cpPan *x)
 {
-	post("%s object by Nathan Wolek", OBJECT_NAME);
-	post("Last updated on %s - www.nathanwolek.com", __DATE__);
+	object_post((t_object*)x, "%s object by Nathan Wolek", OBJECT_NAME);
+	object_post((t_object*)x, "Last updated on %s - www.nathanwolek.com", __DATE__);
 }
 
 /* the following methods are only compiled into the code during debugging*/
@@ -560,14 +435,14 @@ returns:		nothing
 	{
 		if (value >= 0 && value <= (TABLE_SIZE - 1)) 
 		{
-			post("%s: at table position %ld the signal will be multiplied by...", 
+			object_post((t_object*)x, "%s: at table position %ld the signal will be multiplied by...", 
 						OBJECT_NAME, value);
-			post("Left channel: %f", x->table_left[value]);
-			post("Right channel: %f", x->table_right[value]);
+			object_post((t_object*)x, "Left channel: %f", x->table_left[value]);
+			object_post((t_object*)x, "Right channel: %f", x->table_right[value]);
 		}
 		else
 		{
-			post("%s: value %ld is out of array bounds", OBJECT_NAME, value);
+			object_post((t_object*)x, "%s: value %ld is out of array bounds", OBJECT_NAME, value);
 		}
 	}
 	
@@ -580,12 +455,12 @@ returns:		nothing
 ********************************************************************************/
 	void cpPan_position(t_cpPan *x)
 	{
-		post("%s: pan position = %f, table index = %ld", OBJECT_NAME, x->curr_pos, 
+		object_post((t_object*)x, "%s: pan position = %f, table index = %ld", OBJECT_NAME, x->curr_pos, 
 					x->curr_index);
-		post("%s: at this table position, the signal will be multiplied by...", 
+		object_post((t_object*)x, "%s: at this table position, the signal will be multiplied by...", 
 						OBJECT_NAME);
-		post("Left channel: %f", x->curr_multL);
-		post("Right channel: %f", x->curr_multR);
+		object_post((t_object*)x, "Left channel: %f", x->curr_multL);
+		object_post((t_object*)x, "Right channel: %f", x->curr_multR);
 	}
 #endif /* DEBUG */
 

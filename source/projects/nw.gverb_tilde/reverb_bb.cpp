@@ -187,7 +187,7 @@ void rbb_set_shortDelay_delay(rbb_delaybuff_short *info_ptr, long d)
 	else
 	{
 		info_ptr->delayLength = info_ptr->buff_length;
-		post("short delay: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
+		object_post(nullptr, "short delay: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
 	}
 }
 
@@ -287,7 +287,7 @@ void rbb_set_longDelay_delay(rbb_delaybuff_long *info_ptr, long d)
 	else
 	{
 		info_ptr->delayLength = info_ptr->buff_length;
-		post("long delay: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
+		object_post(nullptr, "long delay: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
 	}
 }
 
@@ -404,7 +404,7 @@ void rbb_set_allpassShort_delay(rbb_allpass_short *info_ptr, long d)
 	else
 	{
 		info_ptr->delayLength = info_ptr->buff_length;
-		post("allpass short: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
+		object_post(nullptr, "allpass short: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
 	}
 }
 
@@ -520,7 +520,7 @@ void rbb_set_allpassLong_delay(rbb_allpass_long *info_ptr, long d)
 	else
 	{
 		info_ptr->delayLength = info_ptr->buff_length;
-		post("allpass long: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
+		object_post(nullptr, "allpass long: length %ld invalid, set to max %ld", d, info_ptr->delayLength);
 	}
 }
 
@@ -660,7 +660,7 @@ void rbb_set_allpassMod_delay(rbb_allpass_mod *info_ptr, long d)
 	else
 	{
 		info_ptr->initDelayLength = info_ptr->buff_length - (long)info_ptr->oscDepth + 1;
-		post("allpass long: length %ld invalid, set to max %ld", d, info_ptr->initDelayLength);
+		object_post(nullptr, "allpass long: length %ld invalid, set to max %ld", d, info_ptr->initDelayLength);
 	}
 }
 

@@ -20,8 +20,7 @@
 
 #ifndef __MAXMSP_EXTLIB
 	#define __MAXMSP_EXTLIB
-	#include "ext.h"		// required for all MAX external objects
-	#include "z_dsp.h"		// required for all MSP external objects
+	#include "c74_msp.h"
 #endif /* __MAXMSP_EXTLIB */
 
 #define PI_10 3.141592654
