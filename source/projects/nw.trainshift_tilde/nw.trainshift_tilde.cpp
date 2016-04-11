@@ -13,6 +13,8 @@
 
 #include "c74_msp.h"
 
+using namespace c74::max;
+
 //#define DEBUG			//enable debugging messages
 
 #define OBJECT_NAME		"nw.trainshift~"		// name of the object
@@ -86,7 +88,7 @@ int C74_EXPORT main(void)
     /* bind method "trainShift_dsp64" to the dsp64 message */
     class_addmethod(c, (method)trainShift_dsp64, "dsp64", A_CANT, 0);
 	
-    class_register(C74_CLASS_BOX, c); // register the class w max
+    class_register(CLASS_BOX, c); // register the class w max
     trainshift_class = c;
 	
 	#ifdef DEBUG

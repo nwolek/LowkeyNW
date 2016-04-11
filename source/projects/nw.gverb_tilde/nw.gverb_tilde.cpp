@@ -11,6 +11,7 @@
 */
 
 #include "c74_msp.h"
+using namespace c74::max;
 #include "reverb_bb.h"
 
 //#define DEBUG			//enable debugging messages
@@ -138,7 +139,7 @@ int C74_EXPORT main(void)
     /* bind method "gverb_dsp64" to the dsp64 message */
     class_addmethod(c, (method)gverb_dsp64, "dsp64", A_CANT, 0);
     
-    class_register(C74_CLASS_BOX, c); // register the class w max
+    class_register(CLASS_BOX, c); // register the class w max
     gverb_class = c;
 	
     #ifdef DEBUG

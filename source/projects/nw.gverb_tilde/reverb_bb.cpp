@@ -11,6 +11,8 @@
 
 #include "reverb_bb.h"	// defines structs for reverb network
 
+using namespace c74::max;
+
 /********************************************************************************
 void rbb_init_sinTable(rbb_sintable *info_ptr)
 
