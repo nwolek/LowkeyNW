@@ -1,6 +1,6 @@
 # How To Build
 
-The build system for this project is based on [Max-SDK-Lite](https://github.com/tap/max-sdk-lite).
+The build system for this project is based on the [Max-DevKit](https://github.com/Cycling74/max-devkit).
 
 
 ## Prerequisites
