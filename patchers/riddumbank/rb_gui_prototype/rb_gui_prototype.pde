@@ -92,6 +92,16 @@ void keyPressed() {
   {
     clearPattern();
   }
+  
+  if (key == 'g')
+  {
+    rotatePattern(1);
+  }
+  
+  if (key == 'f')
+  {
+    rotatePattern(-1);
+  }
 }
 
 void clearPattern() {
@@ -126,4 +136,17 @@ void quickFillRandomPattern() {
       pattern[i] = 0.0;
     }
   }
+}
+
+void rotatePattern(int rotateAmount) {
+  float[] newPattern = new float[pattern.length];
+  
+  while (rotateAmount < 0) rotateAmount += pattern.length;
+  
+  for (int i = 0; i < pattern.length; i++) {
+    int j = (i + rotateAmount) % pattern.length;
+    newPattern[j] = pattern[i];
+  }
+  
+  pattern = newPattern;
 }
