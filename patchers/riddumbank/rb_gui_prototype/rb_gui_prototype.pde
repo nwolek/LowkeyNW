@@ -8,9 +8,10 @@ int lastSecond;
 
 Step[] mySteps = new Step[totalSteps];
 float[] pattern = new float[totalSteps];
+float[] markers = new float[totalSteps];
 
 void setup() {
-  size(400,100);
+  size(800,200);
   
   stepWidth = width / columns;
   stepHeight = height / rows;
@@ -36,7 +37,7 @@ void draw() {
   background(255);
   
   for (int i = 0; i < mySteps.length; i++) {
-    mySteps[i].displayBase();
+    mySteps[i].displayBase(markers[i]);
   }
   
   for (int i = 0; i < mySteps.length; i++) {
@@ -71,17 +72,35 @@ void keyPressed(){
   if ('1' <= key && key <= '9')
   {
     int skipRate = key-'0';
-    for (int i = 0; i < mySteps.length; i++) {
-      mySteps[i].updateMark(false);
-    }
+    markers = new float[totalSteps];
     for (int i = 0; i < mySteps.length; i=i+skipRate) {
-      mySteps[i].updateMark(true);
+      markers[i] = 1.0;
     }
   }
   
-  if ('a' <= key && key <= 'z')
+  if (key == 'm')
   {
-    int keyTarget = key-'a';
-    pattern[keyTarget] = 1.0;
+    for (int i = 0; i < markers.length; i++) {
+      if (markers[i] != 0.0 && random(0,100) > 50)
+      {
+        pattern[i] = markers[i];
+      }
+    }
   }
+  
+  if (key == 'M')
+  {
+    for (int i = 0; i < markers.length; i++) {
+      if (markers[i] != 0.0)
+      {
+        pattern[i] = markers[i];
+      }
+    }
+  }
+  
+  if (key == 'c')
+  {
+    pattern = new float[totalSteps];
+  }
+  
 }

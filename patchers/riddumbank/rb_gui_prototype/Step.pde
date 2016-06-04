@@ -2,8 +2,6 @@ class Step {
 
   int w, h;
   int x, y;
-  boolean marked = false;
-  //float value = 0;
 
   Step(int newWidth, int newHeight, int newX, int newY) {
     w = newWidth;
@@ -12,8 +10,8 @@ class Step {
     y = newY;
   }
 
-  void displayBase() {
-    if (marked) {
+  void displayBase(float v) {
+    if (v != 0) {
       fill(100);
     } else {
       fill(200);
@@ -40,7 +38,4 @@ class Step {
     rect(x, y, w, h);
   }
 
-  void updateMark(boolean m) {
-    marked = m;
-  }
 }
