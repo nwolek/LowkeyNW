@@ -2,6 +2,10 @@ class Step {
 
   int w, h;
   int x, y;
+  
+  float fullness = 1.0;
+  float fullnessOffset = 0.5 * (1.0 - fullness);
+  float roundness = 0;
 
   Step(int newWidth, int newHeight, int newX, int newY) {
     w = newWidth;
@@ -19,7 +23,7 @@ class Step {
     stroke(0);
     strokeWeight(3);
     rectMode(CORNER);
-    rect(x, y, w, h);
+    rect(x+fullnessOffset*w, y+fullnessOffset*h, fullness*w, fullness*h, roundness);
   }
 
   void displayPattern(float v) {
@@ -27,7 +31,7 @@ class Step {
       fill(255, 0, 0, 150);
       stroke(255, 0, 0);
       strokeWeight(2);
-      rect(x, y, w, h);
+      rect(x, y, w, h, roundness);
     }
   }
 
@@ -35,7 +39,7 @@ class Step {
     fill(0, 255, 0, 150);
     stroke(0, 255, 0);
     strokeWeight(2);
-    rect(x, y, w, h);
+    rect(x, y, w, h, roundness);
   }
 
 }
