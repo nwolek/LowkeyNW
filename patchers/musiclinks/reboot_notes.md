@@ -12,3 +12,6 @@
 6. durations
 	- limit to "n" only
 
+## questions on 4 April 2017
+1. what if it was called "pitchlinks" to be clearer?
+2. 
