@@ -14,4 +14,5 @@
 
 ## questions on 4 April 2017
 1. what if it was called "pitchlinks" to be clearer?
-2. 
+2. stickiness - should it be based on onsets received or tied to rhythmic loop?
+3. pitch information should be moved to dict.
