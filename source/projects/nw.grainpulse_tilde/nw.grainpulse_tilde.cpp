@@ -78,7 +78,6 @@ typedef struct _grainpulse
 	short grain_pitch_connected;		// <--
 	short grain_gain_connected;			// add 2008.04.22
 	// grain tracking info
-	short grain_stage;
 	long curr_count_samp;
     float last_pulse_in;				// <--
 	double output_sr;					// <--
