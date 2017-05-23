@@ -251,7 +251,7 @@ void grainbang_dsp64(t_grainbang *x, t_object *dsp64, short *count, double sampl
     x->output_1oversr = 1.0 / x->output_sr;
     
     // set stage to no grain
-    x->grain_stage = NO_GRAIN;
+    //x->grain_stage = NO_GRAIN;
     
     if (count[5]) {	// if output connected..
         #ifdef DEBUG
@@ -775,7 +775,7 @@ void grainbang_bang(t_grainbang *x)
 {
 	if (x->x_obj.z_in == 0) // if inlet 1
 	{
-		if (x->grain_stage == NO_GRAIN) {
+		if (sys_getdspstate() && x->grain_stage == NO_GRAIN) {
 			x->grain_stage = NEW_GRAIN;
 			#ifdef DEBUG
 				object_post((t_object*)x, "%s: grain stage set to new grain", OBJECT_NAME);
