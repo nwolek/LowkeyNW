@@ -143,7 +143,7 @@ int C74_EXPORT main(void)
 	ps_buffer = gensym("buffer~");
 	
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+        //object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
     #endif /* DEBUG */
     
     return 0;
