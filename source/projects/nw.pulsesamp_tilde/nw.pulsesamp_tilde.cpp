@@ -301,7 +301,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     float *tab_s;
     float snd_out;
     float snd_out2;
-    long size_s;
+    long size_s, chan_s;
     
     // local vars for object vars and while loop
     double index_s, index_s_start, index_s_end;
@@ -309,7 +309,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     float last_s, last_pulse;
     long count_samp;
     short interp_s, g_direction, of_status;
-    long n, temp_index_int, temp_index_int_times_channelcount;
+    long n, temp_index_int, temp_index_int_times_chan;
     double temp_index_frac;
     
     /* check to make sure buffers are loaded with proper file types*/
@@ -324,6 +324,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     if (!tab_s)		// buffer samples were not accessible
         goto zero;
     size_s = buffer_getframecount(snd_object);
+    chan_s = buffer_getchannelcount(snd_object);
     
     // get snd index info
     index_s_start = x->grain_start;
@@ -447,16 +448,18 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         // compute temporary vars for interpolation
         temp_index_int = (long)(index_s); // integer portion of index
         temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
-        temp_index_int_times_channelcount = temp_index_int * buffer_getchannelcount(snd_object);
+        temp_index_int_times_chan = temp_index_int * chan_s;
         
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
-            snd_out = tab_s[temp_index_int_times_channelcount];
-            snd_out2 = (buffer_getchannelcount(snd_object) == 2) ? tab_s[temp_index_int_times_channelcount+1] : 0.;
+            snd_out = tab_s[temp_index_int_times_chan];
+            snd_out2 = (chan_s == 2) ?
+                tab_s[temp_index_int_times_chan + 1] :
+                0.;
         } else {
-            snd_out = mcLinearInterp(tab_s, temp_index_int_times_channelcount, temp_index_frac, size_s, buffer_getchannelcount(snd_object));
-            snd_out2 = (buffer_getchannelcount(snd_object) == 2) ?
-                mcLinearInterp(tab_s, temp_index_int_times_channelcount+1, temp_index_frac, size_s, buffer_getchannelcount(snd_object)) :
+            snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
+            snd_out2 = (chan_s == 2) ?
+                mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
                 0.;
         }
         
@@ -844,10 +847,10 @@ returns:		interpolated output
 double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_size, short in_chans)
 {
 	double out, sample1, sample2;
-	long index_iP1 = index_i + in_chans;		// corresponding sample in next frame
+    long index_iP1 = index_i + in_chans;		// corresponding sample in next frame
 	
 	// make sure that index_iP1 is not out of range
-	while (index_iP1 >= in_size) index_iP1 -= in_size;
+	while (index_iP1 >= in_size * in_chans) index_iP1 -= in_size;
 	
 	// get samples
 	sample1 = (double)in_array[index_i];
