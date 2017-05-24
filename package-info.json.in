@@ -17,7 +17,7 @@
 	},
 	"package_extra" : { 
 		"reverse_domain" : "com.nathanwolek",
-		"copyright" : "Copyright © 2001-2016, Nathan Wolek. All rights reserved."
+		"copyright" : "Copyright © 2001-2017, Nathan Wolek. All rights reserved."
 	},
 	"tags" : [ "granular", "sampling", "reverb", "zero-crossings" ],
 	"version" : "@GIT_VERSION_MAJ@.@GIT_VERSION_MIN@.@GIT_VERSION_SUB@",
