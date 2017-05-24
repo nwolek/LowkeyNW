@@ -452,10 +452,12 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
             snd_out = tab_s[temp_index_int_times_channelcount];
-            snd_out2 = 0.;
+            snd_out2 = (buffer_getchannelcount(snd_object) == 2) ? tab_s[temp_index_int_times_channelcount+1] : 0.;
         } else {
-            snd_out = mcLinearInterp(tab_s, temp_index_int_times_channelcount, temp_index_frac, size_s, 1);
-            snd_out2 = 0.;
+            snd_out = mcLinearInterp(tab_s, temp_index_int_times_channelcount, temp_index_frac, size_s, buffer_getchannelcount(snd_object));
+            snd_out2 = (buffer_getchannelcount(snd_object) == 2) ?
+                mcLinearInterp(tab_s, temp_index_int_times_channelcount+1, temp_index_frac, size_s, buffer_getchannelcount(snd_object)) :
+                0.;
         }
         
         // multiply snd_out by gain value
@@ -602,8 +604,8 @@ void nw_pulsesamp_setsnd(t_nw_pulsesamp *x, t_symbol *s)
 	if (buffer_ref_exists(b)) {
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
-		if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+		if (buffer_getchannelcount(b_object) > 2) {
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono or stereo", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // make current buffer
