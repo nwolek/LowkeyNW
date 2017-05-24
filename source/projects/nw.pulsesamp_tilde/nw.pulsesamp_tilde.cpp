@@ -300,6 +300,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     t_buffer_obj *snd_object;
     float *tab_s;
     float snd_out;
+    float snd_out2;
     long size_s;
     
     // local vars for object vars and while loop
@@ -308,7 +309,7 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
     float last_s, last_pulse;
     long count_samp;
     short interp_s, g_direction, of_status;
-    long n, temp_index_int;
+    long n, temp_index_int, temp_index_int_times_channelcount;
     double temp_index_frac;
     
     /* check to make sure buffers are loaded with proper file types*/
@@ -446,17 +447,20 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         // compute temporary vars for interpolation
         temp_index_int = (long)(index_s); // integer portion of index
         temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        temp_index_int_times_channelcount = temp_index_int * buffer_getchannelcount(snd_object);
         
         // get value from the snd buffer samples
         if (interp_s == INTERP_OFF) {
-            snd_out = tab_s[(long)index_s];
+            snd_out = tab_s[temp_index_int_times_channelcount];
+            snd_out2 = 0.;
         } else {
-            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+            snd_out = mcLinearInterp(tab_s, temp_index_int_times_channelcount, temp_index_frac, size_s, 1);
+            snd_out2 = 0.;
         }
         
         // multiply snd_out by gain value
         *out_signal = snd_out * g_gain;
-        *out_signal2 = 0.;
+        *out_signal2 = snd_out2 * g_gain;
         
         if (of_status) {
             *out_overflow = *in_pulse;
