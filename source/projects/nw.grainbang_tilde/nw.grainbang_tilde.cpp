@@ -474,10 +474,14 @@ void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long num
         // get value from the snd buffer samples
         if (interp_s == INTERP_ON) {
             snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
-            snd_out2 = 0.;
+            snd_out2 = (chan_s == 2) ?
+                mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
+                0.;
         } else {	// if INTERP_OFF
             snd_out = tab_s[temp_index_int_times_chan];
-            snd_out2 = 0.;
+            snd_out2 = (chan_s == 2) ?
+                tab_s[temp_index_int_times_chan + 1] :
+                0.;
         }
         
         // OUTLETS
