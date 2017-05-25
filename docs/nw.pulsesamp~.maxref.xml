@@ -47,7 +47,7 @@
 			<digest>Audio signal: audio channel 1</digest>
 		</outlet>
 		<outlet id="1" type="signal">
-			<digest>Audio signal: audio channel 2 COMING SOON</digest>
+			<digest>Audio signal: audio channel 2</digest>
 		</outlet>
 		<outlet id="2" type="signal">
 			<digest>Audio signal: sample count since playback started. -1 = no playback.</digest>
@@ -65,6 +65,7 @@
 			</digest>
 			<description>
 				The first argument names the <o>buffer~</o> object whose sample memory is used by this object for playback.
+				For more information about how this sample memory is handled, see documentation for the <m>set</m> message.
 			</description>
 		</objarg>
 	</objarglist>
@@ -133,6 +134,9 @@
 			</digest>
 			<description>
 				The word <m>set</m>, followed by the name of a <o>buffer~</o> object, uses that <o>buffer~</o> for playback.
+				Note that the <o>buffer~</o> object can have up to 2 channels.
+				In the case of 1 channel (mono), the sound produced by both the first and second outlets will be the same.
+				In the case of 2 channels (stereo), the first outlet will playback sound from the first channel (left) and the second outlet will playback sound from the second channel (right).
 				Changes sent by the <m>set</m> message are deferred to the start of the next segment. 
 			</description>
 		</method>

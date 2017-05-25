@@ -451,16 +451,18 @@ void nw_pulsesamp_perform64(t_nw_pulsesamp *x, t_object *dsp64, double **ins, lo
         temp_index_int_times_chan = temp_index_int * chan_s;
         
         // get value from the snd buffer samples
+        // if stereo, get values from each channel
+        // if mono, get one value and copy to both outputs
         if (interp_s == INTERP_OFF) {
             snd_out = tab_s[temp_index_int_times_chan];
             snd_out2 = (chan_s == 2) ?
                 tab_s[temp_index_int_times_chan + 1] :
-                0.;
+                snd_out;
         } else {
             snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
             snd_out2 = (chan_s == 2) ?
                 mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
-                0.;
+                snd_out;
         }
         
         // multiply snd_out by gain value
