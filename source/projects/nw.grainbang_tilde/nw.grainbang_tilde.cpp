@@ -253,7 +253,7 @@ void grainbang_dsp64(t_grainbang *x, t_object *dsp64, short *count, double sampl
     // set stage to no grain
     //x->grain_stage = NO_GRAIN;
     
-    if (count[5]) {	// if output connected..
+    if (count[5] || count[6]) {	// if output 1 or 2 are connected..
         #ifdef DEBUG
             object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
@@ -476,12 +476,12 @@ void grainbang_perform64(t_grainbang *x, t_object *dsp64, double **ins, long num
             snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
             snd_out2 = (chan_s == 2) ?
                 mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
-                0.;
+                snd_out;
         } else {	// if INTERP_OFF
             snd_out = tab_s[temp_index_int_times_chan];
             snd_out2 = (chan_s == 2) ?
                 tab_s[temp_index_int_times_chan + 1] :
-                0.;
+                snd_out;
         }
         
         // OUTLETS
@@ -932,7 +932,7 @@ void grainbang_assist(t_grainbang *x, t_object *b, long msg, long arg, char *s)
                 strcpy(s, "(signal) audio channel 1");
                 break;
             case 1:
-                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                strcpy(s, "(signal) audio channel 2");
                 break;
             case 2:
                 strcpy(s, "(signal) sample count");
