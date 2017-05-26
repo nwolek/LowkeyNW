@@ -228,7 +228,7 @@ void nw_pulsesamp_dsp64(t_nw_pulsesamp *x, t_object *dsp64, short *count, double
     //set overflow status
     x->overflow_status = OVERFLOW_OFF;
     
-    if (count[5] && count[0]) {	// if input and output connected..
+    if (count[5] || count[6]) {	// if output 1 or 2 are connected..
         #ifdef DEBUG
             object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
