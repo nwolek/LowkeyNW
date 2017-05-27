@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 0,
-			"architecture" : "x64",
+			"minor" : 3,
+			"revision" : 1,
+			"architecture" : "x86",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 771.0, 123.0, 616.0, 477.0 ],
+		"rect" : [ 252.0, 107.0, 616.0, 477.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -191,7 +191,7 @@
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 254.0, 236.0, 126.680931, 39.0 ],
-					"presentation_rect" : [ 246.0, 208.0, 126.680931, 39.0 ]
+					"presentation_rect" : [ 254.0, 236.0, 126.680931, 39.0 ]
 				}
 
 			}

@@ -3,13 +3,13 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 0,
-			"revision" : 0,
-			"architecture" : "x64",
+			"minor" : 3,
+			"revision" : 1,
+			"architecture" : "x86",
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 361.0, 356.0, 618.0, 411.0 ],
+		"rect" : [ 143.0, 145.0, 618.0, 411.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -48,7 +48,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 60.0, 168.5, 112.0, 25.0 ],
-					"presentation_rect" : [ 9.666687, 311.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "Play sound file"
 				}
@@ -68,7 +67,6 @@
 					"outlettype" : [ "", "", "int" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 37.0, 171.0, 20.0, 20.0 ],
-					"presentation_rect" : [ 150.666687, 170.5, 0.0, 0.0 ],
 					"rounded" : 60.0,
 					"style" : "",
 					"text" : "3",
@@ -84,22 +82,22 @@
 								"filekind" : "audiofile",
 								"loop" : 0,
 								"content_state" : 								{
-									"mode" : [ "basic" ],
-									"pitchshift" : [ 1.0 ],
-									"formantcorrection" : [ 0 ],
+									"formant" : [ 1.0 ],
 									"play" : [ 0 ],
-									"speed" : [ 1.0 ],
-									"originallength" : [ 0.0, "ticks" ],
+									"slurtime" : [ 0.0 ],
+									"formantcorrection" : [ 0 ],
 									"originallengthms" : [ 0.0 ],
+									"mode" : [ "basic" ],
 									"basictuning" : [ 440 ],
-									"timestretch" : [ 0 ],
-									"pitchshiftcent" : [ 0 ],
-									"followglobaltempo" : [ 0 ],
+									"originallength" : [ 0.0, "ticks" ],
+									"originaltempo" : [ 120.0 ],
+									"speed" : [ 1.0 ],
 									"quality" : [ "basic" ],
 									"pitchcorrection" : [ 0 ],
-									"originaltempo" : [ 120.0 ],
-									"slurtime" : [ 0.0 ],
-									"formant" : [ 1.0 ]
+									"followglobaltempo" : [ 0 ],
+									"pitchshift" : [ 1.0 ],
+									"timestretch" : [ 0 ],
+									"pitchshiftcent" : [ 0 ]
 								}
 
 							}
@@ -278,8 +276,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 265.0, 257.0, 188.013885, 39.0 ],
-					"presentation_rect" : [ 265.0, 252.0, 188.013885, 39.0 ]
+					"patching_rect" : [ 272.0, 256.0, 131.621368, 39.0 ],
+					"presentation_rect" : [ 265.0, 257.0, 131.621368, 39.0 ]
 				}
 
 			}
@@ -370,16 +368,20 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "helpdetails.js",
-				"bootpath" : "/Applications/Max.app/Contents/Resources/C74/help/resources",
-				"patcherrelativepath" : "../../../../../../../Applications/Max.app/Contents/Resources/C74/help/resources",
+				"bootpath" : "C74:/help/resources",
 				"type" : "TEXT",
 				"implicit" : 1
 			}
 , 			{
 				"name" : "helpargs.js",
-				"bootpath" : "/Applications/Max.app/Contents/Resources/C74/help/resources",
-				"patcherrelativepath" : "../../../../../../../Applications/Max.app/Contents/Resources/C74/help/resources",
+				"bootpath" : "C74:/help/resources",
 				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "cherokee.aif",
+				"bootpath" : "C74:/media/msp",
+				"type" : "AIFF",
 				"implicit" : 1
 			}
 , 			{
@@ -387,7 +389,7 @@
 				"type" : "iLaX"
 			}
  ],
-		"embedsnapshot" : 0
+		"autosave" : 0
 	}
 
 }
