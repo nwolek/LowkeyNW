@@ -259,7 +259,7 @@ void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double sam
     // set overflow status
     x->overflow_status = OVERFLOW_OFF;
     
-    if (count[5] && count[0]) {	// if input and output connected..
+    if (count[5] || count[6]) {	// if input and output connected..
         #ifdef DEBUG
             object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
         #endif /* DEBUG */
