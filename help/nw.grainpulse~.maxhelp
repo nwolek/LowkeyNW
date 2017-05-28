@@ -486,8 +486,8 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 358.0, 363.0, 203.712784, 54.0 ],
-					"presentation_rect" : [ 358.0, 363.0, 203.712784, 54.0 ]
+					"patching_rect" : [ 358.0, 363.0, 100.0, 24.0 ],
+					"presentation_rect" : [ 358.0, 363.0, 100.0, 24.0 ]
 				}
 
 			}
@@ -535,7 +535,7 @@
 					"destination" : [ "obj-7", 1 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"source" : [ "obj-1", 0 ]
+					"source" : [ "obj-1", 1 ]
 				}
 
 			}

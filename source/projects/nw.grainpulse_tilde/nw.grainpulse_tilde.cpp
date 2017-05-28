@@ -330,12 +330,12 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     // local vars for snd and win buffer
     t_buffer_obj *snd_object, *win_object;
     float *tab_s, *tab_w;
-    double snd_out, win_out;
-    long size_s, size_w;
+    double snd_out, snd_out2, win_out;
+    long size_s, chan_s, size_w;
     
     // local vars for object vars and while loop
     double index_s, index_w, temp_index_frac;
-    long n, count_samp, temp_index_int;
+    long n, count_samp, temp_index_int, temp_index_int_times_chan;
     double s_step_size, w_step_size, g_gain;
     short interp_s, interp_w, g_direction, of_status;
     float last_pulse;
@@ -352,6 +352,7 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     if (!tab_s)		// buffer samples were not accessible
         goto zero;
     size_s = buffer_getframecount(snd_object);
+    chan_s = buffer_getchannelcount(snd_object);
     
     // get window buffer info
     win_object = buffer_ref_getobject(x->win_buf_ptr);
@@ -490,19 +491,22 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
         // compute temporary vars for interpolation
         temp_index_int = (long)(index_s); // integer portion of index
         temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        temp_index_int_times_chan = temp_index_int * chan_s;
         
         // get value from the snd buffer samples
         if (interp_s == INTERP_ON) {
-            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+            snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
+            snd_out2 = 0.;
         } else {	// if INTERP_OFF
-            snd_out = tab_s[temp_index_int];
+            snd_out = tab_s[temp_index_int_times_chan];
+            snd_out2 = 0.;
         }
         
         // OUTLETS
         
         // multiply snd_out by win_out by gain value
         *out_signal = snd_out * win_out * g_gain;
-        *out_signal2 = 0.;
+        *out_signal2 = snd_out2 * win_out * g_gain;
         
         if (of_status) {
             *out_overflow = *in_pulse;
@@ -681,8 +685,8 @@ void grainpulse_setsnd(t_grainpulse *x, t_symbol *s)
     if (buffer_ref_exists(b)) {
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
-		if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+		if (buffer_getchannelcount(b_object) > 2) {
+			object_error((t_object*)x, "%s: buffer~ > %s < must be mono or stereo", OBJECT_NAME, s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // if first buffer make current buffer
@@ -1005,7 +1009,7 @@ double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_
 	long index_iP1 = index_i + in_chans;		// corresponding sample in next frame
 	
 	// make sure that index_iP1 is not out of range
-	while (index_iP1 >= in_size) index_iP1 -= in_size;
+	while (index_iP1 >= in_size * in_chans) index_iP1 -= in_size;
 	
 	// get samples
 	sample1 = (double)in_array[index_i];
