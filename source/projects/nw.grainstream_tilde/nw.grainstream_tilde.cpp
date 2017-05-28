@@ -867,7 +867,7 @@ void grainstream_assist(t_grainstream *x, t_object *b, long msg, long arg, char 
                 strcpy(s, "(signal) audio channel 1");
                 break;
             case 1:
-                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                strcpy(s, "(signal) audio channel 2");
                 break;
             case 2:
                 strcpy(s, "(signal) sample count");

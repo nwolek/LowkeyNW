@@ -802,7 +802,7 @@ void nw_pulsesamp_assist(t_nw_pulsesamp *x, t_object *b, long msg, long arg, cha
 				strcpy(s, "(signal) audio channel 1");
 				break;
 			case 1:
-				strcpy(s, "(signal) audio channel 2 COMING SOON");
+				strcpy(s, "(signal) audio channel 2");
 				break;
 			case 2:
 				strcpy(s, "(signal) sample count");
