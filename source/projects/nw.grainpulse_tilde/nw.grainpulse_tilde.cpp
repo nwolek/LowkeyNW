@@ -498,12 +498,12 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
             snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
             snd_out2 = (chan_s == 2) ?
                 mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
-                0.;
+                snd_out;
         } else {	// if INTERP_OFF
             snd_out = tab_s[temp_index_int_times_chan];
             snd_out2 = (chan_s == 2) ?
                 tab_s[temp_index_int_times_chan + 1] :
-                0.;
+                snd_out;
         }
         
         // OUTLETS
@@ -962,7 +962,7 @@ void grainpulse_assist(t_grainpulse *x, t_object *b, long msg, long arg, char *s
                 strcpy(s, "(signal) audio channel 1");
                 break;
             case 1:
-                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                strcpy(s, "(signal) audio channel 2");
                 break;
             case 2:
                 strcpy(s, "(signal) sample count");
