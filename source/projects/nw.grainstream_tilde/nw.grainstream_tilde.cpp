@@ -149,7 +149,7 @@ int C74_EXPORT main(void)
 	ps_buffer = gensym("buffer~");
 	
     #ifdef DEBUG
-        //object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+    
     #endif /* DEBUG */
     
     return 0;
@@ -217,7 +217,7 @@ void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double s
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     // set buffers
@@ -236,12 +236,12 @@ void grainstream_dsp64(t_grainstream *x, t_object *dsp64, short *count, double s
     if (count[4] || count[5]) // if either output is connected
     {
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "output is being computed");
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainstream_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "no output computed");
         #endif /* DEBUG */
     }
     
@@ -512,7 +512,7 @@ out:
 void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, float in_pitch_mult, float in_gain_mult)
 {
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: initializing grain", OBJECT_NAME);
+        object_post((t_object*)x, "initializing grain");
     #endif /* DEBUG */
     
     /* should the buffers be updated ? */
@@ -525,7 +525,7 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
         x->next_snd_buf_ptr = NULL;
         
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: sound buffer pointer updated", OBJECT_NAME);
+            object_post((t_object*)x, "sound buffer pointer updated");
         #endif /* DEBUG */
     }
     if (x->next_win_buf_ptr != NULL) {
@@ -533,7 +533,7 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
         x->next_win_buf_ptr = NULL;
         
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: window buffer pointer updated", OBJECT_NAME);
+            object_post((t_object*)x, "window buffer pointer updated");
         #endif /* DEBUG */
     }
     
@@ -587,9 +587,9 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     x->curr_count_samp = -1;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: beginning of grain", OBJECT_NAME);
-        object_post((t_object*)x, "%s: win step size = %f samps", OBJECT_NAME, x->win_step_size);
-        object_post((t_object*)x, "%s: snd step size = %f samps", OBJECT_NAME, x->snd_step_size);
+        object_post((t_object*)x, "beginning of grain");
+        object_post((t_object*)x, "win step size = %f samps", x->win_step_size);
+        object_post((t_object*)x, "snd step size = %f samps", x->snd_step_size);
     #endif /* DEBUG */
     
     return;
@@ -613,7 +613,7 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) > 2) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono or stereo", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "buffer~ > %s < must be mono or stereo", s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // if first buffer make current buffer
@@ -622,7 +622,7 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
 				//x->snd_last_out = 0.0;	//removed 2005.02.03
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "current sound set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->snd_sym = s;
@@ -631,12 +631,12 @@ void grainstream_setsnd(t_grainstream *x, t_symbol *s)
 				//x->snd_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "next sound set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "no buffer~ * %s * found", s->s_name);
 		x->next_snd_buf_ptr = NULL;
 	}
 }
@@ -657,7 +657,7 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "buffer~ > %s < must be mono", s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->win_buf_ptr == NULL) { // if first buffer make current buffer
@@ -667,7 +667,7 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
 				x->win_last_index = buffer_getframecount(b_object);
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "current window set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->win_sym = s;
@@ -676,12 +676,12 @@ void grainstream_setwin(t_grainstream *x, t_symbol *s)
 				//x->win_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: next window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "next window set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		object_error((t_object*)x, "%s: no buffer~ > %s < found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "no buffer~ > %s < found", s->s_name);
 		x->next_win_buf_ptr = NULL;
 	}
 }
@@ -713,7 +713,7 @@ void grainstream_float(t_grainstream *x, double f)
             x->next_grain_gain = f;
             break;
         default:
-            object_post((t_object*)x, "%s: inlet does not accept floats", OBJECT_NAME);
+            object_post((t_object*)x, "that inlet does not accept floats");
             break;
     }
 }
@@ -745,7 +745,7 @@ void grainstream_int(t_grainstream *x, long l)
             x->next_grain_gain = (double)l;
             break;
         default:
-            object_post((t_object*)x, "%s: inlet does not accept ints", OBJECT_NAME);
+            object_post((t_object*)x, "that inlet does not accept ints");
             break;
     }
 }
@@ -765,15 +765,15 @@ void grainstream_sndInterp(t_grainstream *x, long l)
 	if (l == INTERP_OFF) {
 		x->snd_interp = INTERP_OFF;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: sndInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "sndInterp is set to off");
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->snd_interp = INTERP_ON;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: sndInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "sndInterp is set to on");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: sndInterp message was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "sndInterp message was not understood");
 	}
 }
 
@@ -792,15 +792,15 @@ void grainstream_winInterp(t_grainstream *x, long l)
 	if (l == INTERP_OFF) {
 		x->win_interp = INTERP_OFF;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: winInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "winInterp is set to off");
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->win_interp = INTERP_ON;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: winInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "winInterp is set to on");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: winInterp was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "winInterp was not understood");
 	}
 }
 
@@ -818,15 +818,15 @@ void grainstream_reverse(t_grainstream *x, long l)
 	if (l == REVERSE_GRAINS) {
 		x->next_grain_direction = REVERSE_GRAINS;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: reverse is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "reverse is set to on");
 		#endif // DEBUG //
 	} else if (l == FORWARD_GRAINS) {
 		x->next_grain_direction = FORWARD_GRAINS;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: reverse is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "reverse is set to off");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: reverse was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "reverse was not understood");
 	}
 	
 }
@@ -876,7 +876,7 @@ void grainstream_assist(t_grainstream *x, t_object *b, long msg, long arg, char 
     }
 	
 	#ifdef DEBUG
-		//post("%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 

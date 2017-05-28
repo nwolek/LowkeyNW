@@ -143,7 +143,7 @@ int C74_EXPORT main(void)
     gverb_class = c;
 	
     #ifdef DEBUG
-        //object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+    
     #endif /* DEBUG */
     
     return 0;
@@ -185,7 +185,7 @@ void *gverb_new(double d)
 	x->x_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "new function was called");
     #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
@@ -210,7 +210,7 @@ void gverb_dsp64(t_gverb *x, t_object *dsp64, short *count, double samplerate,
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     // check inlet connection
@@ -371,18 +371,18 @@ void gverb_float(t_gverb *x, double f)
 			x->verb_decay_coeff = 
 				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
 			#ifdef DEBUG
-				object_post((t_object*)x, "%s: decay time is %f", OBJECT_NAME, x->verb_decay);
-				object_post((t_object*)x, "%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);
+				object_post((t_object*)x, "decay time is %f", x->verb_decay);
+				object_post((t_object*)x, "decay coeff is %f", x->verb_decay_coeff);
 			#endif /* DEBUG */
 		}
 		else
 		{
-			object_error((t_object*)x, "%s: decay time must be greater than zero", OBJECT_NAME);
+			object_error((t_object*)x, "decay time must be greater than zero");
 		}
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: left inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "left inlet does not accept floats");
 	}
 }
 
@@ -405,18 +405,18 @@ void gverb_int(t_gverb *x, long l)
 			x->verb_decay_coeff = 
 				pow(10.0, (-16416.0 * x->verb_decay_1over * x->output_1overmsr));
 			#ifdef DEBUG
-				object_post((t_object*)x, "%s: decay time is %f", OBJECT_NAME, x->verb_decay);
-				object_post((t_object*)x, "%s: decay coeff is %f", OBJECT_NAME, x->verb_decay_coeff);
+				object_post((t_object*)x, "decay time is %f", x->verb_decay);
+				object_post((t_object*)x, "decay coeff is %f", x->verb_decay_coeff);
 			#endif /* DEBUG */
 		}
 		else
 		{
-			object_error((t_object*)x, "%s: decay time must be greater than zero", OBJECT_NAME);
+			object_error((t_object*)x, "decay time must be greater than zero");
 		}
 	}
 	else
 	{
-		object_error((t_object*)x, "%s: this inlet does not accept integers", OBJECT_NAME);
+		object_error((t_object*)x, "this inlet does not accept integers");
 	}
 }
 
@@ -455,7 +455,7 @@ void gverb_assist(t_gverb *x, t_object *b, long msg, long arg, char *s)
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 
@@ -576,7 +576,7 @@ void gverb_init(t_gverb *x)
 	rbb_set_allpassLong_coeff(apl_ptr + 1, DEC_DIFF_2);
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: lowpass coeff is %f", OBJECT_NAME, (x->lpFilters)->coeff);
+		object_post((t_object*)x, "lowpass coeff is %f", (x->lpFilters)->coeff);
 	#endif /* DEBUG */
 	
 	x->lastout_L = 0.0;

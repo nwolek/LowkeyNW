@@ -97,7 +97,7 @@ int C74_EXPORT main(void)
     cpPan_class = c;
     
     #ifdef DEBUG
-        //object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+        
     #endif /* DEBUG */
     
     return 0;
@@ -134,7 +134,7 @@ void cpPan_fillTables(t_cpPan *x)
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: Tables filled", OBJECT_NAME);
+		object_post((t_object*)x, "Tables filled");
 	#endif /* DEBUG */
 }
 
@@ -160,7 +160,7 @@ void *cpPan_new(double initial_pos)
 	x->x_obj.z_misc = Z_NO_INPLACE;
 	
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "new function was called");
     #endif /* DEBUG */
     
 	/* return a pointer to the new object */
@@ -185,21 +185,21 @@ void cpPan_dsp64(t_cpPan *x, t_object *dsp64, short *count, double samplerate,
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     if (count[1])
     {
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64a, 0, NULL);
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: pan values are being updated at audio rate", OBJECT_NAME);
+            object_post((t_object*)x, "pan values are being updated at audio rate");
         #endif /* DEBUG */
     }
     else
     {
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)cpPan_perform64c, 0, NULL);
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: pan values are being updated at control rate", OBJECT_NAME);
+            object_post((t_object*)x, "pan values are being updated at control rate");
         #endif /* DEBUG */
     }
     
@@ -336,7 +336,7 @@ void cpPan_float(t_cpPan *x, double f)
 	}
 	else if (x->x_obj.z_in == 0)
 	{
-		object_post((t_object*)x, "%s: left inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "left inlet does not accept floats");
 	}
 }
 
@@ -366,7 +366,7 @@ void cpPan_setPosVars(t_cpPan *x, double f)
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: pan value is out of range", OBJECT_NAME);	
+		object_post((t_object*)x, "pan value is out of range");
 	}
 }
 
@@ -404,7 +404,7 @@ void cpPan_assist(t_cpPan *x, t_object *b, long msg, long arg, char *s)
 		}
 	}
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 
@@ -437,14 +437,13 @@ returns:		nothing
 	{
 		if (value >= 0 && value <= (TABLE_SIZE - 1)) 
 		{
-			object_post((t_object*)x, "%s: at table position %ld the signal will be multiplied by...", 
-						OBJECT_NAME, value);
+			object_post((t_object*)x, "at table position %ld the signal will be multiplied by...", value);
 			object_post((t_object*)x, "Left channel: %f", x->table_left[value]);
 			object_post((t_object*)x, "Right channel: %f", x->table_right[value]);
 		}
 		else
 		{
-			object_post((t_object*)x, "%s: value %ld is out of array bounds", OBJECT_NAME, value);
+			object_post((t_object*)x, "value %ld is out of array bounds", value);
 		}
 	}
 	
@@ -457,10 +456,9 @@ returns:		nothing
 ********************************************************************************/
 	void cpPan_position(t_cpPan *x)
 	{
-		object_post((t_object*)x, "%s: pan position = %f, table index = %ld", OBJECT_NAME, x->curr_pos, 
+		object_post((t_object*)x, "pan position = %f, table index = %ld", x->curr_pos,
 					x->curr_index);
-		object_post((t_object*)x, "%s: at this table position, the signal will be multiplied by...", 
-						OBJECT_NAME);
+		object_post((t_object*)x, "at this table position, the signal will be multiplied by...");
 		object_post((t_object*)x, "Left channel: %f", x->curr_multL);
 		object_post((t_object*)x, "Right channel: %f", x->curr_multR);
 	}
