@@ -13,11 +13,11 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
-	<string>nw.gateplus~ 1.1.1 - Copyright © 2001-2016, Nathan Wolek. All rights reserved.</string>
+	<string>nw.gateplus~ 1.2.0 - Copyright © 2001-2017, Nathan Wolek. All rights reserved.</string>
 	<key>CFBundlePackageType</key>
 	<string>iLaX</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.1.1</string>
+	<string>1.2.0</string>
 	<key>CFBundleSignature</key>
 	<string>max2</string>
 	<key>CFBundleSupportedPlatforms</key>
@@ -25,7 +25,7 @@
 		<string>MacOSX</string>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1.1.1</string>
+	<string>1.2.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>DTCompiler</key>
@@ -45,6 +45,6 @@
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2001-2016, Nathan Wolek. All rights reserved.</string>
+	<string>Copyright © 2001-2017, Nathan Wolek. All rights reserved.</string>
 </dict>
 </plist>
