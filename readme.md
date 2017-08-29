@@ -13,8 +13,6 @@ This GitHub project is a [package for Cycling74's Max](https://cycling74.com/201
 
 It also includes several items that were lurking on my hard drive and never formally released. My goal is to slowly gather as much of my Max work here as possible, so that it is easier to track changes and share with others. I am also producing [short YouTube videos](http://www.youtube.com/playlist?list=PLG8vJUg0ALmuKZIw_BqdO1WK0qPdhGjDK) as I go along, so that people can easily see and hear what these items do.
 
-Externals are currently only compiled for the Mac version of [Cycling74's Max](https://cycling74.com/products/max/). If you would like to help compile a binary for Windows, please contact me.
-
 ## Installing
 
 If you have [Git](http://git-scm.com/) installed, you can install via the Terminal using the following commands for Max 7:
