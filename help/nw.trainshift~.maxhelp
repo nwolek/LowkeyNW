@@ -3,9 +3,9 @@
 		"fileversion" : 1,
 		"appversion" : 		{
 			"major" : 7,
-			"minor" : 2,
-			"revision" : 0,
-			"architecture" : "x64",
+			"minor" : 3,
+			"revision" : 1,
+			"architecture" : "x86",
 			"modernui" : 1
 		}
 ,
@@ -222,7 +222,7 @@
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 268.0, 236.0, 126.680931, 39.0 ],
-					"presentation_rect" : [ 265.0, 209.0, 126.680931, 39.0 ]
+					"presentation_rect" : [ 268.0, 236.0, 126.680931, 39.0 ]
 				}
 
 			}

@@ -92,7 +92,7 @@ int C74_EXPORT main(void)
     trainshift_class = c;
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+		
 	#endif /* DEBUG */
     
     return 0;
@@ -123,7 +123,7 @@ void trainShift_setIndexArray(t_trainShift *x)
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: pointers set", OBJECT_NAME);
+		object_post((t_object*)x, "pointers set");
 	#endif /* DEBUG */
 }
 
@@ -159,7 +159,7 @@ void *trainShift_new(long outlets)
 	x->ts_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "new function was called");
     #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
@@ -184,7 +184,7 @@ void trainShift_dsp64(t_trainShift *x, t_object *dsp64, short *count, double sam
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     // check if inlets are connected at audio rate
@@ -297,7 +297,7 @@ void trainShift_float(t_trainShift *x, double f)
 		if (f > x->ts_shortest_pulse) { // if greater than two samples...
 			x->ts_interval_ms = f;				// save interval input
 		} else { // if not...
-			object_post((t_object*)x, "%s: pulse interval must be greater than %f", OBJECT_NAME, 
+			object_post((t_object*)x, "pulse interval must be greater than %f",
 				x->ts_shortest_pulse);
 			x->ts_interval_ms = x->ts_shortest_pulse;
 		}
@@ -307,12 +307,12 @@ void trainShift_float(t_trainShift *x, double f)
 		if (f >= 0.0 && f <= 1.0) { // if within 0 and 1 bounds...
 			x->ts_width_ratio = f;				// save width input
 		} else { // if not..
-			object_post((t_object*)x, "%s: pulse width must be between 0 and 1", OBJECT_NAME);
+			object_post((t_object*)x, "pulse width must be between 0 and 1");
 		}
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -332,18 +332,18 @@ void trainShift_int(t_trainShift *x, long l)
 		if (l > x->ts_shortest_pulse) { // if greater than two samples...
 			x->ts_interval_ms = (double) l;			// save interval input
 		} else { // if not...
-			object_post((t_object*)x, "%s: pulse interval must be greater than %f", OBJECT_NAME, 
+			object_post((t_object*)x, "pulse interval must be greater than %f",
 				x->ts_shortest_pulse);
 			x->ts_interval_ms = x->ts_shortest_pulse;
 		}
 	}
 	else if (x->ts_obj.z_in == 1) // if second inlet
 	{
-		object_post((t_object*)x, "%s: pulse width must be a float between 0 and 1", OBJECT_NAME);
+		object_post((t_object*)x, "pulse width must be a float between 0 and 1");
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -381,7 +381,7 @@ void trainShift_assist(t_trainShift *x, t_object *b, long msg, long arg, char *s
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 

@@ -44,7 +44,7 @@
 			<digest>Audio signal: audio channel 1</digest>
 		</outlet>
 		<outlet id="1" type="signal">
-			<digest>Audio signal: audio channel 2 COMING SOON</digest>
+			<digest>Audio signal: audio channel 2</digest>
 		</outlet>
 		<outlet id="2" type="signal">
 			<digest>Audio signal: sample count since playback started. -1 = no playback.</digest>
@@ -59,6 +59,7 @@
 			</digest>
 			<description>
 				The first argument names the <o>buffer~</o> object whose sample memory contains a source source used by this object for grain production.
+				For more information about how this sample memory is handled, see documentation for the <m>setSound</m> message.
 			</description>
 		</objarg>
 		<objarg name="window-buffer-name" optional="0" type="symbol">
@@ -67,6 +68,7 @@
 			</digest>
 			<description>
 				The second argument names the <o>buffer~</o> object whose sample memory contains a window function used by this object for grain production.
+				For more information about how this sample memory is handled, see documentation for the <m>setWin</m> message.
 			</description>
 		</objarg>
 	</objarglist>
@@ -135,6 +137,9 @@
 			</digest>
 			<description>
 				The word <m>setSound</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as source sound for grain production.
+				Note that this <o>buffer~</o> object can have up to 2 channels.
+				In the case of 1 channel (mono), the sound produced by both the first and second outlets will be the same.
+				In the case of 2 channels (stereo), the first outlet will playback sound from the first channel (left) and the second outlet will playback sound from the second channel (right).
 				Changes sent by the <m>setSound</m> message are deferred to the start of the next grain. 
 			</description>
 		</method>
@@ -147,6 +152,7 @@
 			</digest>
 			<description>
 				The word <m>setWin</m>, followed by the name of a <o>buffer~</o> object, uses that object's sample memory as a window function for grain production.
+				Note that this <o>buffer~</o> object can only have 1 channel (mono).
 				Changes sent by the <m>setWin</m> message are deferred to the start of the next grain. 
 			</description>
 		</method>

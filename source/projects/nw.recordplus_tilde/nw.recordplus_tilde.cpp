@@ -169,7 +169,7 @@ void *recordplus_new(t_symbol *snd)
 void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
 {
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     // set buffer
@@ -182,12 +182,12 @@ void recordplus_dsp64(t_recordplus *x, t_object *dsp64, short *count, double sam
     
     if (count[1] && count[0]) { // if both inputs connected
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "output is being computed");
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)recordplus_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "no output computed");
         #endif /* DEBUG */
     }
     
@@ -385,7 +385,7 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "buffer~ > %s < must be mono", s->s_name);
 			x->next_snd_buf_ref = NULL;
 		} else {
 			if (x->snd_buf_ref == NULL) { // if first buffer make current buffer
@@ -396,7 +396,7 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 				x->snd_buf_ref = b;			// last so that all is ready
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "current sound set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				if (b != x->snd_buf_ref) // if it is not the same as current
@@ -406,13 +406,13 @@ void recordplus_setbuff(t_recordplus *x, t_symbol *s)
 					x->next_snd_buf_ref = b;	// last so that all is ready
 					
 					#ifdef DEBUG
-						object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+						object_post((t_object*)x, "next sound set to buffer~ > %s <", s->s_name);
 					#endif /* DEBUG */
 				}
 			}
 		}
 	} else {
-		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "no buffer~ * %s * found", s->s_name);
 		x->next_snd_buf_ref = NULL;
 	}
 }
@@ -436,7 +436,7 @@ short recordplus_updatebuff(t_recordplus *x)
 		x->next_snd_buf_ref = NULL;
 		
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: new buffer~ > %s < is being used", OBJECT_NAME, x->snd_sym);
+			object_post((t_object*)x, "new buffer~ > %s < is being used", x->snd_sym);
 		#endif /* DEBUG */
 		
 		return true;
@@ -466,7 +466,7 @@ void recordplus_resetcurrentbuff(t_recordplus *x)
         // then feeding the current buffer symbol to this object will reset vars
         recordplus_setbuff(x,x->snd_sym);
     } else {
-        object_post((t_object*)x, "%s: recording must be off to clear", OBJECT_NAME);
+        object_post((t_object*)x, "recording must be off to clear");
     }
     
 }
@@ -505,7 +505,7 @@ void recordplus_assist(t_recordplus *x, t_object *b, long msg, long arg, char *s
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 

@@ -117,7 +117,7 @@ void *gateplus_new(long outlets)
     x->x_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "new function was called");
     #endif /* DEBUG */
     
     /* return a pointer to the new object */
@@ -139,17 +139,17 @@ void *gateplus_new(long outlets)
 void gateplus_dsp64(t_gateplus *x, t_object *dsp64, short *count, double samplerate, long maxvectorsize, long flags)
 {
 #ifdef DEBUG
-    object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+    object_post((t_object*)x, "adding 64 bit perform method");
 #endif /* DEBUG */
     
     if (count[1]) { // if signal input is connected
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "output is being computed");
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)gateplus_perform64, 0, NULL);
     } else {
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "no output computed");
         #endif /* DEBUG */
     }
     
@@ -290,11 +290,11 @@ void gateplus_int(t_gateplus *x, long l)
     if (x->x_obj.z_in == 0) // if first inlet
     {
         // do something with the gate stage
-        object_post((t_object*)x, "%s: ints not implemented yet", OBJECT_NAME);
+        object_post((t_object*)x, "ints not implemented yet");
     }
     else if (x->x_obj.z_in == 1) // if second inlet
     {
-        object_post((t_object*)x, "%s: this inlet does not accept ints", OBJECT_NAME);
+        object_post((t_object*)x, "that inlet does not accept ints");
     }
 }
 
@@ -333,7 +333,7 @@ void gateplus_assist(t_gateplus *x, t_object *b, long msg, long arg, char *s)
     }
     
 #ifdef DEBUG
-    object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+    object_post((t_object*)x, "assist message displayed");
 #endif /* DEBUG */
 }
 

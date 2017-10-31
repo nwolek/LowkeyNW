@@ -94,7 +94,7 @@ int C74_EXPORT main(void)
     phasorshift_class = c;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+    
     #endif /* DEBUG */
     
     return 0;
@@ -126,7 +126,7 @@ void phasorShift_setIndexArray(t_phasorShift *x)
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: pointers set", OBJECT_NAME);
+		object_post((t_object*)x, "pointers set");
 	#endif /* DEBUG */
 }
 
@@ -160,7 +160,7 @@ void *phasorShift_new(long outlets)
 	x->ps_obj.z_misc = Z_NO_INPLACE;
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: new function was called", OBJECT_NAME);
+        object_post((t_object*)x, "new function was called");
     #endif /* DEBUG */
 	
 	/* return a pointer to the new object */
@@ -185,7 +185,7 @@ void phasorShift_dsp64(t_phasorShift *x, t_object *dsp64, short *count, double s
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     // check if inlets are connected at audio rate
@@ -285,7 +285,7 @@ void phasorShift_float(t_phasorShift *x, double f)
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -306,7 +306,7 @@ void phasorShift_int(t_phasorShift *x, long l)
 	}
 	else
 	{
-		object_post((t_object*)x, "%s: that inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -341,7 +341,7 @@ void phasorShift_assist(t_phasorShift *x, t_object *b, long msg, long arg, char 
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 

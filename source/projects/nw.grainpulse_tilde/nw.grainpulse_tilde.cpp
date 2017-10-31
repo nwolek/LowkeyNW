@@ -78,7 +78,6 @@ typedef struct _grainpulse
 	short grain_pitch_connected;		// <--
 	short grain_gain_connected;			// add 2008.04.22
 	// grain tracking info
-	short grain_stage;
 	long curr_count_samp;
     float last_pulse_in;				// <--
 	double output_sr;					// <--
@@ -163,7 +162,7 @@ int C74_EXPORT main(void)
     ps_buffer = gensym("buffer~");
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: main function was called", OBJECT_NAME);
+    
     #endif /* DEBUG */
     
     return 0;
@@ -240,7 +239,7 @@ void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double sam
 {
     
     #ifdef DEBUG
-        object_post((t_object*)x, "%s: adding 64 bit perform method", OBJECT_NAME);
+        object_post((t_object*)x, "adding 64 bit perform method");
     #endif /* DEBUG */
     
     /* set buffers */
@@ -260,14 +259,14 @@ void grainpulse_dsp64(t_grainpulse *x, t_object *dsp64, short *count, double sam
     // set overflow status
     x->overflow_status = OVERFLOW_OFF;
     
-    if (count[5] && count[0]) {	// if input and output connected..
+    if (count[5] || count[6]) {	// if input and output connected..
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: output is being computed", OBJECT_NAME);
+            object_post((t_object*)x, "output is being computed");
         #endif /* DEBUG */
         dsp_add64(dsp64, (t_object*)x, (t_perfroutine64)grainpulse_perform64, 0, NULL);
     } else {					// if not...
         #ifdef DEBUG
-            object_post((t_object*)x, "%s: no output computed", OBJECT_NAME);
+            object_post((t_object*)x, "no output computed");
         #endif /* DEBUG */
     }
     
@@ -331,12 +330,12 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     // local vars for snd and win buffer
     t_buffer_obj *snd_object, *win_object;
     float *tab_s, *tab_w;
-    double snd_out, win_out;
-    long size_s, size_w;
+    double snd_out, snd_out2, win_out;
+    long size_s, chan_s, size_w;
     
     // local vars for object vars and while loop
     double index_s, index_w, temp_index_frac;
-    long n, count_samp, temp_index_int;
+    long n, count_samp, temp_index_int, temp_index_int_times_chan;
     double s_step_size, w_step_size, g_gain;
     short interp_s, interp_w, g_direction, of_status;
     float last_pulse;
@@ -353,6 +352,7 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
     if (!tab_s)		// buffer samples were not accessible
         goto zero;
     size_s = buffer_getframecount(snd_object);
+    chan_s = buffer_getchannelcount(snd_object);
     
     // get window buffer info
     win_object = buffer_ref_getobject(x->win_buf_ptr);
@@ -491,19 +491,26 @@ void grainpulse_perform64(t_grainpulse *x, t_object *dsp64, double **ins, long n
         // compute temporary vars for interpolation
         temp_index_int = (long)(index_s); // integer portion of index
         temp_index_frac = index_s - (double)temp_index_int; // fractional portion of index
+        temp_index_int_times_chan = temp_index_int * chan_s;
         
         // get value from the snd buffer samples
         if (interp_s == INTERP_ON) {
-            snd_out = mcLinearInterp(tab_s, temp_index_int, temp_index_frac, size_s, 1);
+            snd_out = mcLinearInterp(tab_s, temp_index_int_times_chan, temp_index_frac, size_s, chan_s);
+            snd_out2 = (chan_s == 2) ?
+                mcLinearInterp(tab_s, temp_index_int_times_chan + 1, temp_index_frac, size_s, chan_s) :
+                snd_out;
         } else {	// if INTERP_OFF
-            snd_out = tab_s[temp_index_int];
+            snd_out = tab_s[temp_index_int_times_chan];
+            snd_out2 = (chan_s == 2) ?
+                tab_s[temp_index_int_times_chan + 1] :
+                snd_out;
         }
         
         // OUTLETS
         
         // multiply snd_out by win_out by gain value
         *out_signal = snd_out * win_out * g_gain;
-        *out_signal2 = 0.;
+        *out_signal2 = snd_out2 * win_out * g_gain;
         
         if (of_status) {
             *out_overflow = *in_pulse;
@@ -566,7 +573,7 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		float in_pitch_mult, float in_gain_mult)
 {
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: initializing grain", OBJECT_NAME);
+		object_post((t_object*)x, "initializing grain");
 	#endif /* DEBUG */
     
     t_buffer_obj	*snd_object;
@@ -577,7 +584,7 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		x->next_snd_buf_ptr = NULL;
 		
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: sound buffer pointer updated", OBJECT_NAME);
+			object_post((t_object*)x, "sound buffer pointer updated");
 		#endif /* DEBUG */
 	}
 	if (x->next_win_buf_ptr != NULL) {
@@ -585,7 +592,7 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 		x->next_win_buf_ptr = NULL;
 		
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: window buffer pointer updated", OBJECT_NAME);
+			object_post((t_object*)x, "window buffer pointer updated");
 		#endif /* DEBUG */
 	}
 	
@@ -637,9 +644,9 @@ void grainpulse_initGrain(t_grainpulse *x, float in_pos_start, float in_length,
 	//defer(x, (void *)grainpulse_reportoninit,0L,0,0L);
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: beginning of grain", OBJECT_NAME);
-		object_post((t_object*)x, "%s: win step size = %f samps", OBJECT_NAME, x->win_step_size);
-		object_post((t_object*)x, "%s: snd step size = %f samps", OBJECT_NAME, x->snd_step_size);
+		object_post((t_object*)x, "beginning of grain");
+		object_post((t_object*)x, "win step size = %f samps", x->win_step_size);
+		object_post((t_object*)x, "snd step size = %f samps", x->snd_step_size);
 	#endif /* DEBUG */
 }
 
@@ -682,8 +689,8 @@ void grainpulse_setsnd(t_grainpulse *x, t_symbol *s)
     if (buffer_ref_exists(b)) {
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
-		if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+		if (buffer_getchannelcount(b_object) > 2) {
+			object_error((t_object*)x, "buffer~ > %s < must be mono or stereo", s->s_name);
 			x->next_snd_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->snd_buf_ptr == NULL) { // if first buffer make current buffer
@@ -692,7 +699,7 @@ void grainpulse_setsnd(t_grainpulse *x, t_symbol *s)
 				//x->snd_last_out = 0.0; removed 2005.01.25
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: current sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "current sound set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->snd_sym = s;
@@ -701,12 +708,12 @@ void grainpulse_setsnd(t_grainpulse *x, t_symbol *s)
 				//x->snd_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: next sound set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "next sound set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		object_error((t_object*)x, "%s: no buffer~ * %s * found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "no buffer~ * %s * found", s->s_name);
 		x->next_snd_buf_ptr = NULL;
 	}
 }
@@ -727,7 +734,7 @@ void grainpulse_setwin(t_grainpulse *x, t_symbol *s)
         t_buffer_obj	*b_object = buffer_ref_getobject(b);
         
         if (buffer_getchannelcount(b_object) != 1) {
-			object_error((t_object*)x, "%s: buffer~ > %s < must be mono", OBJECT_NAME, s->s_name);
+			object_error((t_object*)x, "buffer~ > %s < must be mono", s->s_name);
 			x->next_win_buf_ptr = NULL;		//added 2002.07.15
 		} else {
 			if (x->win_buf_ptr == NULL) { // if first buffer make current buffer
@@ -739,7 +746,7 @@ void grainpulse_setwin(t_grainpulse *x, t_symbol *s)
 				x->curr_win_pos = (double)(buffer_getframecount(b_object)) + 1.0;
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: current window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "current window set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			} else { // else defer to next buffer
 				x->win_sym = s;
@@ -748,12 +755,12 @@ void grainpulse_setwin(t_grainpulse *x, t_symbol *s)
 				//x->win_last_out = 0.0;		//removed 2002.07.24
 				
 				#ifdef DEBUG
-					object_post((t_object*)x, "%s: next window set to buffer~ > %s <", OBJECT_NAME, s->s_name);
+					object_post((t_object*)x, "next window set to buffer~ > %s <", s->s_name);
 				#endif /* DEBUG */
 			}
 		}
 	} else {
-		object_error((t_object*)x, "%s: no buffer~ > %s < found", OBJECT_NAME, s->s_name);
+		object_error((t_object*)x, "no buffer~ > %s < found", s->s_name);
 		x->next_win_buf_ptr = NULL;
 	}
 }
@@ -780,7 +787,7 @@ void grainpulse_float(t_grainpulse *x, double f)
 		if (f > 0.0) {
 			x->next_grain_length = f;
 		} else {
-			object_post((t_object*)x, "%s: grain length must be greater than zero", OBJECT_NAME);
+			object_post((t_object*)x, "grain length must be greater than zero");
 		}
 	}
 	else if (x->x_obj.z_in == 3) // if inlet 4
@@ -793,7 +800,7 @@ void grainpulse_float(t_grainpulse *x, double f)
 	}
 	else if (x->x_obj.z_in == 0)
 	{
-		object_post((t_object*)x, "%s: left inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -819,7 +826,7 @@ void grainpulse_int(t_grainpulse *x, long l)
 		if (l > 0) {
 			x->next_grain_length = (double) l;
 		} else {
-			object_post((t_object*)x, "%s: grain length must be greater than zero", OBJECT_NAME);
+			object_post((t_object*)x, "grain length must be greater than zero");
 		}
 	}
 	else if (x->x_obj.z_in == 3) // if inlet 4
@@ -832,7 +839,7 @@ void grainpulse_int(t_grainpulse *x, long l)
 	}
 	else if (x->x_obj.z_in == 0)
 	{
-		object_post((t_object*)x, "%s: left inlet does not accept floats", OBJECT_NAME);
+		object_post((t_object*)x, "that inlet does not accept floats");
 	}
 }
 
@@ -851,15 +858,15 @@ void grainpulse_sndInterp(t_grainpulse *x, long l)
 	if (l == INTERP_OFF) {
 		x->snd_interp = INTERP_OFF;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: sndInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "sndInterp is set to off");
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->snd_interp = INTERP_ON;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: sndInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "sndInterp is set to on");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: sndInterp message was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "sndInterp message was not understood");
 	}
 }
 
@@ -878,15 +885,15 @@ void grainpulse_winInterp(t_grainpulse *x, long l)
 	if (l == INTERP_OFF) {
 		x->win_interp = INTERP_OFF;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: winInterp is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "winInterp is set to off");
 		#endif // DEBUG //
 	} else if (l == INTERP_ON) {
 		x->win_interp = INTERP_ON;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: winInterp is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "winInterp is set to on");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: winInterp was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "winInterp was not understood");
 	}
 }
 
@@ -904,15 +911,15 @@ void grainpulse_reverse(t_grainpulse *x, long l)
 	if (l == REVERSE_GRAINS) {
 		x->next_grain_direction = REVERSE_GRAINS;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: reverse is set to on", OBJECT_NAME);
+			object_post((t_object*)x, "reverse is set to on");
 		#endif // DEBUG //
 	} else if (l == FORWARD_GRAINS) {
 		x->next_grain_direction = FORWARD_GRAINS;
 		#ifdef DEBUG
-			object_post((t_object*)x, "%s: reverse is set to off", OBJECT_NAME);
+			object_post((t_object*)x, "reverse is set to off");
 		#endif // DEBUG //
 	} else {
-		object_error((t_object*)x, "%s: reverse was not understood", OBJECT_NAME);
+		object_error((t_object*)x, "reverse was not understood");
 	}
 	
 }
@@ -955,7 +962,7 @@ void grainpulse_assist(t_grainpulse *x, t_object *b, long msg, long arg, char *s
                 strcpy(s, "(signal) audio channel 1");
                 break;
             case 1:
-                strcpy(s, "(signal) audio channel 2 COMING SOON");
+                strcpy(s, "(signal) audio channel 2");
                 break;
             case 2:
                 strcpy(s, "(signal) sample count");
@@ -967,7 +974,7 @@ void grainpulse_assist(t_grainpulse *x, t_object *b, long msg, long arg, char *s
 	}
 	
 	#ifdef DEBUG
-		object_post((t_object*)x, "%s: assist message displayed", OBJECT_NAME);
+		object_post((t_object*)x, "assist message displayed");
 	#endif /* DEBUG */
 }
 
@@ -1006,7 +1013,7 @@ double mcLinearInterp(float *in_array, long index_i, double index_frac, long in_
 	long index_iP1 = index_i + in_chans;		// corresponding sample in next frame
 	
 	// make sure that index_iP1 is not out of range
-	while (index_iP1 >= in_size) index_iP1 -= in_size;
+	while (index_iP1 >= in_size * in_chans) index_iP1 -= in_size;
 	
 	// get samples
 	sample1 = (double)in_array[index_i];
