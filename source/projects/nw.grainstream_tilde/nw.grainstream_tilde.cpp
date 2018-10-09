@@ -564,7 +564,7 @@ void grainstream_initGrain(t_grainstream *x, float in_freq, float in_pos_start, 
     
     // compute sound buffer step size per vector sample
     x->snd_step_size = x->grain_pitch * buffer_getsamplerate(snd_object) * x->output_1oversr;
-    if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
+    //if (x->snd_step_size < 0.) x->snd_step_size *= -1.; // needs to be positive to prevent buffer overruns
     
     // compute amount of sound file for grain
     x->grain_sound_length = x->grain_length * x->grain_pitch;
