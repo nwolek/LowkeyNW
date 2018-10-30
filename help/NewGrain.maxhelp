@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 59.0, 104.0, 640.0, 480.0 ],
+		"rect" : [ 212.0, 193.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,6 +39,44 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"data" : 					{
+						"clips" : [ 							{
+								"filename" : "StetsonMac:/Users/lowkeynw/Desktop/NewGrainDev/1008chaz.m4a",
+								"filekind" : "audiofile",
+								"loop" : 1,
+								"content_state" : 								{
+									"originallengthms" : [ 0.0 ],
+									"originallength" : [ 0.0, "ticks" ],
+									"formant" : [ 1.0 ],
+									"originaltempo" : [ 120.0 ],
+									"basictuning" : [ 440 ],
+									"quality" : [ "basic" ],
+									"pitchshift" : [ 1.0 ],
+									"pitchcorrection" : [ 0 ],
+									"followglobaltempo" : [ 0 ],
+									"play" : [ 0 ],
+									"mode" : [ "basic" ],
+									"timestretch" : [ 0 ],
+									"slurtime" : [ 0.0 ],
+									"formantcorrection" : [ 0 ],
+									"speed" : [ 1.0 ]
+								}
+
+							}
+ ]
+					}
+,
+					"id" : "obj-3",
+					"maxclass" : "playlist~",
+					"numinlets" : 1,
+					"numoutlets" : 5,
+					"outlettype" : [ "signal", "signal", "signal", "", "dictionary" ],
+					"patching_rect" : [ 73.0, 26.0, 150.0, 30.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-35",
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
@@ -60,44 +98,6 @@
 			}
 , 			{
 				"box" : 				{
-					"data" : 					{
-						"clips" : [ 							{
-								"filename" : "StetsonMac:/Users/lowkeynw/Desktop/chaz1008.m4a",
-								"filekind" : "audiofile",
-								"loop" : 1,
-								"content_state" : 								{
-									"pitchcorrection" : [ 0 ],
-									"formant" : [ 1.0 ],
-									"followglobaltempo" : [ 0 ],
-									"mode" : [ "basic" ],
-									"timestretch" : [ 0 ],
-									"play" : [ 0 ],
-									"quality" : [ "basic" ],
-									"pitchshift" : [ 1.0 ],
-									"formantcorrection" : [ 0 ],
-									"originallength" : [ 0.0, "ticks" ],
-									"speed" : [ 1.0 ],
-									"slurtime" : [ 0.0 ],
-									"originaltempo" : [ 120.0 ],
-									"basictuning" : [ 440 ],
-									"originallengthms" : [ 0.0 ]
-								}
-
-							}
- ]
-					}
-,
-					"id" : "obj-95",
-					"maxclass" : "playlist~",
-					"numinlets" : 1,
-					"numoutlets" : 5,
-					"outlettype" : [ "signal", "signal", "signal", "", "dictionary" ],
-					"patching_rect" : [ 185.0, 93.0, 150.0, 30.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"autosave" : 1,
 					"bgmode" : 1,
 					"border" : 0,
@@ -111,7 +111,7 @@
 					"numoutlets" : 4,
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "signal", "signal", "", "" ],
-					"patching_rect" : [ 101.0, 165.0, 252.5, 196.0 ],
+					"patching_rect" : [ 101.0, 165.0, 258.5, 196.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
@@ -142,17 +142,18 @@
 							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 							"valuedictionary" : 							{
 								"parameter_values" : 								{
-									"BufferFlux" : 47.244094488188978,
-									"Dry/Wet" : 64.566929133858224,
-									"Duration1" : 39.370078740157481,
-									"Gain" : 0.0,
-									"Period1" : 19.685039370078741,
-									"Period2" : 51.181102362204726,
+									"AboveThreshold" : 0.0,
+									"BufferFlux" : 62.992125984251842,
+									"Capture" : 1.0,
+									"Dry/Wet" : 54.330708661417361,
+									"Duration1" : 106.299212598425171,
+									"Gain" : -0.188976377952756,
+									"Period1" : 51.181102362204726,
+									"Period2" : 122.047244094488136,
 									"PitchShift" : 0.0,
-									"live.text" : 0.0,
-									"live.text[7]" : 0.0,
-									"Duration2" : 145.66929133858261,
-									"GainFlux" : 0.0,
+									"Threshold" : -19.732283464566883,
+									"Duration2" : 275.590551181102171,
+									"GainFlux" : 13.0,
 									"PitchFlux" : 0.0
 								}
 
@@ -176,17 +177,18 @@
 										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 										"valuedictionary" : 										{
 											"parameter_values" : 											{
-												"BufferFlux" : 47.244094488188978,
-												"Dry/Wet" : 64.566929133858224,
-												"Duration1" : 39.370078740157481,
-												"Gain" : 0.0,
-												"Period1" : 19.685039370078741,
-												"Period2" : 51.181102362204726,
+												"AboveThreshold" : 0.0,
+												"BufferFlux" : 62.992125984251842,
+												"Capture" : 1.0,
+												"Dry/Wet" : 54.330708661417361,
+												"Duration1" : 106.299212598425171,
+												"Gain" : -0.188976377952756,
+												"Period1" : 51.181102362204726,
+												"Period2" : 122.047244094488136,
 												"PitchShift" : 0.0,
-												"live.text" : 0.0,
-												"live.text[7]" : 0.0,
-												"Duration2" : 145.66929133858261,
-												"GainFlux" : 0.0,
+												"Threshold" : -19.732283464566883,
+												"Duration2" : 275.590551181102171,
+												"GainFlux" : 13.0,
 												"PitchFlux" : 0.0
 											}
 
@@ -232,14 +234,14 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-2", 1 ],
-					"source" : [ "obj-95", 1 ]
+					"source" : [ "obj-3", 1 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-2", 0 ],
-					"source" : [ "obj-95", 0 ]
+					"source" : [ "obj-3", 0 ]
 				}
 
 			}
@@ -274,9 +276,16 @@
 				"implicit" : 1
 			}
 , 			{
-				"name" : "chaz1008.m4a",
-				"bootpath" : "~/Desktop",
-				"patcherrelativepath" : "../../../../../../Users/lowkeynw/Desktop",
+				"name" : "nw.2ch-threshold~.maxpat",
+				"bootpath" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain",
+				"patcherrelativepath" : "../patchers/newgrain",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "1008chaz.m4a",
+				"bootpath" : "~/Desktop/NewGrainDev",
+				"patcherrelativepath" : "../../../../../../Users/lowkeynw/Desktop/NewGrainDev",
 				"type" : "M4a",
 				"implicit" : 1
 			}
