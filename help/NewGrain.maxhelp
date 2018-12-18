@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 0,
-			"revision" : 0,
+			"revision" : 2,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -39,27 +39,39 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 357.0, 400.0, 32.0, 22.0 ],
+					"text" : "print"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"data" : 					{
 						"clips" : [ 							{
-								"filename" : "StetsonMac:/Users/lowkeynw/Desktop/NewGrainDev/1008chaz.m4a",
+								"absolutepath" : "StetsonMac:/Users/lowkeynw/Desktop/NewGrainDev/1008chaz.m4a",
+								"filename" : "1008chaz.m4a",
 								"filekind" : "audiofile",
 								"loop" : 1,
 								"content_state" : 								{
-									"originallengthms" : [ 0.0 ],
-									"originallength" : [ 0.0, "ticks" ],
-									"formant" : [ 1.0 ],
+									"play" : [ 0 ],
+									"pitchshift" : [ 1.0 ],
 									"originaltempo" : [ 120.0 ],
 									"basictuning" : [ 440 ],
+									"mode" : [ "basic" ],
+									"speed" : [ 1.0 ],
 									"quality" : [ "basic" ],
-									"pitchshift" : [ 1.0 ],
+									"slurtime" : [ 0.0 ],
 									"pitchcorrection" : [ 0 ],
 									"followglobaltempo" : [ 0 ],
-									"play" : [ 0 ],
-									"mode" : [ "basic" ],
 									"timestretch" : [ 0 ],
-									"slurtime" : [ 0.0 ],
+									"originallengthms" : [ 0.0 ],
 									"formantcorrection" : [ 0 ],
-									"speed" : [ 1.0 ]
+									"formant" : [ 1.0 ],
+									"originallength" : [ 0.0, "ticks" ]
 								}
 
 							}
@@ -142,19 +154,25 @@
 							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 							"valuedictionary" : 							{
 								"parameter_values" : 								{
-									"AboveThreshold" : 0.0,
-									"BufferFlux" : 62.992125984251842,
-									"Capture" : 1.0,
-									"Dry/Wet" : 54.330708661417361,
-									"Duration1" : 106.299212598425171,
-									"Gain" : -0.188976377952756,
-									"Period1" : 51.181102362204726,
-									"Period2" : 122.047244094488136,
-									"PitchShift" : 0.0,
-									"Threshold" : -19.732283464566883,
-									"Duration2" : 275.590551181102171,
-									"GainFlux" : 13.0,
-									"PitchFlux" : 0.0
+									"BufferFlux" : 86.614173228346417,
+									"BufferState" : 0.0,
+									"Dry/Wet" : 59.055118110236258,
+									"Duration1" : 82.677165354330725,
+									"Duration2" : 149.606299212598429,
+									"Gain1" : 5.669291338582674,
+									"Gain2" : 0.0,
+									"OverThreshold" : 0.0,
+									"Period1" : 43.30708661417323,
+									"Period2" : 94.488188976378069,
+									"PitchShift1" : 18.0,
+									"PitchShift2" : -24.0,
+									"RandomDurations" : 1.0,
+									"RandomGains" : 0.0,
+									"RandomPeriods" : 0.0,
+									"RandomPitchShifts" : 1.0,
+									"Threshold" : -80.0,
+									"ThresholdMode" : 0.0,
+									"live.text" : 0.0
 								}
 
 							}
@@ -177,19 +195,25 @@
 										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 										"valuedictionary" : 										{
 											"parameter_values" : 											{
-												"AboveThreshold" : 0.0,
-												"BufferFlux" : 62.992125984251842,
-												"Capture" : 1.0,
-												"Dry/Wet" : 54.330708661417361,
-												"Duration1" : 106.299212598425171,
-												"Gain" : -0.188976377952756,
-												"Period1" : 51.181102362204726,
-												"Period2" : 122.047244094488136,
-												"PitchShift" : 0.0,
-												"Threshold" : -19.732283464566883,
-												"Duration2" : 275.590551181102171,
-												"GainFlux" : 13.0,
-												"PitchFlux" : 0.0
+												"BufferFlux" : 86.614173228346417,
+												"BufferState" : 0.0,
+												"Dry/Wet" : 59.055118110236258,
+												"Duration1" : 82.677165354330725,
+												"Duration2" : 149.606299212598429,
+												"Gain1" : 5.669291338582674,
+												"Gain2" : 0.0,
+												"OverThreshold" : 0.0,
+												"Period1" : 43.30708661417323,
+												"Period2" : 94.488188976378069,
+												"PitchShift1" : 18.0,
+												"PitchShift2" : -24.0,
+												"RandomDurations" : 1.0,
+												"RandomGains" : 0.0,
+												"RandomPeriods" : 0.0,
+												"RandomPitchShifts" : 1.0,
+												"Threshold" : -80.0,
+												"ThresholdMode" : 0.0,
+												"live.text" : 0.0
 											}
 
 										}
@@ -216,6 +240,18 @@
 				}
 
 			}
+, 			{
+				"box" : 				{
+					"id" : "obj-5",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 119.0, 125.0, 65.0, 22.0 ],
+					"text" : "getparams"
+				}
+
+			}
  ],
 		"lines" : [ 			{
 				"patchline" : 				{
@@ -233,6 +269,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-6", 0 ],
+					"source" : [ "obj-2", 3 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-2", 1 ],
 					"source" : [ "obj-3", 1 ]
 				}
@@ -242,6 +285,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-2", 0 ],
 					"source" : [ "obj-3", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 0 ],
+					"source" : [ "obj-5", 0 ]
 				}
 
 			}
@@ -259,27 +309,6 @@
 				"bootpath" : "/Storage/documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../Max 8/Snapshots",
 				"type" : "mx@s",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "NewGrain.amxd",
-				"bootpath" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain",
-				"patcherrelativepath" : "../patchers/newgrain",
-				"type" : "amxd",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "nw.randrange~.maxpat",
-				"bootpath" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain",
-				"patcherrelativepath" : "../patchers/newgrain",
-				"type" : "JSON",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "nw.2ch-threshold~.maxpat",
-				"bootpath" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain",
-				"patcherrelativepath" : "../patchers/newgrain",
-				"type" : "JSON",
 				"implicit" : 1
 			}
 , 			{
