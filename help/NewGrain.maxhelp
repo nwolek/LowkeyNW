@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 212.0, 193.0, 640.0, 480.0 ],
+		"rect" : [ 156.0, 179.0, 640.0, 480.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -154,25 +154,23 @@
 							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 							"valuedictionary" : 							{
 								"parameter_values" : 								{
-									"BufferFlux" : 86.614173228346417,
-									"BufferState" : 0.0,
-									"Dry/Wet" : 59.055118110236258,
-									"Duration1" : 82.677165354330725,
-									"Duration2" : 149.606299212598429,
+									"BufferState" : 1.0,
+									"Threshold" : -24.768153980752416,
+									"ThresholdMode" : 0.0,
+									"RandomizeDurations" : 0.0,
+									"RandomizeGains" : 0.0,
+									"RandomizePeriods" : 1.0,
+									"RandomizePitchShifts" : 0.0,
+									"BufferFlux" : 472.440944881889891,
+									"Duration1" : 295.275590551181381,
+									"Duration2" : 196.850393700787777,
 									"Gain1" : 5.669291338582674,
 									"Gain2" : 0.0,
-									"OverThreshold" : 0.0,
-									"Period1" : 43.30708661417323,
-									"Period2" : 94.488188976378069,
+									"Period1" : 338.582677165354312,
+									"Period2" : 259.842519685039349,
 									"PitchShift1" : 18.0,
 									"PitchShift2" : -24.0,
-									"RandomDurations" : 1.0,
-									"RandomGains" : 0.0,
-									"RandomPeriods" : 0.0,
-									"RandomPitchShifts" : 1.0,
-									"Threshold" : -80.0,
-									"ThresholdMode" : 0.0,
-									"live.text" : 0.0
+									"Dry/Wet" : 59.055118110236258
 								}
 
 							}
@@ -180,7 +178,7 @@
 						}
 ,
 						"snapshotlist" : 						{
-							"current_snapshot" : 0,
+							"current_snapshot" : 1,
 							"entries" : [ 								{
 									"filetype" : "C74Snapshot",
 									"version" : 2,
@@ -195,25 +193,23 @@
 										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 										"valuedictionary" : 										{
 											"parameter_values" : 											{
-												"BufferFlux" : 86.614173228346417,
-												"BufferState" : 0.0,
-												"Dry/Wet" : 59.055118110236258,
-												"Duration1" : 82.677165354330725,
-												"Duration2" : 149.606299212598429,
+												"BufferState" : 1.0,
+												"Threshold" : -24.768153980752416,
+												"ThresholdMode" : 0.0,
+												"RandomizeDurations" : 0.0,
+												"RandomizeGains" : 0.0,
+												"RandomizePeriods" : 1.0,
+												"RandomizePitchShifts" : 0.0,
+												"BufferFlux" : 472.440944881889891,
+												"Duration1" : 295.275590551181381,
+												"Duration2" : 196.850393700787777,
 												"Gain1" : 5.669291338582674,
 												"Gain2" : 0.0,
-												"OverThreshold" : 0.0,
-												"Period1" : 43.30708661417323,
-												"Period2" : 94.488188976378069,
+												"Period1" : 338.582677165354312,
+												"Period2" : 259.842519685039349,
 												"PitchShift1" : 18.0,
 												"PitchShift2" : -24.0,
-												"RandomDurations" : 1.0,
-												"RandomGains" : 0.0,
-												"RandomPeriods" : 0.0,
-												"RandomPitchShifts" : 1.0,
-												"Threshold" : -80.0,
-												"ThresholdMode" : 0.0,
-												"live.text" : 0.0
+												"Dry/Wet" : 59.055118110236258
 											}
 
 										}
@@ -226,6 +222,52 @@
 										"filepath" : "/Storage/documents/Max 8/Snapshots",
 										"filepos" : -1,
 										"snapshotfileid" : "7c48d12dbf3e8ef3cf14e47cbcecb3a6"
+									}
+
+								}
+, 								{
+									"filetype" : "C74Snapshot",
+									"version" : 2,
+									"minorversion" : 0,
+									"name" : "NewGrain.amxd[1]",
+									"origin" : "NewGrain.amxd",
+									"type" : "amxd",
+									"subtype" : "Undefined",
+									"embed" : 0,
+									"snapshot" : 									{
+										"name" : "NewGrain.amxd",
+										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
+										"valuedictionary" : 										{
+											"parameter_values" : 											{
+												"BufferState" : 1.0,
+												"Threshold" : -24.768153980752416,
+												"ThresholdMode" : 0.0,
+												"RandomizeDurations" : 0.0,
+												"RandomizeGains" : 0.0,
+												"RandomizePeriods" : 1.0,
+												"RandomizePitchShifts" : 0.0,
+												"BufferFlux" : 472.440944881889891,
+												"Duration1" : 295.275590551181381,
+												"Duration2" : 196.850393700787777,
+												"Gain1" : 5.669291338582674,
+												"Gain2" : 0.0,
+												"Period1" : 338.582677165354312,
+												"Period2" : 259.842519685039349,
+												"PitchShift1" : 18.0,
+												"PitchShift2" : -24.0,
+												"Dry/Wet" : 59.055118110236258
+											}
+
+										}
+
+									}
+,
+									"fileref" : 									{
+										"name" : "NewGrain.amxd[1]",
+										"filename" : "NewGrain.amxd[1].maxsnap",
+										"filepath" : "/Storage/documents/Max 8/Snapshots",
+										"filepos" : -1,
+										"snapshotfileid" : "00967a67dbce4b1b2499bc4d7e5fe9ef"
 									}
 
 								}
@@ -306,6 +348,13 @@
 ,
 		"dependency_cache" : [ 			{
 				"name" : "NewGrain.amxd.maxsnap",
+				"bootpath" : "/Storage/documents/Max 8/Snapshots",
+				"patcherrelativepath" : "../../../../Max 8/Snapshots",
+				"type" : "mx@s",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "NewGrain.amxd[1].maxsnap",
 				"bootpath" : "/Storage/documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../Max 8/Snapshots",
 				"type" : "mx@s",
