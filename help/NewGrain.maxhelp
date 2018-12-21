@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 156.0, 179.0, 640.0, 480.0 ],
+		"rect" : [ 315.0, 79.0, 624.0, 682.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -39,51 +39,49 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-6",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 357.0, 400.0, 32.0, 22.0 ],
-					"text" : "print"
+					"args" : [ "@module", 2 ],
+					"bgmode" : 0,
+					"border" : 0,
+					"clickthrough" : 0,
+					"enablehscroll" : 0,
+					"enablevscroll" : 0,
+					"id" : "obj-13",
+					"lockeddragscroll" : 0,
+					"maxclass" : "bpatcher",
+					"name" : "demosound.maxpat",
+					"numinlets" : 0,
+					"numoutlets" : 1,
+					"offset" : [ 0.0, 0.0 ],
+					"outlettype" : [ "signal" ],
+					"patching_rect" : [ 52.0, 243.5, 230.0, 95.0 ],
+					"viewvisibility" : 1
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"data" : 					{
-						"clips" : [ 							{
-								"absolutepath" : "StetsonMac:/Users/lowkeynw/Desktop/NewGrainDev/1008chaz.m4a",
-								"filename" : "1008chaz.m4a",
-								"filekind" : "audiofile",
-								"loop" : 1,
-								"content_state" : 								{
-									"play" : [ 0 ],
-									"pitchshift" : [ 1.0 ],
-									"originaltempo" : [ 120.0 ],
-									"basictuning" : [ 440 ],
-									"mode" : [ "basic" ],
-									"speed" : [ 1.0 ],
-									"quality" : [ "basic" ],
-									"slurtime" : [ 0.0 ],
-									"pitchcorrection" : [ 0 ],
-									"followglobaltempo" : [ 0 ],
-									"timestretch" : [ 0 ],
-									"originallengthms" : [ 0.0 ],
-									"formantcorrection" : [ 0 ],
-									"formant" : [ 1.0 ],
-									"originallength" : [ 0.0, "ticks" ]
-								}
-
-							}
- ]
-					}
-,
-					"id" : "obj-3",
-					"maxclass" : "playlist~",
+					"border" : 0,
+					"filename" : "helpdetails.js",
+					"id" : "obj-4",
+					"ignoreclick" : 1,
+					"jsarguments" : [ "GoMoDo" ],
+					"maxclass" : "jsui",
 					"numinlets" : 1,
-					"numoutlets" : 5,
-					"outlettype" : [ "signal", "signal", "signal", "", "dictionary" ],
-					"patching_rect" : [ 73.0, 26.0, 150.0, 30.0 ]
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 9.0, 10.0, 606.0, 222.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-6",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 291.5, 604.0, 83.0, 22.0 ],
+					"text" : "print GoMoDo"
 				}
 
 			}
@@ -93,18 +91,7 @@
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 101.0, 395.0, 45.0, 45.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-77",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 185.0, 73.0, 203.0, 20.0 ],
-					"text" : "for testing, remove from final version"
+					"patching_rect" : [ 52.0, 604.0, 45.0, 45.0 ]
 				}
 
 			}
@@ -123,7 +110,7 @@
 					"numoutlets" : 4,
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "signal", "signal", "", "" ],
-					"patching_rect" : [ 101.0, 165.0, 258.5, 196.0 ],
+					"patching_rect" : [ 52.0, 374.0, 258.5, 196.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
@@ -154,23 +141,23 @@
 							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 							"valuedictionary" : 							{
 								"parameter_values" : 								{
-									"BufferState" : 1.0,
+									"BufferState" : 0.0,
 									"Threshold" : -24.768153980752416,
 									"ThresholdMode" : 0.0,
 									"RandomizeDurations" : 0.0,
 									"RandomizeGains" : 0.0,
-									"RandomizePeriods" : 1.0,
+									"RandomizePeriods" : 0.0,
 									"RandomizePitchShifts" : 0.0,
-									"BufferFlux" : 472.440944881889891,
-									"Duration1" : 295.275590551181381,
-									"Duration2" : 196.850393700787777,
-									"Gain1" : 5.669291338582674,
+									"BufferFlux" : 50.0,
+									"Duration1" : 25.0,
+									"Duration2" : 50.0,
+									"Gain1" : 0.0,
 									"Gain2" : 0.0,
-									"Period1" : 338.582677165354312,
-									"Period2" : 259.842519685039349,
-									"PitchShift1" : 18.0,
-									"PitchShift2" : -24.0,
-									"Dry/Wet" : 59.055118110236258
+									"Period1" : 30.0,
+									"Period2" : 30.0,
+									"PitchShift1" : 0.0,
+									"PitchShift2" : 0.0,
+									"Dry/Wet" : 50.0
 								}
 
 							}
@@ -180,6 +167,52 @@
 						"snapshotlist" : 						{
 							"current_snapshot" : 1,
 							"entries" : [ 								{
+									"filetype" : "C74Snapshot",
+									"version" : 2,
+									"minorversion" : 0,
+									"name" : "default",
+									"origin" : "NewGrain.amxd",
+									"type" : "amxd",
+									"subtype" : "Undefined",
+									"embed" : 0,
+									"snapshot" : 									{
+										"name" : "NewGrain.amxd",
+										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
+										"valuedictionary" : 										{
+											"parameter_values" : 											{
+												"BufferState" : 0.0,
+												"Threshold" : -24.768153980752416,
+												"ThresholdMode" : 0.0,
+												"RandomizeDurations" : 0.0,
+												"RandomizeGains" : 0.0,
+												"RandomizePeriods" : 0.0,
+												"RandomizePitchShifts" : 0.0,
+												"BufferFlux" : 50.0,
+												"Duration1" : 25.0,
+												"Duration2" : 50.0,
+												"Gain1" : 0.0,
+												"Gain2" : 0.0,
+												"Period1" : 30.0,
+												"Period2" : 30.0,
+												"PitchShift1" : 0.0,
+												"PitchShift2" : 0.0,
+												"Dry/Wet" : 50.0
+											}
+
+										}
+
+									}
+,
+									"fileref" : 									{
+										"name" : "NewGrain.amxd[1]",
+										"filename" : "NewGrain.amxd[1].maxsnap",
+										"filepath" : "/Storage/documents/Max 8/Snapshots",
+										"filepos" : -1,
+										"snapshotfileid" : "00967a67dbce4b1b2499bc4d7e5fe9ef"
+									}
+
+								}
+, 								{
 									"filetype" : "C74Snapshot",
 									"version" : 2,
 									"minorversion" : 0,
@@ -193,23 +226,23 @@
 										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
 										"valuedictionary" : 										{
 											"parameter_values" : 											{
-												"BufferState" : 1.0,
+												"BufferState" : 0.0,
 												"Threshold" : -24.768153980752416,
 												"ThresholdMode" : 0.0,
 												"RandomizeDurations" : 0.0,
 												"RandomizeGains" : 0.0,
-												"RandomizePeriods" : 1.0,
+												"RandomizePeriods" : 0.0,
 												"RandomizePitchShifts" : 0.0,
-												"BufferFlux" : 472.440944881889891,
-												"Duration1" : 295.275590551181381,
-												"Duration2" : 196.850393700787777,
-												"Gain1" : 5.669291338582674,
+												"BufferFlux" : 50.0,
+												"Duration1" : 25.0,
+												"Duration2" : 50.0,
+												"Gain1" : 0.0,
 												"Gain2" : 0.0,
-												"Period1" : 338.582677165354312,
-												"Period2" : 259.842519685039349,
-												"PitchShift1" : 18.0,
-												"PitchShift2" : -24.0,
-												"Dry/Wet" : 59.055118110236258
+												"Period1" : 30.0,
+												"Period2" : 30.0,
+												"PitchShift1" : 0.0,
+												"PitchShift2" : 0.0,
+												"Dry/Wet" : 50.0
 											}
 
 										}
@@ -222,52 +255,6 @@
 										"filepath" : "/Storage/documents/Max 8/Snapshots",
 										"filepos" : -1,
 										"snapshotfileid" : "7c48d12dbf3e8ef3cf14e47cbcecb3a6"
-									}
-
-								}
-, 								{
-									"filetype" : "C74Snapshot",
-									"version" : 2,
-									"minorversion" : 0,
-									"name" : "NewGrain.amxd[1]",
-									"origin" : "NewGrain.amxd",
-									"type" : "amxd",
-									"subtype" : "Undefined",
-									"embed" : 0,
-									"snapshot" : 									{
-										"name" : "NewGrain.amxd",
-										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
-										"valuedictionary" : 										{
-											"parameter_values" : 											{
-												"BufferState" : 1.0,
-												"Threshold" : -24.768153980752416,
-												"ThresholdMode" : 0.0,
-												"RandomizeDurations" : 0.0,
-												"RandomizeGains" : 0.0,
-												"RandomizePeriods" : 1.0,
-												"RandomizePitchShifts" : 0.0,
-												"BufferFlux" : 472.440944881889891,
-												"Duration1" : 295.275590551181381,
-												"Duration2" : 196.850393700787777,
-												"Gain1" : 5.669291338582674,
-												"Gain2" : 0.0,
-												"Period1" : 338.582677165354312,
-												"Period2" : 259.842519685039349,
-												"PitchShift1" : 18.0,
-												"PitchShift2" : -24.0,
-												"Dry/Wet" : 59.055118110236258
-											}
-
-										}
-
-									}
-,
-									"fileref" : 									{
-										"name" : "NewGrain.amxd[1]",
-										"filename" : "NewGrain.amxd[1].maxsnap",
-										"filepath" : "/Storage/documents/Max 8/Snapshots",
-										"filepos" : -1,
-										"snapshotfileid" : "00967a67dbce4b1b2499bc4d7e5fe9ef"
 									}
 
 								}
@@ -289,13 +276,29 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 119.0, 125.0, 65.0, 22.0 ],
+					"patching_rect" : [ 305.0, 320.0, 65.0, 22.0 ],
 					"text" : "getparams"
 				}
 
 			}
  ],
 		"lines" : [ 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 1 ],
+					"order" : 0,
+					"source" : [ "obj-13", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-2", 0 ],
+					"order" : 1,
+					"source" : [ "obj-13", 0 ]
+				}
+
+			}
+, 			{
 				"patchline" : 				{
 					"destination" : [ "obj-35", 1 ],
 					"source" : [ "obj-2", 1 ]
@@ -318,20 +321,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-2", 1 ],
-					"source" : [ "obj-3", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-2", 0 ],
-					"source" : [ "obj-3", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-2", 0 ],
 					"source" : [ "obj-5", 0 ]
 				}
@@ -339,7 +328,9 @@
 			}
  ],
 		"parameters" : 		{
+			"obj-13::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
 			"obj-2" : [ "amxd~", "amxd~", 0 ],
+			"obj-13::obj-35" : [ "[5]", "Level", 0 ],
 			"parameterbanks" : 			{
 
 			}
@@ -347,13 +338,6 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "NewGrain.amxd.maxsnap",
-				"bootpath" : "/Storage/documents/Max 8/Snapshots",
-				"patcherrelativepath" : "../../../../Max 8/Snapshots",
-				"type" : "mx@s",
-				"implicit" : 1
-			}
-, 			{
 				"name" : "NewGrain.amxd[1].maxsnap",
 				"bootpath" : "/Storage/documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../Max 8/Snapshots",
@@ -361,10 +345,52 @@
 				"implicit" : 1
 			}
 , 			{
-				"name" : "1008chaz.m4a",
-				"bootpath" : "~/Desktop/NewGrainDev",
-				"patcherrelativepath" : "../../../../../../Users/lowkeynw/Desktop/NewGrainDev",
-				"type" : "M4a",
+				"name" : "NewGrain.amxd.maxsnap",
+				"bootpath" : "/Storage/documents/Max 8/Snapshots",
+				"patcherrelativepath" : "../../../../Max 8/Snapshots",
+				"type" : "mx@s",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "helpdetails.js",
+				"bootpath" : "C74:/help/resources",
+				"type" : "TEXT",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "demosound.maxpat",
+				"bootpath" : "C74:/help/msp",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "sine.svg",
+				"bootpath" : "C74:/media/max/picts/m4l-picts",
+				"type" : "svg",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "saw.svg",
+				"bootpath" : "C74:/media/max/picts/m4l-picts",
+				"type" : "svg",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "square.svg",
+				"bootpath" : "C74:/media/max/picts/m4l-picts",
+				"type" : "svg",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "random.svg",
+				"bootpath" : "C74:/media/max/picts/m4l-picts",
+				"type" : "svg",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "interfacecolor.js",
+				"bootpath" : "C74:/interfaces",
+				"type" : "TEXT",
 				"implicit" : 1
 			}
 , 			{

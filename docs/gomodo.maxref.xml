@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="gomodo" module="msp" category="LowkeyNW, MSP Processing">
+
+	<digest>
+		Sometimes it pays to be picky.
+		A hybrid between noise gating and granular processing.
+	</digest>
+	
+	<description>
+		From the original Hipno documentation: 
+		"With controls that should be familiar to most noise gate users, GoMoDo allows you to be more selective with your grain production. 
+		Instead of processing everything that comes down the pipeline, the user can specify how loud the incoming sound must be before it will be added to the sampling buffer. 
+		Grain production continues even when the buffer is not being updated, the processor just keeps using the last bit of sound that was over the threshold. 
+		No more processing that background hiss, just give me the good stuff!" 
+
+		GoMoDo was originally part of the Hipno plug-in package distributed by Cycling'74. 
+		While this 2.0 version is not an exact replica of the original, it resurrects many of the key features for use in Ableton Live and Cycling'74 Max.
+	</description>
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">Nathan Wolek</metadata>
+		<metadata name="tag">LowkeyNW</metadata>
+		<metadata name="tag">Audio</metadata>
+		<metadata name="tag">Processing</metadata>
+		<metadata name="tag">64-bit</metadata>
+	</metadatalist>
+
+	
+</c74object>
