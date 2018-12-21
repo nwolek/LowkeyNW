@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 315.0, 79.0, 624.0, 682.0 ],
+		"rect" : [ 439.0, 82.0, 624.0, 682.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -104,6 +104,7 @@
 					"enablehscroll" : 0,
 					"enablevscroll" : 0,
 					"id" : "obj-2",
+					"linecount" : 3,
 					"lockeddragscroll" : 0,
 					"maxclass" : "newobj",
 					"numinlets" : 3,
@@ -111,11 +112,12 @@
 					"offset" : [ 0.0, 0.0 ],
 					"outlettype" : [ "signal", "signal", "", "" ],
 					"patching_rect" : [ 52.0, 374.0, 258.5, 196.0 ],
+					"presentation_linecount" : 3,
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_invisible" : 1,
-							"parameter_longname" : "amxd~",
-							"parameter_shortname" : "amxd~",
+							"parameter_longname" : "amxd~[2]",
+							"parameter_shortname" : "amxd~[1]",
 							"parameter_type" : 3
 						}
 
@@ -123,8 +125,8 @@
 ,
 					"saved_object_attributes" : 					{
 						"parameter_enable" : 1,
-						"patchername" : "NewGrain.amxd",
-						"patchername_fallback" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd"
+						"patchername" : "gomodo.amxd",
+						"patchername_fallback" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/gomodo/gomodo.amxd"
 					}
 ,
 					"snapshot" : 					{
@@ -137,12 +139,12 @@
 						"subtype" : "Undefined",
 						"embed" : 1,
 						"snapshot" : 						{
-							"name" : "NewGrain.amxd",
-							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
+							"name" : "gomodo.amxd",
+							"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/gomodo/gomodo.amxd",
 							"valuedictionary" : 							{
 								"parameter_values" : 								{
 									"BufferState" : 0.0,
-									"Threshold" : -24.768153980752416,
+									"Threshold" : -80.0,
 									"ThresholdMode" : 0.0,
 									"RandomizeDurations" : 0.0,
 									"RandomizeGains" : 0.0,
@@ -165,23 +167,23 @@
 						}
 ,
 						"snapshotlist" : 						{
-							"current_snapshot" : 1,
+							"current_snapshot" : 0,
 							"entries" : [ 								{
 									"filetype" : "C74Snapshot",
 									"version" : 2,
 									"minorversion" : 0,
-									"name" : "default",
-									"origin" : "NewGrain.amxd",
+									"name" : "gomodo.amxd",
+									"origin" : "gomodo.amxd",
 									"type" : "amxd",
 									"subtype" : "Undefined",
 									"embed" : 0,
 									"snapshot" : 									{
-										"name" : "NewGrain.amxd",
-										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
+										"name" : "gomodo.amxd",
+										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/gomodo/gomodo.amxd",
 										"valuedictionary" : 										{
 											"parameter_values" : 											{
 												"BufferState" : 0.0,
-												"Threshold" : -24.768153980752416,
+												"Threshold" : -80.0,
 												"ThresholdMode" : 0.0,
 												"RandomizeDurations" : 0.0,
 												"RandomizeGains" : 0.0,
@@ -204,57 +206,11 @@
 									}
 ,
 									"fileref" : 									{
-										"name" : "NewGrain.amxd[1]",
-										"filename" : "NewGrain.amxd[1].maxsnap",
+										"name" : "gomodo.amxd",
+										"filename" : "gomodo.amxd.maxsnap",
 										"filepath" : "/Storage/documents/Max 8/Snapshots",
 										"filepos" : -1,
-										"snapshotfileid" : "00967a67dbce4b1b2499bc4d7e5fe9ef"
-									}
-
-								}
-, 								{
-									"filetype" : "C74Snapshot",
-									"version" : 2,
-									"minorversion" : 0,
-									"name" : "NewGrain.amxd",
-									"origin" : "NewGrain.amxd",
-									"type" : "amxd",
-									"subtype" : "Undefined",
-									"embed" : 0,
-									"snapshot" : 									{
-										"name" : "NewGrain.amxd",
-										"origname" : "/Storage/documents/Max/Packages/LowkeyNW/patchers/newgrain/NewGrain.amxd",
-										"valuedictionary" : 										{
-											"parameter_values" : 											{
-												"BufferState" : 0.0,
-												"Threshold" : -24.768153980752416,
-												"ThresholdMode" : 0.0,
-												"RandomizeDurations" : 0.0,
-												"RandomizeGains" : 0.0,
-												"RandomizePeriods" : 0.0,
-												"RandomizePitchShifts" : 0.0,
-												"BufferFlux" : 50.0,
-												"Duration1" : 25.0,
-												"Duration2" : 50.0,
-												"Gain1" : 0.0,
-												"Gain2" : 0.0,
-												"Period1" : 30.0,
-												"Period2" : 30.0,
-												"PitchShift1" : 0.0,
-												"PitchShift2" : 0.0,
-												"Dry/Wet" : 50.0
-											}
-
-										}
-
-									}
-,
-									"fileref" : 									{
-										"name" : "NewGrain.amxd",
-										"filename" : "NewGrain.amxd.maxsnap",
-										"filepath" : "/Storage/documents/Max 8/Snapshots",
-										"filepos" : -1,
-										"snapshotfileid" : "7c48d12dbf3e8ef3cf14e47cbcecb3a6"
+										"snapshotfileid" : "9a50630cd9953d0d1d7f89af01f7d505"
 									}
 
 								}
@@ -263,7 +219,7 @@
 
 					}
 ,
-					"text" : "amxd~ NewGrain.amxd",
+					"text" : "amxd~ /Storage/documents/Max/Packages/LowkeyNW/patchers/gomodo/gomodo.amxd",
 					"varname" : "amxd~",
 					"viewvisibility" : 1
 				}
@@ -328,9 +284,9 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-13::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
-			"obj-2" : [ "amxd~", "amxd~", 0 ],
+			"obj-2" : [ "amxd~[2]", "amxd~[1]", 0 ],
 			"obj-13::obj-35" : [ "[5]", "Level", 0 ],
+			"obj-13::obj-21::obj-6" : [ "live.tab[3]", "live.tab[1]", 0 ],
 			"parameterbanks" : 			{
 
 			}
@@ -338,14 +294,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "NewGrain.amxd[1].maxsnap",
-				"bootpath" : "/Storage/documents/Max 8/Snapshots",
-				"patcherrelativepath" : "../../../../Max 8/Snapshots",
-				"type" : "mx@s",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "NewGrain.amxd.maxsnap",
+				"name" : "gomodo.amxd.maxsnap",
 				"bootpath" : "/Storage/documents/Max 8/Snapshots",
 				"patcherrelativepath" : "../../../../Max 8/Snapshots",
 				"type" : "mx@s",
