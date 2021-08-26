@@ -24,3 +24,6 @@ DerivedData
 *.opensdf
 sysbuild
 *.sln
+
+# Binaries
+externals/

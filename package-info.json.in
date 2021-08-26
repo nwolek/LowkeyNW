@@ -7,7 +7,7 @@
 	"name" : "LowkeyNW",
 	"os" : 	{
 		"macintosh" : 		{
-			"platform" : [ "ia32", "x64" ],
+			"platform" : [ "ia32", "x64", "aarch64" ],
 			"min_version" : "none"
 		},
 		"windows" : 		{
