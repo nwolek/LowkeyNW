@@ -27,3 +27,6 @@ sysbuild
 
 # Binaries
 externals/
+
+# Generated files
+package-info.json
